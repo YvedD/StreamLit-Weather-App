@@ -92,10 +92,10 @@ def main():
     # Gebruikersinterface
     st.title("Weersvoorspelling voor Jouw Locatie")
     
-    location_name = st.text_input("Voer de naam van de plaats in:", "Amsterdam")
+    location_name = st.text_input("Voer de naam van de plaats in:", "")
     date = st.date_input("Selecteer de datum:", datetime.today())
-    start_time = st.time_input("Starttijd", datetime.now().time())
-    end_time = st.time_input("Eindtijd", datetime.now().time())
+    start_time = st.text_input("Starttijd", "HH:MM")
+    end_time = st.text_input("Eindtijd", "HH:MM")
 
     # Voer de hoofdlogica uit als de gebruiker alle velden heeft ingevuld
     if location_name and date and start_time and end_time:
