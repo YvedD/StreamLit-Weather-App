@@ -93,7 +93,7 @@ def main():
     st.title("Weersvoorspelling voor Jouw Locatie")
     
     location_name = st.text_input("Voer de naam van de plaats in:", "Amsterdam")
-    date = st.text_input("Selecteer de datum:", "")
+    date = st.date_input("Selecteer de datum:", "")
     start_time = st.text_input("Starttijd", "HH:MM")
     end_time = st.text_input("Eindtijd", "HH:MM")
 
