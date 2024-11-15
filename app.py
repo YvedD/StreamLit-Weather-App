@@ -1,7 +1,7 @@
 import streamlit as st
 from geopy.geocoders import Nominatim
 import folium
-from datetime import datetime
+from datetime import datetime, timedelta
 from streamlit_folium import st_folium
 import requests
 
@@ -40,9 +40,9 @@ def plot_location_on_map(lat, lon, zoom_start=2):
     return map
 
 # Functie voor het ophalen van historische data (dummy)
-def get_weather_data(start_date, end_date, lat, lon):
+def get_weather_data(date, start_time, end_time, lat, lon):
     # Voorbeeld: genereren van dummy data
-    times = [datetime.now() for _ in range(5)]
+    times = [datetime.now() + timedelta(hours=i) for i in range(5)]
     temperatures = [15.0, 16.5, 17.2, 15.8, 14.0]
     cloudcovers = [10, 20, 50, 30, 40]
     wind_speeds = [5, 6, 7, 4, 5]
@@ -55,7 +55,7 @@ def get_weather_data(start_date, end_date, lat, lon):
 # Functie voor het ophalen van voorspellingen (dummy)
 def get_forecast(lat, lon):
     # Voorbeeld: genereren van dummy forecast data
-    forecast_times = [datetime.now() for _ in range(3)]
+    forecast_times = [datetime.now() + timedelta(days=i) for i in range(3)]
     forecast_temperatures = [16.5, 17.2, 18.0]
     forecast_cloudcovers = [30, 40, 50]
     forecast_wind_speeds = [4, 5, 6]
@@ -79,11 +79,12 @@ def wind_direction_to_dutch(direction):
 def main():
     st.title("Weather Data Viewer")
 
-    # Invoer: locatie, land, start en stopdatum
+    # Invoer: locatie, land, datum, startuur en stopuur
     country_name = st.selectbox("Kies een land:", ["Belgium", "Netherlands", "Germany", "France", "Luxembourg", "Spain", "Italy"])
     location_name = st.text_input("Voer de naam van de plaats in:")
-    start_date = st.date_input("Kies een startdatum")
-    end_date = st.date_input("Kies een einddatum")
+    date = st.date_input("Kies een datum")
+    start_time = st.time_input("Kies een startuur", value=datetime.now().time())
+    end_time = st.time_input("Kies een stopuur", value=datetime.now().time())
 
     # Wanneer op de knop wordt gedrukt
     if st.button("Gegevens opzoeken"):
@@ -94,15 +95,15 @@ def main():
                 # Toon de coördinaten van de locatie
                 st.write("GPS Coördinaten:", format_coordinates(latitude, longitude))
 
-                # Toon de kaart van de locatie
-                st.subheader("Kaart van de locatie")
-                map = plot_location_on_map(latitude, longitude)
-                st_folium(map, width=700, height=500)
+                # Toon de kaart van de locatie in een aparte expander
+                with st.expander("Kaart van de locatie", expanded=True):
+                    map = plot_location_on_map(latitude, longitude)
+                    st_folium(map, width=700, height=500)
 
                 # Haal de historische data op
-                times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(start_date, end_date, latitude, longitude)
+                times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, start_time, end_time, latitude, longitude)
 
-                # Toon de historische data in een expander
+                # Toon de historische data in een kopieerbaar blok
                 with st.expander("Historische gegevens", expanded=True):
                     all_data = ""
                     for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(times, temperatures, cloudcovers, wind_directions, wind_speeds, visibility, precipitation):
@@ -112,7 +113,7 @@ def main():
                         all_data += line + "\n"
                     st.code(all_data)  # Kopieerbare historische gegevens
 
-                # Toon de voorspellingen in een expander
+                # Toon de voorspellingen in een aparte expander
                 forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
                 with st.expander("3-daagse voorspellingen", expanded=True):
                     forecast_text = ""
@@ -122,12 +123,7 @@ def main():
                         wind_direction = wind_direction_to_dutch(wind_dir)
                         line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
                         forecast_text += line + "\n"
-                    st.text(forecast_text)  # Niet kopieerbaar voor voorspellingen
-
-            else:
-                st.error("Locatie niet gevonden.")
-        else:
-            st.error("Vul een locatie en land in om gegevens op te zoeken.")
+                    st.write(forecast_text)  # Voorspellingen, niet kopieerbaar
 
 if __name__ == "__main__":
     main()
