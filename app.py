@@ -137,18 +137,15 @@ def main():
             try:
                 # Coördinaten ophalen
                 latitude, longitude = get_coordinates(location_name, country_name)
-                st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
-                # Verkrijg de juiste API URL en parameters
+                # Haal historische gegevens op
                 url, params = get_api_url_and_params(date, latitude, longitude)
-
-                # API-aanroep voor historische gegevens
                 response = requests.get(url, params=params)
                 response.raise_for_status()
                 data = response.json()
                 hourly = data.get("hourly", {})
 
-                # Data filteren op basis van opgegeven tijden
+                # Data filteren
                 times = pd.to_datetime(hourly.get("time", []))
                 temperatures = np.array(hourly.get("temperature_2m", []))
                 cloudcovers = np.array(hourly.get("cloudcover", []))
@@ -160,6 +157,7 @@ def main():
                 visibility = np.array(hourly.get("visibility", []))
                 precipitation = np.array(hourly.get("precipitation", []))
 
+                # Filter op tijd
                 start_datetime = pd.to_datetime(f"{date} {start_time}")
                 end_datetime = pd.to_datetime(f"{date} {end_time}")
                 mask = (times >= start_datetime) & (times <= end_datetime)
@@ -175,6 +173,7 @@ def main():
                 filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in visibility[mask]]
                 filtered_precipitation = precipitation[mask]
 
+                # Genereer tekst met <br> voor historische data
                 all_data = ""
                 for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_speed, vis, precip in zip(
                         filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
@@ -182,12 +181,12 @@ def main():
                         filtered_visibility_km, filtered_precipitation):
                     time_str = time.strftime("%H:%M")
                     line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km<br>"
-                    all_data += line  # Voeg de <br> tag toe aan het einde van elke regel
+                    all_data += line
 
-                if st.button("Kopieer alle data"):
-                    st.code(all_data)
+                st.subheader("Historische Data")
+                st.markdown(all_data, unsafe_allow_html=True)
 
-                # 3-daagse voorspelling ophalen en weergeven
+                # Voorspelling van de volgende 3 dagen
                 st.subheader("3-daagse voorspelling per uur")
                 forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, \
                 forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
@@ -203,7 +202,7 @@ def main():
                     wind_bf = wind_speed_to_beaufort(wind_speed)
                     vis_km = vis / 1000 if vis <= 100000 else 0
                     line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km<br>"
-                    forecast_text += line  # Voeg de <br> tag toe aan de voorspelling
+                    forecast_text += line
 
                 st.markdown(forecast_text, unsafe_allow_html=True)
 
