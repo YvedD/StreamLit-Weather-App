@@ -181,9 +181,8 @@ def main():
                         filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_directions, filtered_wind_speeds,
                         filtered_visibility_km, filtered_precipitation):
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km"
-                    st.code(line)
-                    all_data += line + "\n"
+                    line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km<br>"
+                    all_data += line  # Voeg de <br> tag toe aan het einde van elke regel
 
                 if st.button("Kopieer alle data"):
                     st.code(all_data)
@@ -203,10 +202,10 @@ def main():
                     time_str = forecast_time.strftime("%H:%M")
                     wind_bf = wind_speed_to_beaufort(wind_speed)
                     vis_km = vis / 1000 if vis <= 100000 else 0
-                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km"
-                    forecast_text += line + "\n"
+                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km<br>"
+                    forecast_text += line  # Voeg de <br> tag toe aan de voorspelling
 
-                st.text(forecast_text)
+                st.markdown(forecast_text, unsafe_allow_html=True)
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Fout bij API-aanroep: {e}")
