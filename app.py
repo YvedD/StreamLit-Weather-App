@@ -159,12 +159,21 @@ def main():
             visibility = np.array(hourly.get("visibility", []))
             precipitation = np.array(hourly.get("precipitation", []))
 
+            # Debug: Controleer of de tijden correct worden opgehaald
+            st.write(f"Tijden uit de API: {times}")
+
             # Filter de gegevens op basis van de ingevoerde tijdsperiode
             start_datetime = pd.to_datetime(f"{date} {start_time}")
             end_datetime = pd.to_datetime(f"{date} {end_time}")
             
+            st.write(f"Starttijd: {start_datetime}, Eindtijd: {end_datetime}")
+
             # Maskering van de tijden en de filtering
             mask = (times >= start_datetime) & (times <= end_datetime)
+
+            # Debug: Controleer de masker en hoe het filtert
+            st.write(f"Masker: {mask}")
+            st.write(f"Aantal gematchte tijden: {np.sum(mask)}")
 
             # Controleer of het maskeren en filteren correct werkt
             if np.sum(mask) == 0:
@@ -182,16 +191,15 @@ def main():
             filtered_visibility = visibility[mask]
             filtered_precipitation = precipitation[mask]
 
-            # Verwerk de windrichting naar de Nederlandse benaming
-            wind_directions_nl = [wind_direction_to_dutch(wd) for wd in filtered_wind_directions]
-
-            # Toon de historische gegevens
-            st.subheader(f"Weergegevens voor {location_name} op {date} van {start_time} tot {end_time}:")
-            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, windspeed, wind_dir, visi, precip in zip(filtered_times, filtered_temperatures, filtered_cloudcovers,
-                                                                                                filtered_cloudcover_low, filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_speeds,
-                                                                                                wind_directions_nl, filtered_visibility, filtered_precipitation):
+            # Gegevens weergeven
+            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, windspeed, wind_dir, visi, precip in zip(
+                filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low, 
+                filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_speeds, filtered_wind_directions, 
+                filtered_visibility, filtered_precipitation):
                 time_str = time.strftime("%Y-%m-%d %H:%M")
-                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - Wind.{windspeed}km/h - {wind_dir} - Visi.{visi:.1f}km"
+                wind_dir = wind_direction_to_dutch(wind_dir)
+                windspeed_bf = wind_speed_to_beaufort(windspeed)
+                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - Wind.{windspeed}km/h (Beaufort {windspeed_bf}) - {wind_dir} - Visi.{visi:.1f}km"
                 st.code(line)
 
         except requests.exceptions.RequestException as e:
