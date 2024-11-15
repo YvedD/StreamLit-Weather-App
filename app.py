@@ -70,6 +70,11 @@ def main():
     with col2:
         country_name = st.selectbox("Kies een land:", countries, index=0)
     
+    # Toon standaard wereldkaart (uitgezoomd op Eurazië)
+    st.write("### Wereldkaart (uitgezoomd op Eurazië):")
+    initial_map = folium.Map(location=[55.0, 65.0], zoom_start=3)  # Zoom in op Eurazië
+    st_folium(initial_map, width=700, height=500)
+
     # Zoek naar de coördinaten van de opgegeven locatie en land
     if st.button("Zoeken"):
         latitude, longitude = get_coordinates(location_name, country_name)
