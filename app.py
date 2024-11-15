@@ -231,20 +231,8 @@ def main():
                     forecast_date = forecast_time.date()
                     time_str = forecast_time.strftime("%H:%M")
                     line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
-                    st.code(line)
+                    st.text(line)
 
-                # Download knop voor alle data
-                all_data = ""
-                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
-                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
-                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
-                        forecast_visibility, forecast_precipitation):
-                    forecast_date = time.date()
-                    time_str = time.strftime("%H:%M")
-                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
-                    all_data += line + "\n"
-
-                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
                 st.markdown('</div>', unsafe_allow_html=True)
 
         except requests.exceptions.RequestException as e:
