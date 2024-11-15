@@ -11,8 +11,8 @@ st.markdown(
     """
     <style>
     .output-container {
-        max-width: 95%; /* Verhoog de breedte van de uitvoer */
-        margin: 0 auto;
+        max-width: 80%; /* Verhoog de breedte van de uitvoer */
+        margin: 5 auto;
         padding: 10px;
         word-wrap: break-word;
     }
@@ -20,7 +20,7 @@ st.markdown(
         max-width: 95%;
     }
     .stTextInput, .stDateInput, .stTimeInput {
-        width: 100%;
+        width: 90%;
     }
     </style>
     """,
