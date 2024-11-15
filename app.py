@@ -143,82 +143,45 @@ def main():
     st.title("Weather Data Viewer")
 
     # Landkeuze
-    country_name = st.selectbox("Kies een Europees land:", european_countries)
-
-    # Invoerveld voor plaatsnaam
-    location_name = st.text_input(f"Voer de naam van de plaats in in {country_name}:")
-
-    # Datum en tijd invoeren
-    date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
-    start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
-    end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
+    country_name = st.selectbox("Kies een land:", european_countries)
+    location_name = st.text_input("Voer de naam van de plaats in:")
 
     if st.button("Gegevens opzoeken"):
         try:
-            # Verkrijg de GPS-coördinaten
             latitude, longitude = get_coordinates(location_name, country_name)
             
-            # Weerdata ophalen
+            # Haal historische weerdata op
+            date = st.date_input("Kies een datum")
             times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, latitude, longitude)
 
-            # Filter de tijdsdata op basis van start- en eindtijd
-            start_datetime = pd.to_datetime(f"{date} {start_time}")
-            end_datetime = pd.to_datetime(f"{date} {end_time}")
-            mask = (times >= start_datetime) & (times <= end_datetime)
+            # Resultaten in een expander
+            with st.expander("Historische gegevens & Voorspellingen", expanded=True):
+                # Weergave van historische data
+                st.subheader("Historische gegevens")
+                all_data = ""
+                for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(times, temperatures, cloudcovers, wind_directions, wind_speeds, visibility, precipitation):
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    all_data += line + "\n"
+                st.code(all_data)  # Kopieerbare historische gegevens
 
-            filtered_times = times[mask]
-            filtered_temperatures = temperatures[mask]
-            filtered_cloudcovers = cloudcovers[mask]
-            filtered_wind_speeds = wind_speeds[mask]
-            filtered_wind_directions = wind_directions[mask]
-            filtered_visibility = visibility[mask]
-            filtered_precipitation = precipitation[mask]
+                # 3-daagse voorspelling
+                forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+                st.subheader("3-daagse voorspelling")
+                forecast_text = ""
+                for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds,
+                                                                                   forecast_wind_directions, forecast_visibility, forecast_precipitation):
+                    forecast_date = forecast_time.strftime("%Y-%m-%d")
+                    time_str = forecast_time.strftime("%H:%M")
+                    line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    forecast_text += line + "\n"
+                st.text(forecast_text)  # Dit maakt het niet kopieerbaar
 
-            # Kopieerbare historische gegevens
-            all_data = ""
-            for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(
-                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_wind_directions, 
-                    filtered_wind_speeds, filtered_visibility, filtered_precipitation):
-                time_str = time.strftime("%H:%M")
-                line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
-                all_data += line + "\n"
+                # Kaartweergave
+                st.subheader("Kaart van de locatie")
+                map = plot_location_on_map(latitude, longitude)
+                st_folium(map, width=700, height=500)
 
-            st.code(all_data)  # Dit maakt het kopieerbaar voor de gebruiker
-
-            # 3-daagse voorspelling ophalen en weergeven (niet kopieerbaar)
-            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
-
-            st.subheader("3-daagse voorspelling per uur")
-            forecast_text = ""
-            for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(
-                    forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds,
-                    forecast_wind_directions, forecast_visibility, forecast_precipitation):
-                forecast_date = forecast_time.strftime("%Y-%m-%d")
-                time_str = forecast_time.strftime("%H:%M")
-                line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
-                forecast_text += line + "\n"
-            
-            st.text(forecast_text)  # Dit maakt het niet kopieerbaar
-
-            # **Pop-up venster met de kaart**
-            st.markdown("""
-                <div id="popup" style="position:fixed; top: 100px; left: 70%; width: 60%; height: 60%; border: 2px solid black; background-color: white; padding: 10px; z-index: 1000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); cursor: move;">
-                    <h3>Kaart van de locatie</h3>
-                    <div id="map" style="width: 100%; height: 100%;"></div>
-                </div>
-                <style>
-                    #popup {
-                        cursor: move;
-                    }
-                </style>
-            """, unsafe_allow_html=True)
-
-            # Genereer de kaart voor de opgehaalde locatie
-            map = plot_location_on_map(latitude, longitude)
-            st_folium(map, width=700, height=500)
-
-        except requests.exceptions.RequestException as e:
-            st.error(f"Fout bij API-aanroep: {e}")
         except ValueError as e:
             st.error(f"Fout: {e}")
 
