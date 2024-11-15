@@ -132,10 +132,17 @@ def main():
             latitude, longitude = get_coordinates(location_name)
             st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
-            # Verkrijg de juiste API URL en parameters
-            url, params = get_api_url_and_params(date, latitude, longitude)
-
             # API-aanroep voor historisch weer
+            url = "https://api.open-meteo.com/v1/forecast"
+            params = {
+                "latitude": latitude,
+                "longitude": longitude,
+                "hourly": ["temperature_2m", "precipitation", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high",
+                           "visibility", "wind_speed_10m", "wind_direction_10m"],
+                "timezone": "Europe/Berlin",
+                "forecast_days": 3
+            }
+
             response = requests.get(url, params=params)
             response.raise_for_status()
 
@@ -179,11 +186,9 @@ def main():
             # Verkrijg de 3-daagse voorspelling
             forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
 
-            # Maak een container voor de uitvoer en pas de breedte aan via CSS
+            # Toon de historische data
             with st.container():
                 st.markdown('<div class="output-container">', unsafe_allow_html=True)
-
-                # Toon de historische data
                 for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
                         filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
                         filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
@@ -198,13 +203,10 @@ def main():
                         forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
                         forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
                         forecast_visibility, forecast_precipitation):
-                    # Haal de datum uit de tijd van de voorspelling
                     forecast_date = forecast_time.date()
                     time_str = forecast_time.strftime("%H:%M")
-                    # Zet de windsnelheden om naar Beaufort
-                    wind_bf = wind_speed_to_beaufort(forecast_wind_speeds[0])
-                    # Zet de zichtbaarheid om naar km
-                    vis_km = forecast_visibility / 1000 if forecast_visibility and forecast_visibility <= 100000 else 0
+                    wind_bf = wind_speed_to_beaufort(forecast_wind_speeds[0])  # Omzetten naar Beaufort
+                    vis_km = forecast_visibility / 1000 if forecast_visibility <= 100000 else 0
                     line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis_km:.1f}km"
                     st.text(line)
 
