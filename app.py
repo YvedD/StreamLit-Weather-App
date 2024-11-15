@@ -32,10 +32,14 @@ def format_coordinates(lat, lon):
     return f"{lat_d}°{lat_m}'{lat_s}\"{lat_direction} {lon_d}°{lon_m}'{lon_s}\"{lon_direction}"
 
 # Functie om de kaart weer te geven met de locatie
-def plot_location_on_map(lat, lon):
-    # Creëer een kaart met de opgegeven locatie
-    map = folium.Map(location=[lat, lon], zoom_start=12)
-    folium.Marker([lat, lon], popup=f"Locatie: {lat}, {lon}").add_to(map)
+def plot_location_on_map(lat, lon, zoom_start=2):
+    # Creëer een kaart met een basis zoomniveau voor de wereld
+    map = folium.Map(location=[0, 0], zoom_start=zoom_start)  # begin met de wereldkaart
+    
+    if lat and lon:
+        # Inzoomen naar de specifieke locatie
+        map = folium.Map(location=[lat, lon], zoom_start=12)
+        folium.Marker([lat, lon], popup=f"Locatie: {lat}, {lon}").add_to(map)
     
     # Geef de kaart weer in de Streamlit-app
     return st_folium(map, width=700, height=500)
@@ -78,7 +82,7 @@ def main():
             
             # Toon de locatie op een kaart
             st.write("### Kaart van de gevonden locatie:")
-            map = plot_location_on_map(latitude, longitude)
+            map = plot_location_on_map(latitude, longitude, zoom_start=2)
             
             # Blijf de kaart tonen zonder dat deze verdwijnt
             st.write(map)
