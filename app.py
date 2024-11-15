@@ -175,9 +175,9 @@ def main():
             st.write(f"Masker: {mask}")
             st.write(f"Aantal gematchte tijden: {np.sum(mask)}")
 
-            # Controleer of het maskeren en filteren correct werkt
+            # Controleer of het masker goed is toegepast en of er data is
             if np.sum(mask) == 0:
-                st.error("Geen gegevens gevonden voor de opgegeven tijdsperiode.")
+                st.warning("Er zijn geen gegevens binnen de opgegeven tijdsperiode.")
                 return
 
             filtered_times = times[mask]
