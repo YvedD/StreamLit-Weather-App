@@ -18,8 +18,8 @@ def main():
         
         # Pop-up effect met HTML en CSS (overlay)
         st.markdown("""
-            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                        padding: 20px; background-color: rgba(0, 0, 0, 0.8); color: white;
+            <div style="position: fixed; top: 50%; left: 75%; transform: translate(-50%, -50%);
+                        padding: 20px; background-color: white); color: black;
                         border-radius: 10px; z-index: 9999;">
                 <h2>Hello World!</h2>
                 <p>Dit is een pop-up venster die zichtbaar wordt na het ophalen van de gegevens.</p>
