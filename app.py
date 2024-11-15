@@ -4,6 +4,7 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
+import io
 
 # CSS voor marges en breedte van de uitvoer
 st.markdown(
@@ -80,13 +81,12 @@ def wind_speed_to_beaufort(speed_kmh):
     else:
         return 12
 
-# Functie om de juiste API URL en parameters te verkrijgen
+# Functie om te bepalen welke API te gebruiken (historisch of forecast)
 def get_api_url_and_params(date, latitude, longitude):
     today = datetime.now().strftime("%Y-%m-%d")
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
 
     if date == today or date == yesterday:
-        # Huidige of vorige dag: gebruik de forecast API
         url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": latitude,
@@ -97,7 +97,6 @@ def get_api_url_and_params(date, latitude, longitude):
             "past_days": 1 if date == yesterday else 0
         }
     else:
-        # Oudere data: gebruik de archive API
         url = "https://archive-api.open-meteo.com/v1/archive"
         params = {
             "latitude": latitude,
@@ -113,15 +112,15 @@ def get_api_url_and_params(date, latitude, longitude):
 
 # Streamlit app
 def main():
-    st.title("Weather Data Viewer")
-
+    st.title("Migration Weatherdata Viewer")
+    
     # Maak de invoervelden breder met st.columns
     col1, col2 = st.columns([3, 3])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
 
     with col1:
         location_name = st.text_input("Voer de naam van de plaats in:")
         date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
-        
+    
     with col2:
         start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
         end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
@@ -142,43 +141,21 @@ def main():
             # Verkrijg de gegevens uit de JSON-respons
             data = response.json()
             hourly = data.get("hourly", {})
-            
-            # Controleer of de "time" data is geladen
-            if 'time' not in hourly:
-                st.error("Er was een probleem met het ophalen van de tijdstempels.")
-                return
-
             times = pd.to_datetime(hourly.get("time", []))
             temperatures = np.array(hourly.get("temperature_2m", []))
             cloudcovers = np.array(hourly.get("cloudcover", []))
             cloudcover_low = np.array(hourly.get("cloudcover_low", []))
             cloudcover_mid = np.array(hourly.get("cloudcover_mid", []))
             cloudcover_high = np.array(hourly.get("cloudcover_high", []))
-            wind_speeds = np.array(hourly.get("windspeed_10m", []))
+            wind_speeds = np.array(hourly.get("wind_speed_10m", []))
             wind_directions = np.array(hourly.get("wind_direction_10m", []))
             visibility = np.array(hourly.get("visibility", []))
             precipitation = np.array(hourly.get("precipitation", []))
 
-            # Debug: Controleer of de tijden correct worden opgehaald
-            st.write(f"Tijden uit de API: {times}")
-
             # Filter de gegevens op basis van de ingevoerde tijdsperiode
             start_datetime = pd.to_datetime(f"{date} {start_time}")
             end_datetime = pd.to_datetime(f"{date} {end_time}")
-            
-            st.write(f"Starttijd: {start_datetime}, Eindtijd: {end_datetime}")
-
-            # Maskering van de tijden en de filtering
             mask = (times >= start_datetime) & (times <= end_datetime)
-
-            # Debug: Controleer de masker en hoe het filtert
-            st.write(f"Masker: {mask}")
-            st.write(f"Aantal gematchte tijden: {np.sum(mask)}")
-
-            # Controleer of het masker goed is toegepast en of er data is
-            if np.sum(mask) == 0:
-                st.warning("Er zijn geen gegevens binnen de opgegeven tijdsperiode.")
-                return
 
             filtered_times = times[mask]
             filtered_temperatures = temperatures[mask]
@@ -191,16 +168,32 @@ def main():
             filtered_visibility = visibility[mask]
             filtered_precipitation = precipitation[mask]
 
-            # Gegevens weergeven
-            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, windspeed, wind_dir, visi, precip in zip(
-                filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low, 
-                filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_speeds, filtered_wind_directions, 
-                filtered_visibility, filtered_precipitation):
-                time_str = time.strftime("%Y-%m-%d %H:%M")
-                wind_dir = wind_direction_to_dutch(wind_dir)
-                windspeed_bf = wind_speed_to_beaufort(windspeed)
-                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - Wind.{windspeed}km/h (Beaufort {windspeed_bf}) - {wind_dir} - Visi.{visi:.1f}km"
-                st.code(line)
+            # Verwerk de windrichting en windkracht
+            wind_direction_names = [wind_direction_to_dutch(direction) for direction in filtered_wind_directions]
+            wind_beauforts = [wind_speed_to_beaufort(speed) for speed in filtered_wind_speeds]
+
+            # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
+            filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
+
+            # Maak een container voor de uitvoer en pas de breedte aan via CSS
+            with st.container():
+                st.markdown('<div class="output-container">', unsafe_allow_html=True)
+
+                # Voor elke tijdlijn: toon de gegevens
+                all_data = ""
+                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                        filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
+                        filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
+                        filtered_visibility_km, filtered_precipitation):
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    st.code(line)
+                    all_data += line + "\n"
+
+                # Download knop voor alle data
+                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
+
+                st.markdown('</div>', unsafe_allow_html=True)
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
@@ -211,6 +204,6 @@ def main():
         except Exception as e:
             st.error(f"Onverwachte fout: {e}")
 
-# Run de app
+# Voer de main functie uit
 if __name__ == "__main__":
     main()
