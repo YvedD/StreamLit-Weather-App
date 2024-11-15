@@ -18,14 +18,24 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
+# Lijst van landen in Eurazië (en een paar extra om het complete bereik te tonen)
+countries = [
+    "Afghanistan", "Armenia", "Azerbaijan", "Bahrain", "Bangladesh", "Bhutan", "Brunei", "Cambodia", 
+    "China", "Cyprus", "Georgia", "India", "Indonesia", "Iran", "Iraq", "Israel", "Japan", "Jordan", 
+    "Kazakhstan", "Kuwait", "Kyrgyzstan", "Laos", "Lebanon", "Malaysia", "Maldives", "Mongolia", "Myanmar", 
+    "Nepal", "North Korea", "Oman", "Pakistan", "Palestine", "Philippines", "Qatar", "Russia", "Saudi Arabia", 
+    "Singapore", "South Korea", "Sri Lanka", "Syria", "Tajikistan", "Thailand", "Turkey", "Turkmenistan", 
+    "United Arab Emirates", "Uzbekistan", "Vietnam", "Yemen"
+]
+
 # Functie om coördinaten op te halen
-def get_coordinates(location_name):
+def get_coordinates(location_name, country_name):
     geolocator = Nominatim(user_agent="weather_app")
-    location = geolocator.geocode(location_name)
+    location = geolocator.geocode(f"{location_name}, {country_name}")
     if location:
         return location.latitude, location.longitude
     else:
-        raise ValueError(f"Location '{location_name}' not found")
+        raise ValueError(f"Location '{location_name}, {country_name}' not found")
 
 # Functie om windrichting om te zetten naar Nederlandse benamingen
 def wind_direction_to_dutch(direction):
@@ -112,8 +122,9 @@ def main():
     with st.container():
         st.markdown("<div class='container'>", unsafe_allow_html=True)
 
-        # Invoervelden voor locatie
-        location_name = st.text_input("Voer de naam van de plaats in:")
+        # Invoervelden voor locatie en land
+        country_name = st.selectbox("Kies het land:", countries)
+        location_name = st.text_input(f"Voer de naam van de plaats in in {country_name}:")
         date = st.date_input("Kies de datum voor historische gegevens:", datetime.today()).strftime("%Y-%m-%d")
         start_time = st.time_input("Starttijd:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
         end_time = st.time_input("Eindtijd:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
@@ -121,8 +132,8 @@ def main():
         if st.button("Gegevens ophalen"):
             try:
                 # Coördinaten ophalen
-                latitude, longitude = get_coordinates(location_name)
-                st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
+                latitude, longitude = get_coordinates(location_name, country_name)
+                st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
                 # Verkrijg de juiste API URL en parameters
                 url, params = get_api_url_and_params(date, latitude, longitude)
