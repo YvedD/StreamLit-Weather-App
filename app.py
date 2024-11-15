@@ -165,7 +165,7 @@ def main():
                 time_str = time.strftime("%H:%M")
                 line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-View.{vis:.1f}km"
                 st.code(line)
-                all_data +=  "\n" + line
+                all_data +=  "<br>" + line
             
             if st.button("Kopieer alle data"):
                 st.code(all_data)
