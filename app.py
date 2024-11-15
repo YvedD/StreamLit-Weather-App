@@ -1,7 +1,7 @@
 import requests
 import pandas as pd
 import numpy as np
-from geopy.geocators import Nominatim
+from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
 import io
@@ -11,13 +11,13 @@ st.markdown(
     """
     <style>
     .output-container {
-        max-width: 80%; /* Verhoog de breedte van de uitvoer naar 80% */
+        max-width: 95%; /* Verhoog de breedte van de uitvoer */
         margin: 0 auto;
         padding: 10px;
         word-wrap: break-word;
     }
     .stText, .stMarkdown {
-        max-width: 80%;
+        max-width: 95%;
     }
     .stTextInput, .stDateInput, .stTimeInput {
         width: 100%;
