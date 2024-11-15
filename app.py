@@ -4,6 +4,7 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
+import io
 
 # Functie om de coördinaten op te halen
 def get_coordinates(location_name):
@@ -150,16 +151,24 @@ def main():
             # Formatteer neerslag als 0.0mm, ook als het 0 is, gebruik 0.0 als standaard bij None
             filtered_precipitation = [f"{precip:.1f}" if precip is not None else "0.0" for precip in filtered_precipitation]
 
-            # Print de resultaten in het gewenste compacte formaat
-            st.write(f"Weersgegevens voor {location_name} op {date} van {start_time} tot {end_time}:\n")
-
+            # Bouw de resultaten op in een lijst voor kopieerbaar overzicht
+            weather_data = []
             for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
                     filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
                     filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
                     filtered_visibility_km, filtered_precipitation):
                 time_str = time.strftime("%H:%M")
-                st.write(
-                    f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km")
+                line = (
+                    f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% "
+                    f"(L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
+                )
+                weather_data.append(line)
+                st.write(line)  # Elke lijn weergeven
+                st.code(line, language="plaintext")  # Kopieerbare codeblok per lijn
+
+            # Alle data samenvoegen voor "Alle data kopiëren"
+            all_data = "\n".join(weather_data)
+            st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
@@ -170,6 +179,5 @@ def main():
         except Exception as e:
             st.error(f"Onverwachte fout: {e}")
 
-# Voer de main functie uit
 if __name__ == "__main__":
     main()
