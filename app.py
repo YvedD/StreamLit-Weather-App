@@ -6,21 +6,21 @@ from datetime import datetime, timedelta
 import streamlit as st
 import io
 
-# CSS voor marges
+# CSS voor marges en breedte van de uitvoer
 st.markdown(
     """
     <style>
     .output-container {
-        max-width: 90%;
+        max-width: 95%; /* Verhoog de breedte van de uitvoer */
         margin: 0 auto;
         padding: 10px;
         word-wrap: break-word;
     }
     .stText, .stMarkdown {
-        max-width: 90%;
+        max-width: 95%;
     }
     .stTextInput, .stDateInput, .stTimeInput {
-        width: 100%;  /* Maakt invoervelden breder */
+        width: 100%;
     }
     </style>
     """,
@@ -174,9 +174,6 @@ def main():
 
             # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
             filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
-
-            # Formatteer neerslag als 0.0mm, ook als het 0 is, gebruik 0.0 als standaard bij None
-            filtered_precipitation = [f"{precip:.1f}" if precip is not None else "0.0" for precip in filtered_precipitation]
 
             # Maak een container voor de uitvoer en pas de breedte aan via CSS
             with st.container():
