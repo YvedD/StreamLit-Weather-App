@@ -72,7 +72,7 @@ def main():
     
     # Plaats de kaart in de GUI, standaard uitgezoomd
     map = folium.Map(location=[0, 0], zoom_start=3)  # Kaart begint met een wereldkaart
-    map = st_folium(map, width=700, height=500)  # Toon de kaart
+    map = st_folium(map, width=700, height=500)  # Toon de kaart (maar deze wordt later geüpdatet)
 
     # Maak een knop om de locatie op te zoeken
     if st.button("Opzoeken"):
