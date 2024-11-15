@@ -70,33 +70,20 @@ def main():
     with col2:
         country_name = st.selectbox("Kies een land:", countries, index=0)
     
-    # Toon standaard wereldkaart (uitgezoomd op Eurazië)
-    st.write("### Wereldkaart (uitgezoomd op Eurazië):")
-    initial_map = folium.Map(location=[55.0, 65.0], zoom_start=3)  # Zoom in op Eurazië
-    st_folium(initial_map, width=700, height=500)
-
-    # Zoek naar de coördinaten van de opgegeven locatie en land
-    if st.button("Zoeken"):
+    # Toon de GPS-gegevens in tekstformaat onder de invoervelden
+    if location_name and country_name:
+        st.write("### GPS Coördinaten (indien gevonden):")
+        
         latitude, longitude = get_coordinates(location_name, country_name)
         
         if latitude is not None and longitude is not None:
             # Converteer de coördinaten naar het gewenste formaat
             formatted_coordinates = format_coordinates(latitude, longitude)
-            st.write(f"**Geselecteerde locatie coördinaten:**")
-            st.write(formatted_coordinates)
+            st.write(f"**Locatie**: {location_name}, {country_name}")
+            st.write(f"**Coördinaten**: {formatted_coordinates}")
             
-            # Verdeel de interface in twee kolommen: de kaart rechts en de info links
-            col1, col2 = st.columns([3, 2])
-
-            with col1:
-                # Toon de coördinaten en verdere info in de eerste kolom
-                st.write("### Gevonden locatie:")
-                st.write(f"**Plaats**: {location_name}, {country_name}")
-                st.write(f"**Coördinaten**: {formatted_coordinates}")
-            
-            with col2:
-                # Toon de locatie op de kaart in de tweede kolom
-                st.write("### Kaart van de gevonden locatie:")
+            # Popup om de kaart weer te geven met de gevonden locatie
+            with st.expander("Bekijk de kaart van de locatie", expanded=True):
                 map = plot_location_on_map(latitude, longitude, zoom_start=10)
                 st_folium(map, width=700, height=500)
         else:
