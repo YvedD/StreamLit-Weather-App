@@ -110,17 +110,47 @@ def get_api_url_and_params(date, latitude, longitude):
 
     return url, params
 
+# Functie om de weersvoorspelling voor de komende drie dagen op te halen
+def get_forecast(latitude, longitude):
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": ["temperature_2m", "precipitation", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", "cloud_cover_high",
+                   "visibility", "wind_speed_10m", "wind_direction_10m"],
+        "timezone": "Europe/Berlin",
+        "forecast_days": 3
+    }
+    
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+
+    data = response.json()
+    hourly = data.get("hourly", {})
+    times = pd.to_datetime(hourly.get("time", []))
+    temperatures = np.array(hourly.get("temperature_2m", []))
+    cloudcovers = np.array(hourly.get("cloud_cover", []))
+    cloudcover_low = np.array(hourly.get("cloud_cover_low", []))
+    cloudcover_mid = np.array(hourly.get("cloud_cover_mid", []))
+    cloudcover_high = np.array(hourly.get("cloud_cover_high", []))
+    wind_speeds = np.array(hourly.get("wind_speed_10m", []))
+    wind_directions = np.array(hourly.get("wind_direction_10m", []))
+    visibility = np.array(hourly.get("visibility", []))
+    precipitation = np.array(hourly.get("precipitation", []))
+    
+    return times, temperatures, cloudcovers, cloudcover_low, cloudcover_mid, cloudcover_high, wind_speeds, wind_directions, visibility, precipitation
+
 # Streamlit app
 def main():
-    st.title("Migration Weatherdata Viewer")
-    
+    st.title("Weather Data Viewer")
+
     # Maak de invoervelden breder met st.columns
     col1, col2 = st.columns([3, 3])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
 
     with col1:
         location_name = st.text_input("Voer de naam van de plaats in:")
         date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
-    
+
     with col2:
         start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
         end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
@@ -134,7 +164,7 @@ def main():
             # Verkrijg de juiste API URL en parameters
             url, params = get_api_url_and_params(date, latitude, longitude)
 
-            # API-aanroep
+            # API-aanroep voor historisch weer
             response = requests.get(url, params=params)
             response.raise_for_status()
 
@@ -175,12 +205,14 @@ def main():
             # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
             filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
 
+            # Verkrijg de 3-daagse voorspelling
+            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+
             # Maak een container voor de uitvoer en pas de breedte aan via CSS
             with st.container():
                 st.markdown('<div class="output-container">', unsafe_allow_html=True)
 
-                # Voor elke tijdlijn: toon de gegevens
-                all_data = ""
+                # Toon de historische data
                 for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
                         filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
                         filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
@@ -188,11 +220,28 @@ def main():
                     time_str = time.strftime("%H:%M")
                     line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
                     st.code(line)
-                    all_data += line + "\n"
+
+                # Toon de voorspelling per uur voor de komende drie dagen
+                st.subheader("3-daagse voorspelling per uur")
+                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
+                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
+                        forecast_visibility, forecast_precipitation):
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    st.code(line)
 
                 # Download knop voor alle data
-                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
+                all_data = ""
+                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
+                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
+                        forecast_visibility, forecast_precipitation):
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    all_data += line + "\n"
 
+                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
                 st.markdown('</div>', unsafe_allow_html=True)
 
         except requests.exceptions.RequestException as e:
