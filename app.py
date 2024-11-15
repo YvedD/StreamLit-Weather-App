@@ -1,9 +1,9 @@
-import streamlit as st
 import requests
 import pandas as pd
 import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
+import streamlit as st
 
 # Functie om de coördinaten op te halen
 def get_coordinates(location_name):
@@ -30,7 +30,8 @@ def wind_direction_to_dutch(direction):
     return directions.get(direction_name, 'Onbekend')
 
 # Functie om windsnelheid om te zetten naar de Beaufort-schaal
-def wind_speed_to_beaufort(speed):
+def wind_speed_to_beaufort(speed_kmh):
+    speed = speed_kmh / 3.6  # km/u naar m/s
     if pd.isna(speed) or speed < 0.3:
         return 0
     elif speed < 1.6:
@@ -87,25 +88,23 @@ def get_api_url_and_params(date, latitude, longitude):
 
     return url, params
 
-# Streamlit interface
+# Streamlit app
 def main():
-    # Gebruikersinterface
-    st.title("Weersvoorspelling voor Jouw Locatie")
+    st.title("Weerdata Viewer")
     
-    location_name = st.text_input("Voer de naam van de plaats in:", "")
-    date = st.date_input("Selecteer de datum:", datetime.today())
-    start_time = st.text_input("Starttijd", "HH:MM")
-    end_time = st.text_input("Eindtijd", "HH:MM")
+    location_name = st.text_input("Voer de naam van de plaats in:")
+    date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
+    start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
+    end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
 
-    # Voer de hoofdlogica uit als de gebruiker alle velden heeft ingevuld
-    if location_name and date and start_time and end_time:
+    if st.button("Gegevens ophalen"):
         try:
-            # Haal de coördinaten op
+            # Coördinaten ophalen
             latitude, longitude = get_coordinates(location_name)
-            st.write(f"Gegevens ophalen voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
+            st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
             # Verkrijg de juiste API URL en parameters
-            url, params = get_api_url_and_params(str(date), latitude, longitude)
+            url, params = get_api_url_and_params(date, latitude, longitude)
 
             # API-aanroep
             response = requests.get(url, params=params)
@@ -145,30 +144,22 @@ def main():
             wind_direction_names = [wind_direction_to_dutch(direction) for direction in filtered_wind_directions]
             wind_beauforts = [wind_speed_to_beaufort(speed) for speed in filtered_wind_speeds]
 
-            # Converteer zichtbaarheid van meters naar kilometers
+            # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
             filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
 
-            # Formatteer neerslag als 0.00mm
+            # Formatteer neerslag als 0.0mm, ook als het 0 is, gebruik 0.0 als standaard bij None
             filtered_precipitation = [f"{precip:.1f}" if precip is not None else "0.0" for precip in filtered_precipitation]
 
-            # Resultaten tonen in de Streamlit-app
-            st.write(f"### Weersgegevens voor {location_name} op {date} van {start_time} tot {end_time}:")
+            # Print de resultaten in het gewenste compacte formaat
+            st.write(f"Weersgegevens voor {location_name} op {date} van {start_time} tot {end_time}:\n")
 
-            weather_data = {
-                "Tijd": filtered_times,
-                "Temperatuur (°C)": filtered_temperatures,
-                "Neerslag (mm)": filtered_precipitation,
-                "Bewolking (%)": filtered_cloudcovers,
-                "Luchtvochtigheid laag (%)": filtered_cloudcover_low,
-                "Luchtvochtigheid middel (%)": filtered_cloudcover_mid,
-                "Luchtvochtigheid hoog (%)": filtered_cloudcover_high,
-                "Windrichting": wind_direction_names,
-                "Windkracht (Bf)": wind_beauforts,
-                "Zichtbaarheid (km)": filtered_visibility_km,
-            }
-
-            weather_df = pd.DataFrame(weather_data)
-            st.table(weather_df)
+            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
+                    filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
+                    filtered_visibility_km, filtered_precipitation):
+                time_str = time.strftime("%H:%M")
+                st.write(
+                    f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km")
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
@@ -179,5 +170,6 @@ def main():
         except Exception as e:
             st.error(f"Onverwachte fout: {e}")
 
+# Voer de main functie uit
 if __name__ == "__main__":
     main()
