@@ -4,3 +4,5 @@ numpy
 geopy
 streamlit
 pycountry
+folium
+streamlit-folium
