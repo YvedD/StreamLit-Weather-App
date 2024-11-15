@@ -59,7 +59,10 @@ def plot_location_on_map(lat, lon, zoom_start=2):
     return map
 
 # Functie om windrichting om te zetten naar Nederlandse benamingen
+# Functie om windrichting om te zetten naar Nederlandse benamingen
 def wind_direction_to_dutch(direction):
+    if direction is None:
+        return "Onbekend"
     directions = {
         'N': 'N', 'NNE': 'NNO', 'NE': 'NO', 'ENE': 'ONO', 'E': 'O', 'ESE': 'OZO', 'SE': 'ZO', 'SSE': 'ZZO',
         'S': 'Z', 'SSW': 'ZZW', 'SW': 'ZW', 'WSW': 'WZW', 'W': 'W', 'WNW': 'WNW', 'NW': 'NW', 'NNW': 'NNW'
@@ -139,10 +142,11 @@ def get_forecast(latitude, longitude):
     return times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation
 
 # Streamlit app
+
+# Functie om weergegevens weer te geven
 def main():
     st.title("Weather Data Viewer")
 
-    # Landkeuze
     country_name = st.selectbox("Kies een land:", european_countries)
     location_name = st.text_input("Voer de naam van de plaats in:")
 
@@ -161,7 +165,9 @@ def main():
                 all_data = ""
                 for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(times, temperatures, cloudcovers, wind_directions, wind_speeds, visibility, precipitation):
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    # Controleer of wind_dir geldig is, anders zet je "Onbekend" in plaats van de functie aanroep
+                    wind_direction = wind_direction_to_dutch(wind_dir) if wind_dir is not None else "Onbekend"
+                    line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
                     all_data += line + "\n"
                 st.code(all_data)  # Kopieerbare historische gegevens
 
@@ -173,7 +179,9 @@ def main():
                                                                                    forecast_wind_directions, forecast_visibility, forecast_precipitation):
                     forecast_date = forecast_time.strftime("%Y-%m-%d")
                     time_str = forecast_time.strftime("%H:%M")
-                    line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    # Controleer of wind_dir geldig is voor de voorspelling
+                    wind_direction = wind_direction_to_dutch(wind_dir) if wind_dir is not None else "Onbekend"
+                    line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
                     forecast_text += line + "\n"
                 st.text(forecast_text)  # Dit maakt het niet kopieerbaar
 
