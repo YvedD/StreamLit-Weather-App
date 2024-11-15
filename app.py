@@ -112,10 +112,10 @@ def get_api_url_and_params(date, latitude, longitude):
 
 # Streamlit app
 def main():
-    st.title("Weerdata Viewer")
+    st.title("Migration Weatherdata Viewer")
     
     # Maak de invoervelden breder met st.columns
-    col1, col2 = st.columns([3, 2])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
+    col1, col2 = st.columns([3, 3])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
 
     with col1:
         location_name = st.text_input("Voer de naam van de plaats in:")
@@ -186,7 +186,7 @@ def main():
                         filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
                         filtered_visibility_km, filtered_precipitation):
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str} : Temp. {temp:.1f}°C-Neersl. {precip}mm-Bew. {cloud}% (L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi. {vis:.1f}km"
+                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
                     st.code(line)
                     all_data += line + "\n"
 
