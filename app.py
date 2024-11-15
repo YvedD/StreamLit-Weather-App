@@ -54,7 +54,7 @@ def convert_visibility_to_km(visibility_m):
 
 # Functie om historische gegevens op te halen van de Open-Meteo API
 def fetch_weather_data(latitude, longitude, start_time, end_time):
-    historical_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={start_time.strftime('%Y-%m-%d')}&end_date={end_time.strftime('%Y-%m-%d')}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_10m&timezone=Europe%2FBerlin&forecast_days=3"
+    historical_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={start_time.strftime('%Y-%m-%d')}&end_date={end_time.strftime('%Y-%m-%d')}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_10m&timezone=Europe%2FBerlin"
     response = requests.get(historical_url)
     data = response.json()
 
@@ -126,10 +126,15 @@ def main():
     location_name = st.text_input("Voer de naam van de plaats in:")
     date = st.date_input("Kies een datum", min_value=datetime.date(2000, 1, 1), max_value=datetime.date.today())
     
-    # Voor demo, beginnen we met hardcoded tijden
-    start_time = datetime.datetime.combine(date, datetime.time(8, 0))
-    end_time = datetime.datetime.combine(date, datetime.time(15, 0))
+    # Invoervelden voor begin- en einduur
+    start_hour = st.selectbox("Kies een beginuur", list(range(0, 24)), index=8)  # Standaard 08:00
+    end_hour = st.selectbox("Kies een einduur", list(range(0, 24)), index=15)   # Standaard 15:00
 
+    # Bereken het start- en eindtijdstip
+    start_time = datetime.datetime.combine(date, datetime.time(start_hour, 0))
+    end_time = datetime.datetime.combine(date, datetime.time(end_hour, 0))
+
+    # Opzoeken knop
     if st.button("Opzoeken"):
         if location_name:
             # Haal de coördinaten op van de ingevoerde locatie
@@ -162,7 +167,7 @@ def main():
         with st.expander("3 day's Forecast for this location", expanded=True):
             st.write("Weersvoorspellingen voor de komende drie dagen:")
             for data in st.session_state.forecast_data:
-                st.write(f"Uur {data['hour']}: Temp Max: {data['temp_max']}°C, Temp Min: {data['temp_min']}°C, Precip: {data['precip']}mm, Cloud: {data['cloud']}%, Wind: {data['wind_dir']} {data['wind_speed']} km/h, Vis: {data['vis']} km")
+                st.write(f"{data['hour']}: Temp Max: {data['temp_max']}°C, Temp Min: {data['temp_min']}°C, Precip: {data['precip']}mm, Cloud: {data['cloud']}%, Wind: {data['wind_speed']} km/h, Windrichting: {data['wind_dir']}, Vis: {data['vis']} km")
 
 if __name__ == "__main__":
     main()
