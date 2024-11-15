@@ -70,12 +70,8 @@ def main():
     with col2:
         country_name = st.selectbox("Kies een land:", countries, index=0)
     
-    # Plaats de kaart in de GUI, standaard uitgezoomd
-    map = folium.Map(location=[0, 0], zoom_start=3)  # Kaart begint met een wereldkaart
-    map = st_folium(map, width=700, height=500)  # Toon de kaart (maar deze wordt later geüpdatet)
-
-    # Maak een knop om de locatie op te zoeken
-    if st.button("Opzoeken"):
+    # Toon de GPS-gegevens in tekstformaat onder de invoervelden
+    if location_name and country_name:
         st.write("### GPS Coördinaten (indien gevonden):")
         
         latitude, longitude = get_coordinates(location_name, country_name)
@@ -86,10 +82,10 @@ def main():
             st.write(f"**Locatie**: {location_name}, {country_name}")
             st.write(f"**Coördinaten**: {formatted_coordinates}")
             
-            # Herteken de kaart met de gevonden locatie
-            map = folium.Map(location=[latitude, longitude], zoom_start=12)
-            folium.Marker([latitude, longitude], popup=f"Locatie: {latitude}, {longitude}").add_to(map)
-            st_folium(map, width=700, height=500)  # Toon de nieuwe kaart
+            # Popup om de kaart weer te geven met de gevonden locatie
+            with st.expander("Bekijk de kaart van de locatie", expanded=True):
+                map = plot_location_on_map(latitude, longitude, zoom_start=10)
+                st_folium(map, width=700, height=500)
         else:
             st.write("Locatie niet gevonden. Probeer het opnieuw.")
 
