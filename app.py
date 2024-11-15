@@ -10,8 +10,14 @@ import io
 st.markdown(
     """
     <style>
+    .output-container {
+        max-width: 90%;
+        margin: 0 auto;
+        padding: 10px;
+        word-wrap: break-word;
+    }
     .stText, .stMarkdown {
-        max-width: 100%;
+        max-width: 90%;
     }
     </style>
     """,
@@ -38,7 +44,7 @@ def wind_direction_to_dutch(direction):
         'W': 'W', 'WNW': 'WNW', 'NW': 'NW', 'NNW': 'NNW'
     }
     index = round(direction / 22.5) % 16
-    direction_name = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'OZO', 'SSE',
+    direction_name = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][index]
     return directions.get(direction_name, 'Onbekend')
 
@@ -103,7 +109,7 @@ def get_api_url_and_params(date, latitude, longitude):
 
 # Streamlit app
 def main():
-    st.title("Migration Weerdata Finder")
+    st.title("Weerdata Viewer")
     
     location_name = st.text_input("Voer de naam van de plaats in:")
     date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
@@ -163,23 +169,22 @@ def main():
             # Formatteer neerslag als 0.0mm, ook als het 0 is, gebruik 0.0 als standaard bij None
             filtered_precipitation = [f"{precip:.1f}" if precip is not None else "0.0" for precip in filtered_precipitation]
 
-            # Bouw de resultaten op in een lijst voor kopieerbaar overzicht
-            weather_data = []
-            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
-                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
-                    filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
-                    filtered_visibility_km, filtered_precipitation):
-                time_str = time.strftime("%H:%M")
-                line = (
-                    f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% "
-                    f"(L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
-                )
-                st.code(line)
-                weather_data.append(line)
+            # Maak een container voor de uitvoer en pas de breedte aan via CSS
+            with st.container():
+                st.markdown('<div class="output-container">', unsafe_allow_html=True)
+                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                        filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
+                        filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
+                        filtered_visibility_km, filtered_precipitation):
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
+                    st.code(line)
+                
+                # Download knop voor alle data
+                all_data = "\n".join([line])
+                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
 
-            # Download knop voor alle data
-            all_data = "\n".join(weather_data)
-            st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
+                st.markdown('</div>', unsafe_allow_html=True)
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
@@ -190,5 +195,6 @@ def main():
         except Exception as e:
             st.error(f"Onverwachte fout: {e}")
 
+# Voer de main functie uit
 if __name__ == "__main__":
     main()
