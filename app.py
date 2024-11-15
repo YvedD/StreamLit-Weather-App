@@ -81,35 +81,6 @@ def wind_speed_to_beaufort(speed_kmh):
     else:
         return 12
 
-# Functie om te bepalen welke API te gebruiken (historisch of forecast)
-def get_api_url_and_params(date, latitude, longitude):
-    today = datetime.now().strftime("%Y-%m-%d")
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-
-    if date == today or date == yesterday:
-        url = "https://api.open-meteo.com/v1/forecast"
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "hourly": ["temperature_2m", "apparent_temperature", "cloudcover", "cloudcover_low", "cloudcover_mid",
-                       "cloudcover_high", "wind_speed_10m", "wind_direction_10m", "visibility", "precipitation"],
-            "timezone": "Europe/Berlin",
-            "past_days": 1 if date == yesterday else 0
-        }
-    else:
-        url = "https://archive-api.open-meteo.com/v1/archive"
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "start_date": date,
-            "end_date": date,
-            "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "cloudcover",
-                       "cloudcover_low", "cloudcover_mid", "cloudcover_high", "visibility"],
-            "timezone": "Europe/Berlin"
-        }
-
-    return url, params
-
 # Functie om de weersvoorspelling voor de komende drie dagen op te halen
 def get_forecast(latitude, longitude):
     url = "https://api.open-meteo.com/v1/forecast"
@@ -202,8 +173,8 @@ def main():
             wind_direction_names = [wind_direction_to_dutch(direction) for direction in filtered_wind_directions]
             wind_beauforts = [wind_speed_to_beaufort(speed) for speed in filtered_wind_speeds]
 
-            # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
-            filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
+            # Converteer zichtbaarheid van meters naar kilometers, en vermijd onrealistische waarden
+            filtered_visibility_km = [vis / 1000 if vis and vis <= 100000 else 0 for vis in filtered_visibility]
 
             # Verkrijg de 3-daagse voorspelling
             forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
@@ -230,7 +201,11 @@ def main():
                     # Haal de datum uit de tijd van de voorspelling
                     forecast_date = forecast_time.date()
                     time_str = forecast_time.strftime("%H:%M")
-                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    # Zet de windsnelheden om naar Beaufort
+                    wind_bf = wind_speed_to_beaufort(forecast_wind_speeds[0])
+                    # Zet de zichtbaarheid om naar km
+                    vis_km = forecast_visibility / 1000 if forecast_visibility and forecast_visibility <= 100000 else 0
+                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis_km:.1f}km"
                     st.text(line)
 
                 st.markdown('</div>', unsafe_allow_html=True)
