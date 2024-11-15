@@ -79,15 +79,25 @@ def wind_direction_to_dutch(direction):
 def main():
     st.title("Weather Data Viewer")
 
-    # Invoer: locatie, land, datum, startuur en stopuur
-    country_name = st.selectbox("Kies een land:", ["Belgium", "Netherlands", "Germany", "France", "Luxembourg", "Spain", "Italy"])
+    # Drie expanders die ingeklapt zijn
+    with st.expander("Weatherdata", expanded=False):
+        historical_data = None
+        
+    with st.expander("Map of location", expanded=False):
+        location_map = None
+        
+    with st.expander("3 day's Forecast for this location", expanded=False):
+        forecast_data = None
+
+    # Invoer: locatie, land, datum, beginuur en einduur
+    country_name = st.selectbox("Kies een land:", ["Belgium", "Netherlands", "Germany", "France", "Luxembourg", "Spain", "Italy"], index=0)
     location_name = st.text_input("Voer de naam van de plaats in:")
-    date = st.date_input("Kies een datum")
+    date = st.date_input("Kies een datum", min_value=datetime(2000, 1, 1))
     start_time = st.time_input("Kies een startuur", value=datetime.now().time())
     end_time = st.time_input("Kies een stopuur", value=datetime.now().time())
 
     # Wanneer op de knop wordt gedrukt
-    if st.button("Gegevens opzoeken"):
+    if st.button("Opzoeken"):
         if location_name and country_name:
             latitude, longitude = get_coordinates(location_name, country_name)
             
@@ -95,35 +105,41 @@ def main():
                 # Toon de coördinaten van de locatie
                 st.write("GPS Coördinaten:", format_coordinates(latitude, longitude))
 
-                # Toon de kaart van de locatie in een aparte expander
-                with st.expander("Kaart van de locatie", expanded=True):
-                    map = plot_location_on_map(latitude, longitude)
-                    st_folium(map, width=700, height=500)
-
                 # Haal de historische data op
                 times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, start_time, end_time, latitude, longitude)
 
-                # Toon de historische data in een kopieerbaar blok
-                with st.expander("Historische gegevens", expanded=True):
-                    all_data = ""
-                    for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(times, temperatures, cloudcovers, wind_directions, wind_speeds, visibility, precipitation):
-                        time_str = time.strftime("%H:%M")
-                        wind_direction = wind_direction_to_dutch(wind_dir)
-                        line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
-                        all_data += line + "\n"
-                    st.code(all_data)  # Kopieerbare historische gegevens
+                # Vul de expander met historische gegevens
+                historical_data = ""
+                for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(times, temperatures, cloudcovers, wind_directions, wind_speeds, visibility, precipitation):
+                    time_str = time.strftime("%H:%M")
+                    wind_direction = wind_direction_to_dutch(wind_dir)
+                    line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    historical_data += line + "\n"
 
-                # Toon de voorspellingen in een aparte expander
+                # Toon historische gegevens in de eerste expander (kopieerbaar)
+                with st.expander("Weatherdata", expanded=False):
+                    st.code(historical_data)  # Kopieerbare historische gegevens
+
+                # Toon de kaart van de locatie in de tweede expander
+                with st.expander("Map of location", expanded=False):
+                    map = plot_location_on_map(latitude, longitude)
+                    st_folium(map, width=700, height=500)
+
+                # Haal de voorspellingen op
                 forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
-                with st.expander("3-daagse voorspellingen", expanded=True):
-                    forecast_text = ""
-                    for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation):
-                        forecast_date = forecast_time.strftime("%Y-%m-%d")
-                        time_str = forecast_time.strftime("%H:%M")
-                        wind_direction = wind_direction_to_dutch(wind_dir)
-                        line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
-                        forecast_text += line + "\n"
-                    st.write(forecast_text)  # Voorspellingen, niet kopieerbaar
+
+                # Vul de expander met voorspellingen
+                forecast_data = ""
+                for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation):
+                    forecast_date = forecast_time.strftime("%Y-%m-%d")
+                    time_str = forecast_time.strftime("%H:%M")
+                    wind_direction = wind_direction_to_dutch(wind_dir)
+                    line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                    forecast_data += line + "\n"
+
+                # Toon de voorspellingen in de derde expander
+                with st.expander("3 day's Forecast for this location", expanded=False):
+                    st.write(forecast_data)  # Niet kopieerbare voorspellingen
 
 if __name__ == "__main__":
     main()
