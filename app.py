@@ -70,8 +70,8 @@ def main():
     with col2:
         country_name = st.selectbox("Kies een land:", countries, index=0)
     
-    # Toon de GPS-gegevens in tekstformaat onder de invoervelden
-    if location_name and country_name:
+    # Maak een knop om de locatie op te zoeken
+    if st.button("Opzoeken"):
         st.write("### GPS Coördinaten (indien gevonden):")
         
         latitude, longitude = get_coordinates(location_name, country_name)
