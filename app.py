@@ -1,6 +1,15 @@
 import streamlit as st
-import pycountry
 from geopy.geocoders import Nominatim
+
+# Functie om decimale coördinaten om te zetten naar graad, minuut, seconde formaat
+def decimal_to_dms(degrees):
+    # Haal het gehele aantal graden (g) en het decimale deel af
+    g = int(degrees)
+    minutes = (degrees - g) * 60
+    m = int(minutes)
+    seconds = (minutes - m) * 60
+    s = round(seconds, 1)  # Beperk het aantal seconden tot 1 decimaal
+    return g, m, s
 
 # Functie om de coördinaten van een locatie op te halen, met landkeuze
 def get_coordinates(location_name, country_name):
@@ -11,10 +20,22 @@ def get_coordinates(location_name, country_name):
     else:
         return None, None
 
-# Functie om landen in Eurazië op te halen (Europa, Azië en Nabije Oosten)
-def get_eurasian_countries():
-    # Lijst van landen in Eurazië (gebaseerd op de geografische regio)
-    eurasian_countries = [
+# Functie om decimale coördinaten om te zetten naar het gewenste formaat met N/S, E/W
+def format_coordinates(lat, lon):
+    lat_d, lat_m, lat_s = decimal_to_dms(abs(lat))
+    lon_d, lon_m, lon_s = decimal_to_dms(abs(lon))
+    
+    lat_direction = "N" if lat >= 0 else "S"
+    lon_direction = "E" if lon >= 0 else "W"
+    
+    return f"{lat_d}°{lat_m}'{lat_s}\"{lat_direction} {lon_d}°{lon_m}'{lon_s}\"{lon_direction}"
+
+# Streamlit app
+def main():
+    st.title("Plaatsselectie met Landkeuze (Eurazië)")
+
+    # Haal de lijst van Euraziatische landen op
+    countries = [
         "Albania", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium", "Bosnia and Herzegovina",
         "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia",
         "Germany", "Greece", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Israel",
@@ -25,14 +46,6 @@ def get_eurasian_countries():
         "Sri Lanka", "Syria", "Tajikistan", "Thailand", "Turkey", "Turkmenistan", "Ukraine", "United Kingdom",
         "Uzbekistan", "Vietnam", "Yemen"
     ]
-    return eurasian_countries
-
-# Streamlit app
-def main():
-    st.title("Plaatsselectie met Landkeuze (Eurazië)")
-
-    # Haal de lijst van Euraziatische landen op
-    countries = get_eurasian_countries()
 
     # Plaatsinvoer en landenkeuze
     col1, col2 = st.columns([3, 1])
@@ -48,8 +61,10 @@ def main():
         latitude, longitude = get_coordinates(location_name, country_name)
         
         if latitude is not None and longitude is not None:
+            # Converteer de coördinaten naar het gewenste formaat
+            formatted_coordinates = format_coordinates(latitude, longitude)
             st.write(f"**Geselecteerde locatie coördinaten:**")
-            st.write(f"Latitude: {latitude}, Longitude: {longitude}")
+            st.write(formatted_coordinates)
         else:
             st.write("Locatie niet gevonden. Probeer het opnieuw.")
 
