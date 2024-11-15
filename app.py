@@ -5,41 +5,14 @@ from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
 
-# Zet de pagina in Wide Mode
-st.set_page_config(layout="wide")
-
-# CSS voor het instellen van de breedte
-st.markdown("""
-    <style>
-        .container {
-            width: 80%;
-            margin: auto;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Lijst van landen in Europa, Nabije Oosten en Azië
-countries = [
-    "België", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bahrain", "Belarus", "Bosnia and Herzegovina", 
-    "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Georgia", 
-    "Germany", "Greece", "Hungary", "Iceland", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jordan", "Kazakhstan", 
-    "Kosovo", "Kuwait", "Kyrgyzstan", "Latvia", "Lebanon", "Liechtenstein", "Lithuania", "Luxembourg", "Malta", 
-    "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", "Norway", "Oman", "Pakistan", "Palestine", 
-    "Poland", "Portugal", "Qatar", "Romania", "Russia", "San Marino", "Saudi Arabia", "Serbia", "Singapore", 
-    "Slovakia", "Slovenia", "South Korea", "Spain", "Sri Lanka", "Syria", "Sweden", "Switzerland", "Tajikistan", 
-    "Turkey", "Turkmenistan", "Ukraine", "United Arab Emirates", "United Kingdom", "Uzbekistan", "Yemen", 
-    "China", "Japan", "India", "Indonesia", "Malaysia", "Mongolia", "Nepal", "North Korea", "Philippines", "Singapore", 
-    "South Korea", "Thailand", "Vietnam"
-]
-
 # Functie om coördinaten op te halen
-def get_coordinates(location_name, country_name):
+def get_coordinates(location_name):
     geolocator = Nominatim(user_agent="weather_app")
-    location = geolocator.geocode(f"{location_name}, {country_name}")
+    location = geolocator.geocode(location_name)
     if location:
         return location.latitude, location.longitude
     else:
-        raise ValueError(f"Location '{location_name}, {country_name}' not found")
+        raise ValueError(f"Location '{location_name}' not found")
 
 # Functie om windrichting om te zetten naar Nederlandse benamingen
 def wind_direction_to_dutch(direction):
@@ -61,7 +34,7 @@ def wind_speed_to_beaufort(speed_kmh):
             return bf
     return 12
 
-# Functie om de juiste API URL en parameters te bepalen (historisch of vandaag)
+# Functie om te bepalen welke API te gebruiken (historisch of forecast)
 def get_api_url_and_params(date, latitude, longitude):
     today = datetime.now().strftime("%Y-%m-%d")
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -88,14 +61,14 @@ def get_api_url_and_params(date, latitude, longitude):
         }
     return url, params
 
-# Functie om 3-daagse voorspelling op te halen
+# Functie om voorspelling voor de komende drie dagen op te halen
 def get_forecast(latitude, longitude):
     url = "https://api.open-meteo.com/v1/forecast"
     params = {
         "latitude": latitude,
         "longitude": longitude,
-        "hourly": ["temperature_2m", "precipitation", "cloudcover", "cloudcover_low", "cloudcover_mid", 
-                   "cloudcover_high", "visibility", "wind_speed_10m", "wind_direction_10m"],
+        "hourly": ["temperature_2m", "precipitation", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", 
+                   "cloud_cover_high", "visibility", "wind_speed_10m", "wind_direction_10m"],
         "timezone": "Europe/Berlin",
         "forecast_days": 3
     }
@@ -107,10 +80,10 @@ def get_forecast(latitude, longitude):
     # Data inlezen
     times = pd.to_datetime(hourly.get("time", []))
     temperatures = np.array(hourly.get("temperature_2m", []))
-    cloudcovers = np.array(hourly.get("cloudcover", []))
-    cloudcover_low = np.array(hourly.get("cloudcover_low", []))
-    cloudcover_mid = np.array(hourly.get("cloudcover_mid", []))
-    cloudcover_high = np.array(hourly.get("cloudcover_high", []))
+    cloudcovers = np.array(hourly.get("cloud_cover", []))
+    cloudcover_low = np.array(hourly.get("cloud_cover_low", []))
+    cloudcover_mid = np.array(hourly.get("cloud_cover_mid", []))
+    cloudcover_high = np.array(hourly.get("cloud_cover_high", []))
     wind_speeds = np.array(hourly.get("wind_speed_10m", []))
     wind_directions = np.array(hourly.get("wind_direction_10m", []))
     visibility = np.array(hourly.get("visibility", []))
@@ -122,103 +95,91 @@ def get_forecast(latitude, longitude):
 def main():
     st.title("Weather Data Viewer")
 
-    # Gebruik de container met de breedte van 80%
-    with st.container():
-        st.markdown("<div class='container'>", unsafe_allow_html=True)
+    # Invoervelden voor historische gegevens
+    location_name = st.text_input("Voer de naam van de plaats in:")
+    date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
+    start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
+    end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
 
-        # Invoervelden voor locatie en land
-        country_name = st.selectbox("Kies het land:", countries, index=countries.index("België"))
-        location_name = st.text_input(f"Voer de naam van de plaats in in {country_name}:")
-        date = st.date_input("Kies de datum voor historische gegevens:", datetime.today()).strftime("%Y-%m-%d")
-        start_time = st.time_input("Starttijd:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
-        end_time = st.time_input("Eindtijd:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
+    if st.button("Gegevens ophalen"):
+        try:
+            # Coördinaten ophalen
+            latitude, longitude = get_coordinates(location_name)
+            st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
-        if st.button("Gegevens ophalen"):
-            try:
-                # Coördinaten ophalen
-                latitude, longitude = get_coordinates(location_name, country_name)
+            # Verkrijg de juiste API URL en parameters
+            url, params = get_api_url_and_params(date, latitude, longitude)
 
-                # Haal historische gegevens op
-                url, params = get_api_url_and_params(date, latitude, longitude)
-                response = requests.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
-                hourly = data.get("hourly", {})
+            # API-aanroep voor historische gegevens
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+            hourly = data.get("hourly", {})
+            
+            times = pd.to_datetime(hourly.get("time", []))
+            temperatures = np.array(hourly.get("temperature_2m", []))
+            cloudcovers = np.array(hourly.get("cloudcover", []))
+            cloudcover_low = np.array(hourly.get("cloudcover_low", []))
+            cloudcover_mid = np.array(hourly.get("cloudcover_mid", []))
+            cloudcover_high = np.array(hourly.get("cloudcover_high", []))
+            wind_speeds = np.array(hourly.get("wind_speed_10m", []))
+            wind_directions = np.array(hourly.get("wind_direction_10m", []))
+            visibility = np.array(hourly.get("visibility", []))
+            precipitation = np.array(hourly.get("precipitation", []))
 
-                # Data filteren
-                times = pd.to_datetime(hourly.get("time", []))
-                temperatures = np.array(hourly.get("temperature_2m", []))
-                cloudcovers = np.array(hourly.get("cloudcover", []))
-                cloudcover_low = np.array(hourly.get("cloudcover_low", []))
-                cloudcover_mid = np.array(hourly.get("cloudcover_mid", []))
-                cloudcover_high = np.array(hourly.get("cloudcover_high", []))
-                wind_speeds = np.array(hourly.get("wind_speed_10m", []))
-                wind_directions = np.array(hourly.get("wind_direction_10m", []))
-                visibility = np.array(hourly.get("visibility", []))
-                precipitation = np.array(hourly.get("precipitation", []))
+            start_datetime = pd.to_datetime(f"{date} {start_time}")
+            end_datetime = pd.to_datetime(f"{date} {end_time}")
+            mask = (times >= start_datetime) & (times <= end_datetime)
 
-                # Filter op tijd
-                start_datetime = pd.to_datetime(f"{date} {start_time}")
-                end_datetime = pd.to_datetime(f"{date} {end_time}")
-                mask = (times >= start_datetime) & (times <= end_datetime)
+            filtered_times = times[mask]
+            filtered_temperatures = temperatures[mask]
+            filtered_cloudcovers = cloudcovers[mask]
+            filtered_cloudcover_low = cloudcover_low[mask]
+            filtered_cloudcover_mid = cloudcover_mid[mask]
+            filtered_cloudcover_high = cloudcover_high[mask]
+            filtered_wind_speeds = wind_speeds[mask]
+            filtered_wind_directions = wind_directions[mask]
+            filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in visibility[mask]]
+            filtered_precipitation = precipitation[mask]
 
-                filtered_times = times[mask]
-                filtered_temperatures = temperatures[mask]
-                filtered_cloudcovers = cloudcovers[mask]
-                filtered_cloudcover_low = cloudcover_low[mask]
-                filtered_cloudcover_mid = cloudcover_mid[mask]
-                filtered_cloudcover_high = cloudcover_high[mask]
-                filtered_wind_speeds = wind_speeds[mask]
-                filtered_wind_directions = wind_directions[mask]
-                filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in visibility[mask]]
-                filtered_precipitation = precipitation[mask]
+            all_data = ""
+            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_speed, vis, precip in zip(
+                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
+                    filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_directions, filtered_wind_speeds,
+                    filtered_visibility_km, filtered_precipitation):
+                time_str = time.strftime("%H:%M")
+                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf - Visi.{vis:.1f}km"
+                st.code(line)
+                all_data += line + "\n"
+            
+            if st.button("Kopieer alle data"):
+                st.code(all_data)
 
-                # Genereer tekst met <br> voor historische data
-                all_data = ""
-                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_speed, vis, precip in zip(
-                        filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
-                        filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_directions, filtered_wind_speeds,
-                        filtered_visibility_km, filtered_precipitation):
-                    time_str = time.strftime("%H:%M")
-                    line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km<br>"
-                    all_data += line
-
-                # Toon historische data
-                st.subheader("Historische Data")
-                st.markdown(all_data, unsafe_allow_html=True)
-
-                # Voeg kopieerfunctie toe
-                st.text_area("Kopieer deze historische data:", value=all_data, height=300)
-
-                # Voeg download knop toe
-                st.download_button("Download historische data", data=all_data, file_name=f"{location_name}_{date}_historical.txt")
-
-                # Voorspelling van de volgende 3 dagen
-                st.subheader("3-daagse voorspelling per uur")
-                forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, \
-                forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
-
-                forecast_text = ""
-                for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_speed, wind_dir, vis, precip in zip(
-                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
-                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
-                        forecast_visibility, forecast_precipitation):
-
-                    forecast_date = forecast_time.strftime("%Y-%m-%d")
-                    time_str = forecast_time.strftime("%H:%M")
-                    wind_bf = wind_speed_to_beaufort(wind_speed)
-                    vis_km = vis / 1000 if vis <= 100000 else 0
-                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km<br>"
-                    forecast_text += line
-
-                st.markdown(forecast_text, unsafe_allow_html=True)
-
-            except requests.exceptions.RequestException as e:
-                st.error(f"Fout bij API-aanroep: {e}")
-            except ValueError as e:
-                st.error(f"Fout: {e}")
-
-        st.markdown("</div>", unsafe_allow_html=True)
+            # 3-daagse voorspelling ophalen en weergeven
+            st.subheader("3-daagse voorspelling per uur")
+            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, \
+            forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+            
+            forecast_text = ""
+            for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_speed, wind_dir, vis, precip in zip(
+                    forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
+                    forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
+                    forecast_visibility, forecast_precipitation):
+                
+                forecast_date = forecast_time.strftime("%Y-%m-%d")
+                time_str = forecast_time.strftime("%H:%M")
+                wind_bf = wind_speed_to_beaufort(wind_speed)
+                vis_km = vis / 1000 if vis <= 100000 else 0
+                line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C - Neersl.{precip}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_direction_to_dutch(wind_dir)} {wind_bf}Bf - Visi.{vis_km:.1f}km"
+                
+                forecast_text += line + "\n"
+                
+            st.text(forecast_text)
+        
+        except requests.exceptions.RequestException as e:
+            st.error(f"Fout bij API-aanroep: {e}")
+        except ValueError as e:
+            st.error(f"Fout: {e}")
 
 # Voer de main functie uit
 if __name__ == "__main__":
