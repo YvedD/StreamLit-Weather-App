@@ -1,11 +1,6 @@
 import streamlit as st
+import pycountry
 from geopy.geocoders import Nominatim
-
-# Mapping voor landcodes naar vlaggen-emoji's
-def get_flag(country_code):
-    flag_offset = 127397  # Unicode offset voor vlaggen
-    flag_emoji = "".join(chr(ord(char) + flag_offset) for char in country_code.upper())
-    return flag_emoji
 
 # Functie om de coördinaten van een locatie op te halen, met landkeuze
 def get_coordinates(location_name, country_name):
@@ -16,21 +11,19 @@ def get_coordinates(location_name, country_name):
     else:
         return None, None
 
-# Lijst met landen voor de dropdown (en vlaggen)
-countries = [
-    ("België", "BE"),
-    ("Nederland", "NL"),
-    ("Duitsland", "DE"),
-    ("Frankrijk", "FR"),
-    ("Verenigd Koninkrijk", "GB"),
-    ("Spanje", "ES"),
-    ("Italië", "IT"),
-    ("Luxemburg", "LU")
-]
+# Functie om een lijst van landen te verkrijgen (voor Eurazië)
+def get_all_countries():
+    countries = []
+    for country in pycountry.countries:
+        countries.append((country.name, country.alpha_2))  # (Landnaam, Landcode)
+    return countries
 
 # Streamlit app
 def main():
-    st.title("Plaatsselectie met Landkeuze")
+    st.title("Plaatsselectie met Landkeuze (Eurazië)")
+
+    # Haal alle landen op
+    countries = get_all_countries()
 
     # Plaatsinvoer en landenkeuze
     col1, col2 = st.columns([3, 1])
