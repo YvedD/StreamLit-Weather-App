@@ -145,14 +145,14 @@ def main():
                 }
             </style>
             <script>
-                var popup = document.getElementById("popup");
+                const popup = document.getElementById("popup");
                 popup.onmousedown = function(event) {
-                    var shiftX = event.clientX - popup.getBoundingClientRect().left;
-                    var shiftY = event.clientY - popup.getBoundingClientRect().top;
+                    const offsetX = event.clientX - popup.getBoundingClientRect().left;
+                    const offsetY = event.clientY - popup.getBoundingClientRect().top;
 
                     function moveAt(pageX, pageY) {
-                        popup.style.left = pageX - shiftX + 'px';
-                        popup.style.top = pageY - shiftY + 'px';
+                        popup.style.left = pageX - offsetX + 'px';
+                        popup.style.top = pageY - offsetY + 'px';
                     }
 
                     moveAt(event.pageX, event.pageY);
@@ -194,22 +194,31 @@ def main():
             filtered_visibility = visibility[mask]
             filtered_precipitation = precipitation[mask]
 
+            # Kopieerbare historische gegevens
+            all_data = ""
             for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(
                     filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_wind_directions, 
                     filtered_wind_speeds, filtered_visibility, filtered_precipitation):
                 time_str = time.strftime("%H:%M")
-                st.write(f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km")
-            
-            # 3-daagse voorspelling ophalen en weergeven
+                line = f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                all_data += line + "\n"
+
+            st.code(all_data)  # Dit maakt het kopieerbaar voor de gebruiker
+
+            # 3-daagse voorspelling ophalen en weergeven (niet kopieerbaar)
             forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
 
             st.subheader("3-daagse voorspelling per uur")
+            forecast_text = ""
             for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(
                     forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds,
                     forecast_wind_directions, forecast_visibility, forecast_precipitation):
                 forecast_date = forecast_time.strftime("%Y-%m-%d")
                 time_str = forecast_time.strftime("%H:%M")
-                st.write(f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km")
+                line = f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km"
+                forecast_text += line + "\n"
+            
+            st.text(forecast_text)  # Dit maakt het niet kopieerbaar
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
