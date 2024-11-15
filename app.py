@@ -4,6 +4,8 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
+import folium
+from streamlit_folium import st_folium
 
 # Lijst van Europese landen
 european_countries = [
@@ -23,6 +25,38 @@ def get_coordinates(location_name, country_name):
         return location.latitude, location.longitude
     else:
         raise ValueError(f"Location '{location_name}, {country_name}' not found")
+
+# Functie om decimale coördinaten om te zetten naar graad, minuut, seconde formaat
+def decimal_to_dms(degrees):
+    g = int(degrees)
+    minutes = (degrees - g) * 60
+    m = int(minutes)
+    seconds = (minutes - m) * 60
+    s = round(seconds, 1)
+    return g, m, s
+
+# Functie om decimale coördinaten om te zetten naar het gewenste formaat met N/S, E/W
+def format_coordinates(lat, lon):
+    lat_d, lat_m, lat_s = decimal_to_dms(abs(lat))
+    lon_d, lon_m, lon_s = decimal_to_dms(abs(lon))
+    
+    lat_direction = "N" if lat >= 0 else "S"
+    lon_direction = "E" if lon >= 0 else "W"
+    
+    return f"{lat_d}°{lat_m}'{lat_s}\"{lat_direction} {lon_d}°{lon_m}'{lon_s}\"{lon_direction}"
+
+# Functie om de kaart weer te geven met de locatie
+def plot_location_on_map(lat, lon, zoom_start=2):
+    # Creëer een kaart met een basis zoomniveau voor de wereld
+    map = folium.Map(location=[0, 0], zoom_start=zoom_start)  # begin met de wereldkaart
+    
+    if lat and lon:
+        # Inzoomen naar de specifieke locatie
+        map = folium.Map(location=[lat, lon], zoom_start=12)
+        folium.Marker([lat, lon], popup=f"Locatie: {lat}, {lon}").add_to(map)
+    
+    # Geef de kaart weer in de Streamlit-app
+    return map
 
 # Functie om windrichting om te zetten naar Nederlandse benamingen
 def wind_direction_to_dutch(direction):
@@ -120,62 +154,11 @@ def main():
     end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
 
     # Knop om de gegevens op te halen
-    if st.button("Gegevens ophalen"):
-        # Pop-up met de boodschap "Hello World"
-        st.markdown("""
-            <div id="popup" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%);
-                        padding: 15px; background-color: rgba(0, 0, 0, 0.8); color: white;
-                        border-radius: 10px; z-index: 9999; width: 300px; height: 200px; overflow: auto; cursor: move;">
-                <h2>Hello World!</h2>
-                <p>Je hebt zojuist op de knop gedrukt en nu worden je weergegevens opgehaald...</p>
-            </div>
-            <style>
-                #popup {
-                    cursor: move;
-                    position: absolute;
-                    top: 100px;
-                    left: 50%;
-                    transform: translate(-50%, 0);
-                    width: 300px;
-                    padding: 10px;
-                    background: rgba(0,0,0,0.7);
-                    color: white;
-                    border-radius: 10px;
-                    box-shadow: 0 0 10px rgba(0,0,0,0.5);
-                }
-            </style>
-            <script>
-                const popup = document.getElementById("popup");
-                popup.onmousedown = function(event) {
-                    const offsetX = event.clientX - popup.getBoundingClientRect().left;
-                    const offsetY = event.clientY - popup.getBoundingClientRect().top;
-
-                    function moveAt(pageX, pageY) {
-                        popup.style.left = pageX - offsetX + 'px';
-                        popup.style.top = pageY - offsetY + 'px';
-                    }
-
-                    moveAt(event.pageX, event.pageY);
-
-                    document.onmousemove = function(event) {
-                        moveAt(event.pageX, event.pageY);
-                    };
-
-                    popup.onmouseup = function() {
-                        document.onmousemove = null;
-                        popup.onmouseup = null;
-                    };
-                };
-
-                popup.ondragstart = function() {
-                    return false;
-                };
-            </script>
-        """, unsafe_allow_html=True)
-
+    if st.button("Gegevens opzoeken"):
         try:
-            # Coördinaten ophalen
+            # Verkrijg de GPS-coördinaten
             latitude, longitude = get_coordinates(location_name, country_name)
+            
             st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
             # Weerdata ophalen
@@ -220,11 +203,24 @@ def main():
             
             st.text(forecast_text)  # Dit maakt het niet kopieerbaar
 
+            # **Pop-up venster met de kaart**
+            st.markdown("""
+                <div id="popup" style="position:fixed; top: 100px; left: 70%; width: 50%; height: 50%; border: 2px solid black; background-color: white; padding: 10px; z-index: 1000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                    <h3>Kaart van de locatie</h3>
+                    <div id="map" style="width: 100%; height: 100%;"></div>
+                </div>
+                <style>
+                    #popup {
+                        cursor: move;
+                    }
+                </style>
+            """, unsafe_allow_html=True)
+
+            # Genereer de kaart voor de opgehaalde locatie
+            map = plot_location_on_map(latitude, longitude)
+            st_folium(map, width=700, height=500)
+
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
         except ValueError as e:
             st.error(f"Fout: {e}")
-
-# Voer de main functie uit
-if __name__ == "__main__":
-    main()
