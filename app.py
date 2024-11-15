@@ -12,7 +12,7 @@ st.set_page_config(layout="wide")
 st.markdown("""
     <style>
         .container {
-            width: 80%;
+            width: 60%;
             margin: auto;
         }
     </style>
