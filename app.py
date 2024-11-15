@@ -6,6 +6,18 @@ from datetime import datetime, timedelta
 import streamlit as st
 import io
 
+# CSS voor bredere uitvoer
+st.markdown(
+    """
+    <style>
+    .stText, .stMarkdown {
+        max-width: 80%;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True
+)
+
 # Functie om de coördinaten op te halen
 def get_coordinates(location_name):
     geolocator = Nominatim(user_agent="weather_app")
@@ -166,7 +178,7 @@ def main():
                 st.write(line)  # Elke lijn weergeven
                 st.code(line, language="plaintext")  # Kopieerbare codeblok per lijn
 
-            # Alle data samenvoegen voor "Alle data kopiëren"
+            # Alle data samenvoegen voor "Alle data kopiëren" knop
             all_data = "\n".join(weather_data)
             st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
 
