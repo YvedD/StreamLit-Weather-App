@@ -4,7 +4,6 @@ import numpy as np
 from geopy.geocoders import Nominatim
 from datetime import datetime, timedelta
 import streamlit as st
-import io
 
 # CSS voor marges en breedte van de uitvoer
 st.markdown(
@@ -82,19 +81,24 @@ def wind_speed_to_beaufort(speed_kmh):
         return 12
 
 # Functie om te bepalen welke API te gebruiken (historisch of forecast)
-def get_api_url_and_params(date, latitude, longitude):
+def get_api_url_and_params(date, latitude, longitude, forecast=False):
     today = datetime.now().strftime("%Y-%m-%d")
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-
-    if date == today or date == yesterday:
+    if forecast:
+        url = "https://api.open-meteo.com/v1/forecast"
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "daily": ["temperature_2m_max", "temperature_2m_min", "precipitation_sum", "windspeed_10m_max", "wind_direction_10m_dominant", "windgusts_10m_max"],
+            "timezone": "Europe/Berlin",
+        }
+    elif date == today:
         url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": latitude,
             "longitude": longitude,
             "hourly": ["temperature_2m", "apparent_temperature", "cloudcover", "cloudcover_low", "cloudcover_mid",
                        "cloudcover_high", "wind_speed_10m", "wind_direction_10m", "visibility", "precipitation"],
-            "timezone": "Europe/Berlin",
-            "past_days": 1 if date == yesterday else 0
+            "timezone": "Europe/Berlin"
         }
     else:
         url = "https://archive-api.open-meteo.com/v1/archive"
@@ -112,15 +116,16 @@ def get_api_url_and_params(date, latitude, longitude):
 
 # Streamlit app
 def main():
-    st.title("Migration Weatherdata Viewer")
-    
+    st.title("Weather Data Viewer")
+
     # Maak de invoervelden breder met st.columns
     col1, col2 = st.columns([3, 3])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
 
     with col1:
         location_name = st.text_input("Voer de naam van de plaats in:")
         date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
-    
+        forecast_button = st.button("Toekomstige weersverwachtingen (3 dagen)")  # Knop voor de toekomst
+
     with col2:
         start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
         end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
@@ -131,8 +136,8 @@ def main():
             latitude, longitude = get_coordinates(location_name)
             st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
-            # Verkrijg de juiste API URL en parameters
-            url, params = get_api_url_and_params(date, latitude, longitude)
+            # Verkrijg de juiste API URL en parameters voor historisch weer
+            url, params = get_api_url_and_params(date, latitude, longitude, forecast=False)
 
             # API-aanroep
             response = requests.get(url, params=params)
@@ -204,6 +209,33 @@ def main():
         except Exception as e:
             st.error(f"Onverwachte fout: {e}")
 
-# Voer de main functie uit
-if __name__ == "__main__":
-    main()
+    # Als er op de knop voor toekomst wordt geklikt, voer dan de toekomstopvraag uit
+    if forecast_button:
+        try:
+            # Verkrijg de juiste API URL en parameters voor voorspellingen (3 dagen)
+            url, params = get_api_url_and_params(date, latitude, longitude, forecast=True)
+
+            # API-aanroep voor toekomstig weer
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+
+            # Verkrijg de gegevens uit de JSON-respons
+            data = response.json()
+            daily = data.get("daily", {})
+            dates = pd.to_datetime(daily.get("time", []))
+            max_temperatures = np.array(daily.get("temperature_2m_max", []))
+            min_temperatures = np.array(daily.get("temperature_2m_min", []))
+            precipitation = np.array(daily.get("precipitation_sum", []))
+            max_windspeed = np.array(daily.get("windspeed_10m_max", []))
+
+            # Maak een container voor de uitvoer van voorspellingen
+            with st.container():
+                st.markdown('<div class="output-container">', unsafe_allow_html=True)
+                # Toon de toekomstige voorspellingen
+                for date, max_temp, min_temp, precip, windspeed in zip(dates, max_temperatures, min_temperatures,
+                                                                        precipitation, max_windspeed):
+                    line = f"{date.strftime('%Y-%m-%d')}: Max Temp.{max_temp:.1f}°C - Min Temp.{min_temp:.1f}°C - Neersl.{precip}mm - Max Wind.{windspeed}km/h"
+                    st.code(line)
+                st.markdown('</div>', unsafe_allow_html=True)
+        except requests.exceptions.RequestException as e:
+            st.error(f"Fout bij het ophalen van de toekomstige gegevens: {e}")
