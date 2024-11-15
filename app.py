@@ -80,9 +80,19 @@ def main():
             st.write(f"**Geselecteerde locatie coördinaten:**")
             st.write(formatted_coordinates)
             
-            # Toon de locatie op een kaart
-            st.write("### Kaart van de gevonden locatie:")
-            map = plot_location_on_map(latitude, longitude, zoom_start=2)
+            # Verdeel de interface in twee kolommen: de kaart rechts en de info links
+            col1, col2 = st.columns([3, 2])
+
+            with col1:
+                # Toon de coördinaten en verdere info in de eerste kolom
+                st.write("### Gevonden locatie:")
+                st.write(f"**Plaats**: {location_name}, {country_name}")
+                st.write(f"**Coördinaten**: {formatted_coordinates}")
+            
+            with col2:
+                # Toon de locatie op de kaart in de tweede kolom
+                st.write("### Kaart van de gevonden locatie:")
+                map = plot_location_on_map(latitude, longitude, zoom_start=2)
             
             # Blijf de kaart tonen zonder dat deze verdwijnt
             st.write(map)
