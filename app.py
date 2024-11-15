@@ -155,4 +155,67 @@ def main():
                         popup.style.top = pageY - shiftY + 'px';
                     }
 
-                    moveAt(event.pageX, event.page
+                    moveAt(event.pageX, event.pageY);
+
+                    document.onmousemove = function(event) {
+                        moveAt(event.pageX, event.pageY);
+                    };
+
+                    popup.onmouseup = function() {
+                        document.onmousemove = null;
+                        popup.onmouseup = null;
+                    };
+                };
+
+                popup.ondragstart = function() {
+                    return false;
+                };
+            </script>
+        """, unsafe_allow_html=True)
+
+        try:
+            # Coördinaten ophalen
+            latitude, longitude = get_coordinates(location_name, country_name)
+            st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
+
+            # Weerdata ophalen
+            times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, latitude, longitude)
+
+            # Filter de tijdsdata op basis van start- en eindtijd
+            start_datetime = pd.to_datetime(f"{date} {start_time}")
+            end_datetime = pd.to_datetime(f"{date} {end_time}")
+            mask = (times >= start_datetime) & (times <= end_datetime)
+
+            filtered_times = times[mask]
+            filtered_temperatures = temperatures[mask]
+            filtered_cloudcovers = cloudcovers[mask]
+            filtered_wind_speeds = wind_speeds[mask]
+            filtered_wind_directions = wind_directions[mask]
+            filtered_visibility = visibility[mask]
+            filtered_precipitation = precipitation[mask]
+
+            for time, temp, cloud, wind_dir, wind_speed, vis, precip in zip(
+                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_wind_directions, 
+                    filtered_wind_speeds, filtered_visibility, filtered_precipitation):
+                time_str = time.strftime("%H:%M")
+                st.write(f"{time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km")
+            
+            # 3-daagse voorspelling ophalen en weergeven
+            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+
+            st.subheader("3-daagse voorspelling per uur")
+            for forecast_time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(
+                    forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_wind_speeds,
+                    forecast_wind_directions, forecast_visibility, forecast_precipitation):
+                forecast_date = forecast_time.strftime("%Y-%m-%d")
+                time_str = forecast_time.strftime("%H:%M")
+                st.write(f"{forecast_date} {time_str}: Temp. {temp:.1f}°C, Bew. {cloud}%, Neersl. {precip}mm, Wind {wind_direction_to_dutch(wind_dir)} {wind_speed:.1f} km/h, Vis. {vis/1000:.1f} km")
+
+        except requests.exceptions.RequestException as e:
+            st.error(f"Fout bij API-aanroep: {e}")
+        except ValueError as e:
+            st.error(f"Fout: {e}")
+
+# Voer de main functie uit
+if __name__ == "__main__":
+    main()
