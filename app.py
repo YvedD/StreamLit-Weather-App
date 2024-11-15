@@ -153,14 +153,11 @@ def main():
     start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
     end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
 
-    # Knop om de gegevens op te halen
     if st.button("Gegevens opzoeken"):
         try:
             # Verkrijg de GPS-coördinaten
             latitude, longitude = get_coordinates(location_name, country_name)
             
-            st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
-
             # Weerdata ophalen
             times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, latitude, longitude)
 
@@ -205,7 +202,7 @@ def main():
 
             # **Pop-up venster met de kaart**
             st.markdown("""
-                <div id="popup" style="position:fixed; top: 100px; left: 70%; width: 50%; height: 50%; border: 2px solid black; background-color: white; padding: 10px; z-index: 1000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);">
+                <div id="popup" style="position:fixed; top: 100px; left: 70%; width: 60%; height: 60%; border: 2px solid black; background-color: white; padding: 10px; z-index: 1000; box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); cursor: move;">
                     <h3>Kaart van de locatie</h3>
                     <div id="map" style="width: 100%; height: 100%;"></div>
                 </div>
@@ -224,3 +221,6 @@ def main():
             st.error(f"Fout bij API-aanroep: {e}")
         except ValueError as e:
             st.error(f"Fout: {e}")
+
+if __name__ == "__main__":
+    main()
