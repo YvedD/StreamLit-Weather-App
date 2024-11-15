@@ -165,11 +165,8 @@ def main():
                 time_str = time.strftime("%H:%M")
                 line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-View.{vis:.1f}km"
                 st.code(line)
-                all_data +=  "<br>" + line
+                all_data +=  line
             
-            if st.button("Kopieer alle data"):
-                st.code(all_data)
-
             # 3-daagse voorspelling ophalen en weergeven
             st.subheader("3-daagse voorspelling per uur")
             forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, \
