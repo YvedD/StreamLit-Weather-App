@@ -150,6 +150,10 @@ def main():
             data = response.json()
             hourly = data.get("hourly", {})
             times = pd.to_datetime(hourly.get("time", []))
+            if times.empty:
+                st.warning("Geen gegevens beschikbaar voor de opgegeven datum en tijd.")
+                return  # Stop als er geen data is
+            
             temperatures = np.array(hourly.get("temperature_2m", []))
             cloudcovers = np.array(hourly.get("cloudcover", []))
             cloudcover_low = np.array(hourly.get("cloudcover_low", []))
@@ -165,6 +169,11 @@ def main():
             end_datetime = pd.to_datetime(f"{date} {end_time}")
             mask = (times >= start_datetime) & (times <= end_datetime)
 
+            # Controleer of er data binnen het filter valt
+            if not mask.any():
+                st.warning("Geen gegevens beschikbaar binnen het geselecteerde tijdsinterval.")
+                return  # Stop als er geen data in het interval valt
+
             filtered_times = times[mask]
             filtered_temperatures = temperatures[mask]
             filtered_cloudcovers = cloudcovers[mask]
@@ -179,38 +188,35 @@ def main():
             # Verwerk de windrichting en windkracht
             wind_direction_names = [wind_direction_to_dutch(direction) for direction in filtered_wind_directions]
             wind_beauforts = [wind_speed_to_beaufort(speed) for speed in filtered_wind_speeds]
-
-            # Converteer zichtbaarheid van meters naar kilometers, en vermijd onrealistische waarden
-            filtered_visibility_km = [vis / 1000 if vis and vis <= 100000 else 0 for vis in filtered_visibility]
-
-            # Verkrijg de 3-daagse voorspelling
-            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+            filtered_visibility_km = np.round(filtered_visibility / 1000, 1) # Omzetten naar km
 
             # Toon de historische data
-            with st.container():
-                st.markdown('<div class="output-container">', unsafe_allow_html=True)
-                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
-                        filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
-                        filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
-                        filtered_visibility_km, filtered_precipitation):
-                    time_str = time.strftime("%H:%M")
-                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
-                    st.code(line)
+            st.markdown('<div class="output-container">', unsafe_allow_html=True)
+            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
+                    filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
+                    filtered_visibility_km, filtered_precipitation):
+                time_str = time.strftime("%H:%M")
+                line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                st.code(line)
+            st.markdown('</div>', unsafe_allow_html=True)
 
-                # Toon de voorspelling per uur voor de komende drie dagen
-                st.subheader("3-daagse voorspelling per uur")
-                for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
-                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
-                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
-                        forecast_visibility, forecast_precipitation):
-                    forecast_date = forecast_time.date()
-                    time_str = forecast_time.strftime("%H:%M")
-                    wind_bf = wind_speed_to_beaufort(forecast_wind_speeds[0])  # Omzetten naar Beaufort
-                    vis_km = forecast_visibility / 1000 if forecast_visibility <= 100000 else 0
-                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis_km:.1f}km"
-                    st.text(line)
-
-                st.markdown('</div>', unsafe_allow_html=True)
+            # Toon de voorspelling per uur voor de komende drie dagen
+            st.subheader("3-daagse voorspelling per uur")
+            forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, \
+            forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, \
+            forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+            
+            for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_speed, wind_dir, vis, precip in zip(
+                    forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
+                    forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
+                    forecast_visibility, forecast_precipitation):
+                forecast_date = forecast_time.date()
+                time_str = forecast_time.strftime("%H:%M")
+                wind_bf = wind_speed_to_beaufort(wind_speed)  # Omzetten naar Beaufort
+                vis_km = vis / 1000 if vis <= 100000 else 0
+                line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)}{wind_bf}Bf-Visi.{vis_km:.1f}km"
+                st.text(line)
 
         except requests.exceptions.RequestException as e:
             st.error(f"Fout bij API-aanroep: {e}")
