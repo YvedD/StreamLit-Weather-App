@@ -78,7 +78,10 @@ def main():
             
             # Toon de locatie op een kaart
             st.write("### Kaart van de gevonden locatie:")
-            plot_location_on_map(latitude, longitude)
+            map = plot_location_on_map(latitude, longitude)
+            
+            # Blijf de kaart tonen zonder dat deze verdwijnt
+            st.write(map)
         else:
             st.write("Locatie niet gevonden. Probeer het opnieuw.")
 
