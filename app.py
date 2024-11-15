@@ -42,7 +42,7 @@ def plot_location_on_map(lat, lon, zoom_start=2):
         folium.Marker([lat, lon], popup=f"Locatie: {lat}, {lon}").add_to(map)
     
     # Geef de kaart weer in de Streamlit-app
-    return st_folium(map, width=700, height=500)
+    return map
 
 # Streamlit app
 def main():
@@ -97,10 +97,8 @@ def main():
             with col2:
                 # Toon de locatie op de kaart in de tweede kolom
                 st.write("### Kaart van de gevonden locatie:")
-                map = plot_location_on_map(latitude, longitude, zoom_start=2)
-            
-            # Blijf de kaart tonen zonder dat deze verdwijnt
-            st.write(map)
+                map = plot_location_on_map(latitude, longitude, zoom_start=10)
+                st_folium(map, width=700, height=500)
         else:
             st.write("Locatie niet gevonden. Probeer het opnieuw.")
 
