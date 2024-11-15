@@ -149,33 +149,32 @@ def main():
     start_time = st.time_input("Kies het startuur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     end_time = st.time_input("Kies het einduur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     
-    if location_name and country_name:
-        try:
-            # Coördinaten ophalen
-            lat, lon = get_coordinates(location_name, country_name)
-            st.write(f"Coördinaten voor {location_name}: {lat}, {lon}")
-            
-            # Verkrijg de juiste API afhankelijk van de geselecteerde datum
-            url, params = get_api_url_and_params(formatted_date, lat, lon)
+    # Voeg de zoek op knop toe
+    if st.button("Zoek op"):
+        if location_name and country_name:
+            try:
+                # Coördinaten ophalen
+                lat, lon = get_coordinates(location_name, country_name)
+                st.write(f"Coördinaten voor {location_name}: {lat}, {lon}")
+                
+                # Verkrijg de juiste API afhankelijk van de geselecteerde datum
+                url, params = get_api_url_and_params(formatted_date, lat, lon)
+                response = requests.get(url, params=params)
+                response.raise_for_status()
+                data = response.json()
 
-            # Haal de weerdata op
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-            data = response.json()
-
-            # Weergave van gegevens
-            if 'hourly' in data:
-                st.write(f"Gegevens voor {formatted_date}:")
-                st.write(data['hourly'])
-            
-            # Maak een kaart van de locatie
-            map = plot_location_on_map(lat, lon)
-            st_folium(map, width=800, height=600)
-            
-        except ValueError as e:
-            st.error(f"Error: {str(e)}")
+                # Weergave van gegevens in bredere kolom
+                if 'hourly' in data:
+                    st.write(f"Gegevens voor {formatted_date}:")
+                    st.dataframe(data['hourly'], width=1000)  # Verhoog de breedte van de dataframe
+                
+                # Maak een kaart van de locatie
+                map = plot_location_on_map(lat, lon)
+                st_folium(map, width=800, height=600)
+                
+            except ValueError as e:
+                st.error(f"Error: {str(e)}")
 
 # Start de Streamlit app
 if __name__ == "__main__":
     main()
-
