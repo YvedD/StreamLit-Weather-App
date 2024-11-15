@@ -129,25 +129,30 @@ def plot_location_on_map(lat, lon, zoom_start=2):
 def main():
     st.title("Weer Data Viewer met Locatie en Kaart")
 
-    # Invoervelden voor locatie en tijd
-    location_name = st.text_input("Voer de naam van de plaats in:")
-    country_name = st.selectbox("Kies een land:", [
-        "Albania", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium", "Bosnia and Herzegovina",
-        "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia",
-        "Germany", "Greece", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Israel",
-        "Italy", "Kazakhstan", "Kosovo", "Kuwait", "Kyrgyzstan", "Latvia", "Liechtenstein", "Lithuania",
-        "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Morocco", "Nepal", "Netherlands", "Norway",
-        "Oman", "Poland", "Portugal", "Qatar", "Romania", "Russia", "San Marino", "Saudi Arabia", "Serbia",
-        "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Syria", "Tajikistan", "Turkey", "Turkmenistan", "Ukraine",
-        "United Kingdom", "United States", "Uzbekistan", "Vietnam", "Yemen"
-    ])
-    
-    # Datumkiezer voor historische gegevens
-    selected_date = st.date_input("Kies een datum voor de weersvoorspelling of historisch weer:", datetime.today())
-    formatted_date = selected_date.strftime("%Y-%m-%d")
-    
-    start_time = st.time_input("Kies het startuur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
-    end_time = st.time_input("Kies het einduur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
+    # Maak twee kolommen voor de interface
+    col1, col2 = st.columns(2)
+
+    with col1:
+        # Invoervelden voor locatie en tijd
+        location_name = st.text_input("Voer de naam van de plaats in:")
+        country_name = st.selectbox("Kies een land:", [
+            "Albania", "Armenia", "Austria", "Azerbaijan", "Belarus", "Belgium", "Bosnia and Herzegovina",
+            "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia",
+            "Germany", "Greece", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Israel",
+            "Italy", "Kazakhstan", "Kosovo", "Kuwait", "Kyrgyzstan", "Latvia", "Liechtenstein", "Lithuania",
+            "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Morocco", "Nepal", "Netherlands",
+            "North Macedonia", "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia",
+            "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Syria", "Turkey", "Turkmenistan", 
+            "Ukraine", "United Kingdom", "Uzbekistan", "Vietnam", "Yemen"
+        ])
+
+    with col2:
+        # Datumkiezer voor historische gegevens
+        selected_date = st.date_input("Kies een datum voor de weersvoorspelling of historisch weer:", datetime.today())
+        formatted_date = selected_date.strftime("%Y-%m-%d")
+        
+        start_time = st.time_input("Kies het startuur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
+        end_time = st.time_input("Kies het einduur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     
     # Voeg de zoek op knop toe
     if st.button("Zoek op"):
@@ -163,10 +168,11 @@ def main():
                 response.raise_for_status()
                 data = response.json()
 
-                # Weergave van gegevens in bredere kolom
-                if 'hourly' in data:
-                    st.write(f"Gegevens voor {formatted_date}:")
-                    st.dataframe(data['hourly'], width=1000)  # Verhoog de breedte van de dataframe
+                # In een expander de historische gegevens tonen
+                with st.expander(f"Historische Gegevens voor {formatted_date}"):
+                    if 'hourly' in data:
+                        st.write(f"Gegevens voor {formatted_date}:")
+                        st.dataframe(data['hourly'], width=1000)  # Verhoog de breedte van de dataframe
                 
                 # Maak een kaart van de locatie
                 map = plot_location_on_map(lat, lon)
