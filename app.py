@@ -183,8 +183,15 @@ def main():
                     line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km<br>"
                     all_data += line
 
+                # Toon historische data
                 st.subheader("Historische Data")
                 st.markdown(all_data, unsafe_allow_html=True)
+
+                # Voeg kopieerfunctie toe
+                st.text_area("Kopieer deze historische data:", value=all_data, height=300)
+
+                # Voeg download knop toe
+                st.download_button("Download historische data", data=all_data, file_name=f"{location_name}_{date}_historical.txt")
 
                 # Voorspelling van de volgende 3 dagen
                 st.subheader("3-daagse voorspelling per uur")
