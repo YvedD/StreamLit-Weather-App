@@ -137,11 +137,14 @@ def main():
         "Germany", "Greece", "Hungary", "Iceland", "India", "Indonesia", "Iran", "Iraq", "Israel",
         "Italy", "Kazakhstan", "Kosovo", "Kuwait", "Kyrgyzstan", "Latvia", "Liechtenstein", "Lithuania",
         "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Morocco", "Nepal", "Netherlands", "Norway",
-        "Oman", "Pakistan", "Palestinian Territories", "Poland", "Portugal", "Qatar", "Romania", "Russia",
-        "San Marino", "Saudi Arabia", "Serbia", "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain",
-        "Sri Lanka", "Sweden", "Switzerland", "Syria", "Tajikistan", "Turkey", "Turkmenistan", "Ukraine",
+        "Oman", "Poland", "Portugal", "Qatar", "Romania", "Russia", "San Marino", "Saudi Arabia", "Serbia",
+        "Slovakia", "Slovenia", "Spain", "Sweden", "Switzerland", "Syria", "Tajikistan", "Turkey", "Turkmenistan", "Ukraine",
         "United Kingdom", "United States", "Uzbekistan", "Vietnam", "Yemen"
     ])
+    
+    # Datumkiezer voor historische gegevens
+    selected_date = st.date_input("Kies een datum voor de weersvoorspelling of historisch weer:", datetime.today())
+    formatted_date = selected_date.strftime("%Y-%m-%d")
     
     start_time = st.time_input("Kies het startuur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     end_time = st.time_input("Kies het einduur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
@@ -152,8 +155,18 @@ def main():
             lat, lon = get_coordinates(location_name, country_name)
             st.write(f"Coördinaten voor {location_name}: {lat}, {lon}")
             
-            # De weerdata verkrijgen
-            times, temperatures, cloudcovers, cloudcover_low, cloudcover_mid, cloudcover_high, wind_speeds, wind_directions, visibility, precipitation = get_forecast(lat, lon)
+            # Verkrijg de juiste API afhankelijk van de geselecteerde datum
+            url, params = get_api_url_and_params(formatted_date, lat, lon)
+
+            # Haal de weerdata op
+            response = requests.get(url, params=params)
+            response.raise_for_status()
+            data = response.json()
+
+            # Weergave van gegevens
+            if 'hourly' in data:
+                st.write(f"Gegevens voor {formatted_date}:")
+                st.write(data['hourly'])
             
             # Maak een kaart van de locatie
             map = plot_location_on_map(lat, lon)
@@ -162,10 +175,7 @@ def main():
         except ValueError as e:
             st.error(f"Error: {str(e)}")
 
-    # Verplaats de expander naar onderaan
-    with st.expander("Bekijk de weersvoorspelling details"):
-        st.write("Details van de weersvoorspelling kunnen hier worden toegevoegd.")
-
 # Start de Streamlit app
 if __name__ == "__main__":
     main()
+
