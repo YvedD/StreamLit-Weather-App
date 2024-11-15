@@ -80,25 +80,32 @@ def wind_speed_to_beaufort(speed_kmh):
     else:
         return 12
 
-# Functie om te bepalen welke API te gebruiken
-def get_api_url_and_params(date, latitude, longitude, forecast=False):
+# Functie om de juiste API URL en parameters te verkrijgen
+def get_api_url_and_params(date, latitude, longitude):
     today = datetime.now().strftime("%Y-%m-%d")
-    if forecast:
-        url = "https://api.open-meteo.com/v1/forecast"
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "hourly": ["temperature_2m", "precipitation", "cloudcover", "cloudcover_low", "cloudcover_mid", "cloudcover_high", "visibility", "windspeed_10m", "wind_direction_10m"],
-            "timezone": "Europe/Berlin",
-            "forecast_days": 3
-        }
-    else:
+    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
+
+    if date == today or date == yesterday:
+        # Huidige of vorige dag: gebruik de forecast API
         url = "https://api.open-meteo.com/v1/forecast"
         params = {
             "latitude": latitude,
             "longitude": longitude,
             "hourly": ["temperature_2m", "apparent_temperature", "cloudcover", "cloudcover_low", "cloudcover_mid",
                        "cloudcover_high", "wind_speed_10m", "wind_direction_10m", "visibility", "precipitation"],
+            "timezone": "Europe/Berlin",
+            "past_days": 1 if date == yesterday else 0
+        }
+    else:
+        # Oudere data: gebruik de archive API
+        url = "https://archive-api.open-meteo.com/v1/archive"
+        params = {
+            "latitude": latitude,
+            "longitude": longitude,
+            "start_date": date,
+            "end_date": date,
+            "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "cloudcover",
+                       "cloudcover_low", "cloudcover_mid", "cloudcover_high", "visibility"],
             "timezone": "Europe/Berlin"
         }
 
@@ -125,8 +132,8 @@ def main():
             latitude, longitude = get_coordinates(location_name)
             st.write(f"Gegevens voor {location_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
 
-            # Verkrijg de juiste API URL en parameters voor historisch weer
-            url, params = get_api_url_and_params(date, latitude, longitude, forecast=False)
+            # Verkrijg de juiste API URL en parameters
+            url, params = get_api_url_and_params(date, latitude, longitude)
 
             # API-aanroep
             response = requests.get(url, params=params)
@@ -185,30 +192,6 @@ def main():
                                                                                                 wind_directions_nl, filtered_visibility, filtered_precipitation):
                 time_str = time.strftime("%Y-%m-%d %H:%M")
                 line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - Wind.{windspeed}km/h - {wind_dir} - Visi.{visi:.1f}km"
-                st.code(line)
-
-            # Verkrijg de juiste API URL en parameters voor voorspellingen (3 dagen)
-            url, params = get_api_url_and_params(date, latitude, longitude, forecast=True)
-
-            # API-aanroep voor toekomstig weer
-            response = requests.get(url, params=params)
-            response.raise_for_status()
-
-            # Verkrijg de gegevens uit de JSON-respons
-            data = response.json()
-            hourly_forecast = data.get("hourly", {})
-            forecast_times = pd.to_datetime(hourly_forecast.get("time", []))
-            forecast_temperatures = np.array(hourly_forecast.get("temperature_2m", []))
-            forecast_precipitation = np.array(hourly_forecast.get("precipitation", []))
-            forecast_cloudcovers = np.array(hourly_forecast.get("cloudcover", []))
-            forecast_windspeeds = np.array(hourly_forecast.get("windspeed_10m", []))
-            forecast_wind_directions = np.array(hourly_forecast.get("wind_direction_10m", []))
-
-            # Toon de voorspellingen per uur
-            st.subheader("Voorspellingen per uur voor de komende 3 dagen:")
-            for time, temp, precip, cloud, windspeed, wind_dir in zip(forecast_times, forecast_temperatures, forecast_precipitation, forecast_cloudcovers, forecast_windspeeds, forecast_wind_directions):
-                time_str = time.strftime("%Y-%m-%d %H:%M")
-                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% - Wind.{windspeed}km/h - {wind_direction_to_dutch(wind_dir)}"
                 st.code(line)
 
         except requests.exceptions.RequestException as e:
