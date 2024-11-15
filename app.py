@@ -36,7 +36,7 @@ def wind_speed_to_beaufort(speed_kmh):
             return bf
     return 12
 
-# Functie om te bepalen welke API te gebruiken (historisch of forecast)
+# Functie om de juiste API te bepalen afhankelijk van de datum
 def get_api_url_and_params(date, latitude, longitude):
     today = datetime.now().strftime("%Y-%m-%d")
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -63,35 +63,31 @@ def get_api_url_and_params(date, latitude, longitude):
         }
     return url, params
 
-# Functie om voorspelling voor de komende drie dagen op te halen
-def get_forecast(latitude, longitude):
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "hourly": ["temperature_2m", "precipitation", "cloud_cover", "cloud_cover_low", "cloud_cover_mid", 
-                   "cloud_cover_high", "visibility", "wind_speed_10m", "wind_direction_10m"],
-        "timezone": "Europe/Berlin",
-        "forecast_days": 3
-    }
+# Functie om de gegevens van het weer op te halen
+def get_weather_data(date, latitude, longitude):
+    url, params = get_api_url_and_params(date, latitude, longitude)
     response = requests.get(url, params=params)
     response.raise_for_status()
     data = response.json()
-    hourly = data.get("hourly", {})
     
-    # Data inlezen
-    times = pd.to_datetime(hourly.get("time", []))
-    temperatures = np.array(hourly.get("temperature_2m", []))
-    cloudcovers = np.array(hourly.get("cloud_cover", []))
-    cloudcover_low = np.array(hourly.get("cloud_cover_low", []))
-    cloudcover_mid = np.array(hourly.get("cloud_cover_mid", []))
-    cloudcover_high = np.array(hourly.get("cloud_cover_high", []))
-    wind_speeds = np.array(hourly.get("wind_speed_10m", []))
-    wind_directions = np.array(hourly.get("wind_direction_10m", []))
-    visibility = np.array(hourly.get("visibility", []))
-    precipitation = np.array(hourly.get("precipitation", []))
+    # Data ophalen van de API
+    times = pd.to_datetime(data.get("hourly", {}).get("time", []))
+    temperatures = np.array(data.get("hourly", {}).get("temperature_2m", []))
+    cloudcover = np.array(data.get("hourly", {}).get("cloudcover", []))
+    wind_speeds = np.array(data.get("hourly", {}).get("wind_speed_10m", []))
+    wind_directions = np.array(data.get("hourly", {}).get("wind_direction_10m", []))
+    visibility = np.array(data.get("hourly", {}).get("visibility", []))
+    precipitation = np.array(data.get("hourly", {}).get("precipitation", []))
     
-    return times, temperatures, cloudcovers, cloudcover_low, cloudcover_mid, cloudcover_high, wind_speeds, wind_directions, visibility, precipitation
+    return {
+        "times": times,
+        "temperatures": temperatures,
+        "cloudcover": cloudcover,
+        "wind_speeds": wind_speeds,
+        "wind_directions": wind_directions,
+        "visibility": visibility,
+        "precipitation": precipitation
+    }
 
 # Functie om decimale coördinaten om te zetten naar graad, minuut, seconde formaat
 def decimal_to_dms(degrees):
@@ -162,18 +158,13 @@ def main():
                 lat, lon = get_coordinates(location_name, country_name)
                 st.write(f"Coördinaten voor {location_name}: {lat}, {lon}")
                 
-                # Verkrijg de juiste API afhankelijk van de geselecteerde datum
-                url, params = get_api_url_and_params(formatted_date, lat, lon)
-                response = requests.get(url, params=params)
-                response.raise_for_status()
-                data = response.json()
+                # Verkrijg de weerdata
+                data = get_weather_data(formatted_date, lat, lon)
 
-                # In een expander de historische gegevens tonen
-                with st.expander(f"Historische Gegevens voor {formatted_date}"):
-                    if 'hourly' in data:
-                        st.write(f"Gegevens voor {formatted_date}:")
-                        st.dataframe(data['hourly'], width=1000)  # Verhoog de breedte van de dataframe
-                
+                # Toon de gegevens
+                st.write(f"Gegevens voor {formatted_date}:")
+                st.dataframe(pd.DataFrame(data))
+
                 # Maak een kaart van de locatie
                 map = plot_location_on_map(lat, lon)
                 st_folium(map, width=800, height=600)
