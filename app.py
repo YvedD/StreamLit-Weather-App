@@ -223,12 +223,14 @@ def main():
 
                 # Toon de voorspelling per uur voor de komende drie dagen
                 st.subheader("3-daagse voorspelling per uur")
-                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
+                for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
                         forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
                         forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
                         forecast_visibility, forecast_precipitation):
-                    time_str = time.strftime("%H:%M")
-                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    # Haal de datum uit de tijd van de voorspelling
+                    forecast_date = forecast_time.date()
+                    time_str = forecast_time.strftime("%H:%M")
+                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
                     st.code(line)
 
                 # Download knop voor alle data
@@ -237,8 +239,9 @@ def main():
                         forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
                         forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
                         forecast_visibility, forecast_precipitation):
+                    forecast_date = time.date()
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
+                    line = f"{forecast_date}: {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
                     all_data += line + "\n"
 
                 st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
