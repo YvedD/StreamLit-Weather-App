@@ -79,6 +79,31 @@ def get_weather_data(date, latitude, longitude):
     
     return times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation
 
+# Functie om voorspellingen voor de komende drie dagen op te halen
+def get_forecast(latitude, longitude):
+    url = "https://api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "hourly": ["temperature_2m", "precipitation", "cloudcover", "wind_speed_10m", "wind_direction_10m", "visibility"],
+        "timezone": "Europe/Berlin"
+    }
+    response = requests.get(url, params=params)
+    response.raise_for_status()
+    data = response.json()
+    hourly = data.get("hourly", {})
+    
+    # Data inlezen
+    times = pd.to_datetime(hourly.get("time", []))
+    temperatures = np.array(hourly.get("temperature_2m", []))
+    cloudcovers = np.array(hourly.get("cloudcover", []))
+    wind_speeds = np.array(hourly.get("wind_speed_10m", []))
+    wind_directions = np.array(hourly.get("wind_direction_10m", []))
+    visibility = np.array(hourly.get("visibility", []))
+    precipitation = np.array(hourly.get("precipitation", []))
+    
+    return times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation
+
 # Streamlit app
 def main():
     st.title("Weather Data Viewer")
@@ -98,48 +123,36 @@ def main():
     if st.button("Gegevens ophalen"):
         # Pop-up met de boodschap "Hello World"
         st.markdown("""
-            <div style="position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
-                        padding: 20px; background-color: rgba(0, 0, 0, 0.8); color: white;
-                        border-radius: 10px; z-index: 9999; width: 80%; height: 80%; overflow: auto;">
+            <div id="popup" style="position: fixed; top: 20%; left: 50%; transform: translate(-50%, -20%);
+                        padding: 15px; background-color: rgba(0, 0, 0, 0.8); color: white;
+                        border-radius: 10px; z-index: 9999; width: 300px; height: 200px; overflow: auto; cursor: move;">
                 <h2>Hello World!</h2>
                 <p>Je hebt zojuist op de knop gedrukt en nu worden je weergegevens opgehaald...</p>
             </div>
-        """, unsafe_allow_html=True)
+            <style>
+                #popup {
+                    cursor: move;
+                    position: absolute;
+                    top: 100px;
+                    left: 50%;
+                    transform: translate(-50%, 0);
+                    width: 300px;
+                    padding: 10px;
+                    background: rgba(0,0,0,0.7);
+                    color: white;
+                    border-radius: 10px;
+                    box-shadow: 0 0 10px rgba(0,0,0,0.5);
+                }
+            </style>
+            <script>
+                var popup = document.getElementById("popup");
+                popup.onmousedown = function(event) {
+                    var shiftX = event.clientX - popup.getBoundingClientRect().left;
+                    var shiftY = event.clientY - popup.getBoundingClientRect().top;
 
-        try:
-            # Coördinaten ophalen
-            latitude, longitude = get_coordinates(location_name, country_name)
-            st.write(f"Gegevens voor {location_name}, {country_name} (latitude: {latitude}, longitude: {longitude}) op {date}")
+                    function moveAt(pageX, pageY) {
+                        popup.style.left = pageX - shiftX + 'px';
+                        popup.style.top = pageY - shiftY + 'px';
+                    }
 
-            # Verkrijg de weergegevens
-            times, temperatures, cloudcovers, wind_speeds, wind_directions, visibility, precipitation = get_weather_data(date, latitude, longitude)
-
-            # Filter de gegevens op basis van de ingevoerde tijden
-            start_datetime = pd.to_datetime(f"{date} {start_time}")
-            end_datetime = pd.to_datetime(f"{date} {end_time}")
-            mask = (times >= start_datetime) & (times <= end_datetime)
-
-            filtered_times = times[mask]
-            filtered_temperatures = temperatures[mask]
-            filtered_cloudcovers = cloudcovers[mask]
-            filtered_wind_speeds = wind_speeds[mask]
-            filtered_wind_directions = wind_directions[mask]
-            filtered_visibility = visibility[mask]
-            filtered_precipitation = precipitation[mask]
-
-            # Toon de gegevens
-            for time, temp, cloud, wind_speed, wind_dir, vis, precip in zip(
-                    filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_wind_speeds,
-                    filtered_wind_directions, filtered_visibility, filtered_precipitation):
-                time_str = time.strftime("%H:%M")
-                st.code(f"{time_str}: Temp.{temp:.1f}°C - Bewolking: {cloud}% - Windsnelheid: {wind_speed:.1f} km/h - "
-                        f"Windrichting: {wind_direction_to_dutch(wind_dir)} - Zicht: {vis/1000:.1f} km - Neerslag: {precip:.2f} mm")
-
-        except requests.exceptions.RequestException as e:
-            st.error(f"Fout bij API-aanroep: {e}")
-        except ValueError as e:
-            st.error(f"Fout: {e}")
-
-# Voer de main functie uit
-if __name__ == "__main__":
-    main()
+                    moveAt(event.pageX, event.page
