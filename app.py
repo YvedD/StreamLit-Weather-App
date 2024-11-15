@@ -15,9 +15,11 @@ def get_location_choices(query):
     choices = []
     if locations:
         for loc in locations:
+            # Verkrijg landcode en landnaam
             country_code = loc.raw.get('address', {}).get('country_code', 'unknown').upper()
             country_name = loc.raw.get('address', {}).get('country', 'Unknown')
             flag = get_flag(country_code) if len(country_code) == 2 else ""
+            # Toon locatie met landinformatie
             display_name = f"{loc.address} ({flag} {country_name})"
             choices.append((display_name, loc.latitude, loc.longitude))
     return choices
@@ -43,6 +45,8 @@ def main():
             
             if selected_data:
                 st.write(f"**Geselecteerde locatie coördinaten:** Latitude: {selected_data[0]}, Longitude: {selected_data[1]}")
+            else:
+                st.write("Geen coördinaten gevonden voor de geselecteerde locatie.")
         else:
             st.write("Geen resultaten gevonden, probeer een andere zoekterm.")
 
