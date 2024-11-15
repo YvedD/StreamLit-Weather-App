@@ -1,14 +1,15 @@
 import streamlit as st
 from geopy.geocoders import Nominatim
+import folium
+from streamlit_folium import st_folium
 
 # Functie om decimale coördinaten om te zetten naar graad, minuut, seconde formaat
 def decimal_to_dms(degrees):
-    # Haal het gehele aantal graden (g) en het decimale deel af
     g = int(degrees)
     minutes = (degrees - g) * 60
     m = int(minutes)
     seconds = (minutes - m) * 60
-    s = round(seconds, 1)  # Beperk het aantal seconden tot 1 decimaal
+    s = round(seconds, 1)
     return g, m, s
 
 # Functie om de coördinaten van een locatie op te halen, met landkeuze
@@ -29,6 +30,15 @@ def format_coordinates(lat, lon):
     lon_direction = "E" if lon >= 0 else "W"
     
     return f"{lat_d}°{lat_m}'{lat_s}\"{lat_direction} {lon_d}°{lon_m}'{lon_s}\"{lon_direction}"
+
+# Functie om de kaart weer te geven met de locatie
+def plot_location_on_map(lat, lon):
+    # Creëer een kaart met de opgegeven locatie
+    map = folium.Map(location=[lat, lon], zoom_start=12)
+    folium.Marker([lat, lon], popup=f"Locatie: {lat}, {lon}").add_to(map)
+    
+    # Geef de kaart weer in de Streamlit-app
+    return st_folium(map, width=700, height=500)
 
 # Streamlit app
 def main():
@@ -65,6 +75,9 @@ def main():
             formatted_coordinates = format_coordinates(latitude, longitude)
             st.write(f"**Geselecteerde locatie coördinaten:**")
             st.write(formatted_coordinates)
+            
+            # Toon de locatie op een kaart
+            plot_location_on_map(latitude, longitude)
         else:
             st.write("Locatie niet gevonden. Probeer het opnieuw.")
 
