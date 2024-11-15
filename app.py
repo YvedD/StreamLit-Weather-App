@@ -135,6 +135,12 @@ def main():
             # Verkrijg de gegevens uit de JSON-respons
             data = response.json()
             hourly = data.get("hourly", {})
+            
+            # Controleer of de "time" data is geladen
+            if 'time' not in hourly:
+                st.error("Er was een probleem met het ophalen van de tijdstempels.")
+                return
+
             times = pd.to_datetime(hourly.get("time", []))
             temperatures = np.array(hourly.get("temperature_2m", []))
             cloudcovers = np.array(hourly.get("cloudcover", []))
@@ -149,7 +155,14 @@ def main():
             # Filter de gegevens op basis van de ingevoerde tijdsperiode
             start_datetime = pd.to_datetime(f"{date} {start_time}")
             end_datetime = pd.to_datetime(f"{date} {end_time}")
+            
+            # Maskering van de tijden en de filtering
             mask = (times >= start_datetime) & (times <= end_datetime)
+
+            # Controleer of het maskeren en filteren correct werkt
+            if np.sum(mask) == 0:
+                st.error("Geen gegevens gevonden voor de opgegeven tijdsperiode.")
+                return
 
             filtered_times = times[mask]
             filtered_temperatures = temperatures[mask]
@@ -162,34 +175,18 @@ def main():
             filtered_visibility = visibility[mask]
             filtered_precipitation = precipitation[mask]
 
-            # Verwerk de windrichting en windkracht
-            wind_direction_names = [wind_direction_to_dutch(direction) for direction in filtered_wind_directions]
-            wind_beauforts = [wind_speed_to_beaufort(speed) for speed in filtered_wind_speeds]
+            # Verwerk de windrichting naar de Nederlandse benaming
+            wind_directions_nl = [wind_direction_to_dutch(wd) for wd in filtered_wind_directions]
 
-            # Converteer zichtbaarheid van meters naar kilometers, gebruik 0 als standaard bij None
-            filtered_visibility_km = [vis / 1000 if vis is not None else 0 for vis in filtered_visibility]
+            # Toon de historische gegevens
+            st.subheader(f"Weergegevens voor {location_name} op {date} van {start_time} tot {end_time}:")
+            for time, temp, cloud, cloud_low, cloud_mid, cloud_high, windspeed, wind_dir, visi, precip in zip(filtered_times, filtered_temperatures, filtered_cloudcovers,
+                                                                                                filtered_cloudcover_low, filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_speeds,
+                                                                                                wind_directions_nl, filtered_visibility, filtered_precipitation):
+                time_str = time.strftime("%Y-%m-%d %H:%M")
+                line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip:.1f}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - Wind.{windspeed}km/h - {wind_dir} - Visi.{visi:.1f}km"
+                st.code(line)
 
-            # Maak een container voor de uitvoer en pas de breedte aan via CSS
-            with st.container():
-                st.markdown('<div class="output-container">', unsafe_allow_html=True)
-
-                # Voor elke tijdlijn: toon de gegevens
-                all_data = ""
-                for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
-                        filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
-                        filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
-                        filtered_visibility_km, filtered_precipitation):
-                    time_str = time.strftime("%H:%M")
-                    line = f"{time_str}:Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}%(L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi.{vis:.1f}km"
-                    st.code(line)
-                    all_data += line + "\n"
-
-                # Download knop voor alle data
-                st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
-
-                st.markdown('</div>', unsafe_allow_html=True)
-
-            # **Voorspellingen voor de komende drie dagen**
             # Verkrijg de juiste API URL en parameters voor voorspellingen (3 dagen)
             url, params = get_api_url_and_params(date, latitude, longitude, forecast=True)
 
