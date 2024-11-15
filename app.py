@@ -1,15 +1,11 @@
 import streamlit as st
 import datetime
-import time
 import requests
 import json
+import pandas as pd
 from geopy.geocoders import Nominatim
 import folium
 from streamlit_folium import st_folium
-import pandas as pd
-
-# Streamlit instellingen
-st.set_page_config(page_title="Weerapplicatie", layout="wide")
 
 # Functie om de coördinaten van de locatie op te halen
 def get_coordinates(location_name, country_name):
@@ -41,12 +37,14 @@ def decimal_to_dms(degrees):
 
 # Functie om historische gegevens op te halen van de Open-Meteo API
 def fetch_weather_data(latitude, longitude, start_time, end_time):
-    # Gebruik de Open-Meteo API om historische gegevens op te halen (enkel als voorbeeld)
     historical_url = f"https://archive-api.open-meteo.com/v1/archive?latitude={latitude}&longitude={longitude}&start_date={start_time.strftime('%Y-%m-%d')}&end_date={end_time.strftime('%Y-%m-%d')}&hourly=temperature_2m,cloudcover,precipitation,wind_speed_10m,wind_direction_10m,visibility"
     response = requests.get(historical_url)
     data = response.json()
-    
-    # Formatteer de resultaten zoals gewenst
+
+    # Controleer de respons en log de gegevens
+    st.write("Open-Meteo Historical Data Response:")
+    st.write(data)
+
     historical_data = []
     for i in range(len(data['hourly']['temperature_2m'])):
         timestamp = start_time + datetime.timedelta(hours=i)
@@ -70,12 +68,19 @@ def fetch_weather_data(latitude, longitude, start_time, end_time):
 
 # Functie om weersvoorspellingen op te halen van de Open-Meteo API
 def fetch_forecast_data(latitude, longitude):
-    # Gebruik de Open-Meteo API om voorspellingen op te halen
     forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,cloudcover_mean,wind_speed_10m_max,wind_direction_10m_max,visibility_mean&timezone=Europe/Brussels"
     response = requests.get(forecast_url)
     data = response.json()
-    
-    # Formatteer de resultaten zoals gewenst
+
+    # Controleer de respons en log de gegevens
+    st.write("Open-Meteo Forecast Data Response:")
+    st.write(data)
+
+    # Zorg ervoor dat de data de verwachte structuur heeft
+    if 'daily' not in data or 'temperature_2m_max' not in data['daily']:
+        st.error("Er is een probleem met het ophalen van de weersvoorspellingen. Controleer de invoer en probeer het opnieuw.")
+        return []
+
     forecast_data = []
     for i in range(len(data['daily']['temperature_2m_max'])):
         forecast_data.append({
