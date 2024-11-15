@@ -89,12 +89,14 @@ def main():
     with st.expander("3 day's Forecast for this location", expanded=False):
         forecast_data = None
 
-    # Invoer: locatie, land, datum, beginuur en einduur
+    # Invoer: locatie, land, datum (met vaste begin- en eindtijd)
     country_name = st.selectbox("Kies een land:", ["Belgium", "Netherlands", "Germany", "France", "Luxembourg", "Spain", "Italy"], index=0)
     location_name = st.text_input("Voer de naam van de plaats in:")
     date = st.date_input("Kies een datum", min_value=datetime(2000, 1, 1))
-    start_time = st.time_input("Kies een startuur", value=datetime.now().time())
-    end_time = st.time_input("Kies een stopuur", value=datetime.now().time())
+    
+    # Hardcoded tijden
+    start_time = "08:00"
+    end_time = "15:00"
 
     # Wanneer op de knop wordt gedrukt
     if st.button("Opzoeken"):
