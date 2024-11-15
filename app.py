@@ -19,6 +19,9 @@ st.markdown(
     .stText, .stMarkdown {
         max-width: 90%;
     }
+    .stTextInput, .stDateInput, .stTimeInput {
+        width: 100%;  /* Maakt invoervelden breder */
+    }
     </style>
     """,
     unsafe_allow_html=True
@@ -111,10 +114,16 @@ def get_api_url_and_params(date, latitude, longitude):
 def main():
     st.title("Weerdata Viewer")
     
-    location_name = st.text_input("Voer de naam van de plaats in:")
-    date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
-    start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
-    end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
+    # Maak de invoervelden breder met st.columns
+    col1, col2 = st.columns([3, 2])  # Kolommen: 3 keer de breedte voor invoer, 2 keer de breedte voor andere
+
+    with col1:
+        location_name = st.text_input("Voer de naam van de plaats in:")
+        date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
+    
+    with col2:
+        start_time = st.time_input("Voer de starttijd in:").strftime("%H:%M")
+        end_time = st.time_input("Voer de eindtijd in:").strftime("%H:%M")
 
     if st.button("Gegevens ophalen"):
         try:
@@ -172,6 +181,9 @@ def main():
             # Maak een container voor de uitvoer en pas de breedte aan via CSS
             with st.container():
                 st.markdown('<div class="output-container">', unsafe_allow_html=True)
+
+                # Voor elke tijdlijn: toon de gegevens
+                all_data = ""
                 for time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_dir, wind_bf, vis, precip in zip(
                         filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
                         filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
@@ -179,9 +191,9 @@ def main():
                     time_str = time.strftime("%H:%M")
                     line = f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
                     st.code(line)
-                
+                    all_data += line + "\n"
+
                 # Download knop voor alle data
-                all_data = "\n".join([line])
                 st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
 
                 st.markdown('</div>', unsafe_allow_html=True)
