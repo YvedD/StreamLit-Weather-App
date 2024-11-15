@@ -11,7 +11,7 @@ st.markdown(
     """
     <style>
     .stText, .stMarkdown {
-        max-width: 80%;
+        max-width: 100%;
     }
     </style>
     """,
@@ -103,7 +103,7 @@ def get_api_url_and_params(date, latitude, longitude):
 
 # Streamlit app
 def main():
-    st.title("Weerdata Viewer")
+    st.title("Migration Weerdata Finder")
     
     location_name = st.text_input("Voer de naam van de plaats in:")
     date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
