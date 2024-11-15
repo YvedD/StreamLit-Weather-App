@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 import streamlit as st
 import io
 
-# CSS voor bredere uitvoer
+# CSS voor marges
 st.markdown(
     """
     <style>
@@ -38,7 +38,7 @@ def wind_direction_to_dutch(direction):
         'W': 'W', 'WNW': 'WNW', 'NW': 'NW', 'NNW': 'NNW'
     }
     index = round(direction / 22.5) % 16
-    direction_name = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE',
+    direction_name = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'OZO', 'SSE',
                       'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][index]
     return directions.get(direction_name, 'Onbekend')
 
@@ -174,11 +174,10 @@ def main():
                     f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% "
                     f"(L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
                 )
+                st.code(line)
                 weather_data.append(line)
-                st.write(line)  # Elke lijn weergeven
-                st.code(line, language="plaintext")  # Kopieerbare codeblok per lijn
 
-            # Alle data samenvoegen voor "Alle data kopiëren" knop
+            # Download knop voor alle data
             all_data = "\n".join(weather_data)
             st.download_button("Alle data kopiëren", all_data, file_name="weer_data.txt", mime="text/plain")
 
