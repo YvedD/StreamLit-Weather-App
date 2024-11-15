@@ -37,7 +37,7 @@ def wind_speed_to_beaufort(speed_kmh):
             return bf
     return 12
 
-# Functie om te bepalen welke API te gebruiken (historisch of forecast)
+# Functie om de juiste API URL en parameters te bepalen (historisch of vandaag)
 def get_api_url_and_params(date, latitude, longitude):
     today = datetime.now().strftime("%Y-%m-%d")
     yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
@@ -109,7 +109,6 @@ def main():
         end_time = st.time_input("Eindtijd:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
 
     with col2:
-        # Resultaten weergeven en actieknoppen
         if st.button("Gegevens ophalen"):
             try:
                 # Coördinaten ophalen
@@ -156,12 +155,41 @@ def main():
                         filtered_times, filtered_temperatures, filtered_cloudcovers, filtered_cloudcover_low,
                         filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_directions, filtered_wind_speeds,
                         filtered_visibility_km, filtered_precipitation):
-                    all_data += f"**{time}:** Temp: {temp}°C, Cloudcover: {cloud}%, Wind: {wind_speed} km/h {wind_direction_to_dutch(wind_dir)}, Visibility: {vis} km, Precipitation: {precip} mm\n"
+                    time_str = time.strftime("%H:%M")
+                    line = f"{time_str}: Temp.{temp:.1f}°C - Neersl.{precip}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf - Visi.{vis:.1f}km"
+                    st.code(line)
+                    all_data += line + "\n"
+                
+                # Kopieer functionaliteit
+                if st.button("Kopieer alle data"):
+                    st.code(all_data)
 
-                st.write(all_data)
+                # 3-daagse voorspelling ophalen en weergeven
+                st.subheader("3-daagse voorspelling per uur")
+                forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low, forecast_cloudcover_mid, \
+                forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions, forecast_visibility, forecast_precipitation = get_forecast(latitude, longitude)
+                
+                forecast_text = ""
+                for forecast_time, temp, cloud, cloud_low, cloud_mid, cloud_high, wind_speed, wind_dir, vis, precip in zip(
+                        forecast_times, forecast_temperatures, forecast_cloudcovers, forecast_cloudcover_low,
+                        forecast_cloudcover_mid, forecast_cloudcover_high, forecast_wind_speeds, forecast_wind_directions,
+                        forecast_visibility, forecast_precipitation):
+                    
+                    forecast_date = forecast_time.strftime("%Y-%m-%d")
+                    time_str = forecast_time.strftime("%H:%M")
+                    wind_bf = wind_speed_to_beaufort(wind_speed)
+                    vis_km = vis / 1000 if vis <= 100000 else 0
+                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C - Neersl.{precip}mm - Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_direction_to_dutch(wind_dir)} {wind_bf}Bf - Visi.{vis_km:.1f}km"
+                    
+                    forecast_text += line + "\n"
+                    
+                st.text(forecast_text)
+            
+            except requests.exceptions.RequestException as e:
+                st.error(f"Fout bij API-aanroep: {e}")
+            except ValueError as e:
+                st.error(f"Fout: {e}")
 
-            except Exception as e:
-                st.error(f"Er is een fout opgetreden: {e}")
-
+# Voer de main functie uit
 if __name__ == "__main__":
     main()
