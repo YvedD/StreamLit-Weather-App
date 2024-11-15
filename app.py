@@ -139,10 +139,10 @@ def main():
         "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Morocco", "Nepal", "Netherlands", "Norway",
         "Oman", "Pakistan", "Palestinian Territories", "Poland", "Portugal", "Qatar", "Romania", "Russia",
         "San Marino", "Saudi Arabia", "Serbia", "Singapore", "Slovakia", "Slovenia", "South Korea", "Spain",
-        "Sri Lanka", "Syria", "Tajikistan", "Thailand", "Turkey", "Turkmenistan", "Ukraine", "United Kingdom",
-        "Uzbekistan", "Vietnam", "Yemen"
+        "Sri Lanka", "Sweden", "Switzerland", "Syria", "Tajikistan", "Turkey", "Turkmenistan", "Ukraine",
+        "United Kingdom", "United States", "Uzbekistan", "Vietnam", "Yemen"
     ])
-    date = st.date_input("Voer de datum in:").strftime("%Y-%m-%d")
+    
     start_time = st.time_input("Kies het startuur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     end_time = st.time_input("Kies het einduur:", datetime(2023, 1, 1, 12, 0)).strftime("%H:%M")
     
@@ -161,3 +161,11 @@ def main():
             
         except ValueError as e:
             st.error(f"Error: {str(e)}")
+
+    # Verplaats de expander naar onderaan
+    with st.expander("Bekijk de weersvoorspelling details"):
+        st.write("Details van de weersvoorspelling kunnen hier worden toegevoegd.")
+
+# Start de Streamlit app
+if __name__ == "__main__":
+    main()
