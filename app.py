@@ -1,8 +1,6 @@
 import streamlit as st
 import datetime
 import requests
-import json
-import pandas as pd
 from geopy.geocoders import Nominatim
 import folium
 from streamlit_folium import st_folium
@@ -16,17 +14,7 @@ def get_coordinates(location_name, country_name):
     else:
         return None, None
 
-# Functie om de coördinaten naar een begrijpelijk formaat om te zetten
-def format_coordinates(lat, lon):
-    lat_d, lat_m, lat_s = decimal_to_dms(abs(lat))
-    lon_d, lon_m, lon_s = decimal_to_dms(abs(lon))
-    
-    lat_direction = "N" if lat >= 0 else "S"
-    lon_direction = "E" if lon >= 0 else "W"
-    
-    return f"{lat_d}°{lat_m}'{lat_s}\"{lat_direction} {lon_d}°{lon_m}'{lon_s}\"{lon_direction}"
-
-# Functie om decimale coördinaten om te zetten naar graad, minuut, seconde formaat
+# Functie om de coördinaten om te zetten naar graad, minuut, seconde formaat
 def decimal_to_dms(degrees):
     g = int(degrees)
     minutes = (degrees - g) * 60
@@ -35,64 +23,82 @@ def decimal_to_dms(degrees):
     s = round(seconds, 1)
     return g, m, s
 
+# Functie om de windrichting om te zetten naar een tekstuele waarde
+def wind_direction_to_dutch(degree):
+    if degree >= 0 and degree < 22.5:
+        return 'Noord'
+    elif degree >= 22.5 and degree < 67.5:
+        return 'Noord-Oost'
+    elif degree >= 67.5 and degree < 112.5:
+        return 'Oost'
+    elif degree >= 112.5 and degree < 157.5:
+        return 'Zuid-Oost'
+    elif degree >= 157.5 and degree < 202.5:
+        return 'Zuid'
+    elif degree >= 202.5 and degree < 247.5:
+        return 'Zuid-West'
+    elif degree >= 247.5 and degree < 292.5:
+        return 'West'
+    elif degree >= 292.5 and degree < 337.5:
+        return 'Noord-West'
+    else:
+        return 'Noord'
+
+# Functie om de windsnelheid om te zetten naar km/h
+def convert_wind_speed_to_kmh(speed_mps):
+    return round(speed_mps * 3.6, 1)
+
+# Functie om de zichtbaarheid om te zetten naar kilometers met 1 decimaal
+def convert_visibility_to_km(visibility_m):
+    return round(visibility_m / 1000, 1)
+
 # Functie om historische gegevens op te halen van de Open-Meteo API
 def fetch_weather_data(latitude, longitude, start_time, end_time):
-    historical_url = f"https://archive-api.open-meteo.com/v1/archive?latitude={latitude}&longitude={longitude}&start_date={start_time.strftime('%Y-%m-%d')}&end_date={end_time.strftime('%Y-%m-%d')}&hourly=temperature_2m,cloudcover,precipitation,wind_speed_10m,wind_direction_10m,visibility"
+    historical_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={start_time.strftime('%Y-%m-%d')}&end_date={end_time.strftime('%Y-%m-%d')}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_10m&timezone=Europe%2FBerlin&forecast_days=3"
     response = requests.get(historical_url)
     data = response.json()
 
-    # Controleer de respons en log de gegevens
-    st.write("Open-Meteo Historical Data Response:")
-    st.write(data)
-
     historical_data = []
-    for i in range(len(data['hourly']['temperature_2m'])):
-        timestamp = start_time + datetime.timedelta(hours=i)
-        temp = data['hourly']['temperature_2m'][i]
-        cloud = data['hourly']['cloudcover'][i]
-        precip = data['hourly']['precipitation'][i]
-        wind_speed = data['hourly']['wind_speed_10m'][i]
-        wind_dir = data['hourly']['wind_direction_10m'][i]
-        vis = data['hourly']['visibility'][i]
-        
-        historical_data.append({
-            "timestamp": timestamp,
-            "temp": temp,
-            "cloud": cloud,
-            "precip": precip,
-            "wind_dir": wind_dir,
-            "wind_speed": wind_speed,
-            "vis": vis
-        })
+    if 'hourly' in data:
+        for i in range(len(data['hourly']['temperature_2m'])):
+            timestamp = start_time + datetime.timedelta(hours=i)
+            temp = data['hourly']['temperature_2m'][i]
+            cloud = data['hourly']['cloud_cover'][i]
+            precip = data['hourly']['precipitation'][i]
+            wind_speed = convert_wind_speed_to_kmh(data['hourly']['wind_speed_10m'][i])
+            wind_dir = wind_direction_to_dutch(data['hourly']['wind_direction_10m'][i])
+            vis = convert_visibility_to_km(data['hourly']['visibility'][i])
+            
+            historical_data.append({
+                "timestamp": timestamp,
+                "temp": temp,
+                "cloud": cloud,
+                "precip": precip,
+                "wind_dir": wind_dir,
+                "wind_speed": wind_speed,
+                "vis": vis
+            })
     return historical_data
 
 # Functie om weersvoorspellingen op te halen van de Open-Meteo API
 def fetch_forecast_data(latitude, longitude):
-    forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,cloudcover_mean,wind_speed_10m_max,wind_direction_10m_max,visibility_mean&timezone=Europe/Brussels"
+    forecast_url = f"https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m_max,temperature_2m_min,precipitation_sum,cloudcover_mean,wind_speed_10m_max,wind_direction_10m_max,visibility_mean&timezone=Europe%2FBerlin&forecast_days=3"
     response = requests.get(forecast_url)
     data = response.json()
 
-    # Controleer de respons en log de gegevens
-    st.write("Open-Meteo Forecast Data Response:")
-    st.write(data)
-
-    # Zorg ervoor dat de data de verwachte structuur heeft
-    if 'daily' not in data or 'temperature_2m_max' not in data['daily']:
-        st.error("Er is een probleem met het ophalen van de weersvoorspellingen. Controleer de invoer en probeer het opnieuw.")
-        return []
-
     forecast_data = []
-    for i in range(len(data['daily']['temperature_2m_max'])):
-        forecast_data.append({
-            "day": f"Dag {i+1}",
-            "temp_max": data['daily']['temperature_2m_max'][i],
-            "temp_min": data['daily']['temperature_2m_min'][i],
-            "precip": data['daily']['precipitation_sum'][i],
-            "cloud": data['daily']['cloudcover_mean'][i],
-            "wind_speed": data['daily']['wind_speed_10m_max'][i],
-            "wind_dir": data['daily']['wind_direction_10m_max'][i],
-            "vis": data['daily']['visibility_mean'][i]
-        })
+    if 'hourly' in data:
+        for i in range(len(data['hourly']['temperature_2m_max'])):
+            forecast_data.append({
+                "hour": f"Uur {i+1}",
+                "temp_max": data['hourly']['temperature_2m_max'][i],
+                "temp_min": data['hourly']['temperature_2m_min'][i],
+                "precip": data['hourly']['precipitation_sum'][i],
+                "cloud": data['hourly']['cloudcover_mean'][i],
+                "wind_speed": convert_wind_speed_to_kmh(data['hourly']['wind_speed_10m_max'][i]),
+                "wind_dir": wind_direction_to_dutch(data['hourly']['wind_direction_10m_max'][i]),
+                "vis": convert_visibility_to_km(data['hourly']['visibility_mean'][i])
+            })
     return forecast_data
 
 # Functie om de locatie op een kaart te tonen
@@ -119,46 +125,44 @@ def main():
     country = st.selectbox("Kies een land", ["Belgium", "Nederland", "Frankrijk", "Duitsland", "Luxemburg"], index=0)
     location_name = st.text_input("Voer de naam van de plaats in:")
     date = st.date_input("Kies een datum", min_value=datetime.date(2000, 1, 1), max_value=datetime.date.today())
-    start_time = st.time_input("Kies een beginuur", value=datetime.time(8, 0))
-    end_time = st.time_input("Kies een einduur", value=datetime.time(15, 0))
+    
+    # Voor demo, beginnen we met hardcoded tijden
+    start_time = datetime.datetime.combine(date, datetime.time(8, 0))
+    end_time = datetime.datetime.combine(date, datetime.time(15, 0))
 
-    # Functie om historische data en voorspellingen te tonen
     if st.button("Opzoeken"):
         if location_name:
+            # Haal de coördinaten op van de ingevoerde locatie
             latitude, longitude = get_coordinates(location_name, country)
-            st.session_state.coordinates = (latitude, longitude)
-            st.session_state.location = location_name
+            if latitude and longitude:
+                st.session_state.coordinates = (latitude, longitude)
 
-            # Haal de historische gegevens op
-            st.session_state.historical_data = fetch_weather_data(latitude, longitude, datetime.datetime.combine(date, start_time), datetime.datetime.combine(date, end_time))
+                # Haal de historische gegevens en voorspellingen op
+                st.session_state.historical_data = fetch_weather_data(latitude, longitude, start_time, end_time)
+                st.session_state.forecast_data = fetch_forecast_data(latitude, longitude)
 
-            # Haal de voorspellingen op
-            st.session_state.forecast_data = fetch_forecast_data(latitude, longitude)
+                st.session_state.location = location_name
+            else:
+                st.error("Locatie niet gevonden.")
 
-    # 3 expanders voor weergave
-    with st.expander("Weatherdata", expanded=False):
-        if st.session_state.historical_data:
-            # Maak een DataFrame van historische gegevens
-            historical_df = pd.DataFrame(st.session_state.historical_data)
-            historical_df['timestamp'] = historical_df['timestamp'].apply(lambda x: x.strftime("%Y-%m-%d %H:%M:%S"))
-            st.write(historical_df.to_string(index=False))
-        else:
-            st.write("Voer de locatie en datum in en klik op 'Opzoeken' om historische gegevens op te halen.")
+    # Het tonen van de expanders
+    if st.session_state.historical_data:
+        with st.expander("Weatherdata", expanded=True):
+            st.write("Historische gegevens:")
+            st.write("Kopieer per regel")
+            for data in st.session_state.historical_data:
+                st.write(f"{data['timestamp']}: Temp: {data['temp']}°C, Cloud: {data['cloud']}%, Precip: {data['precip']}mm, Wind: {data['wind_dir']} {data['wind_speed']} km/h, Vis: {data['vis']} km")
 
-    with st.expander("Map of location", expanded=False):
-        if st.session_state.coordinates:
-            lat, lon = st.session_state.coordinates
-            map = plot_location_on_map(lat, lon)
+    if st.session_state.coordinates:
+        with st.expander("Map of location", expanded=True):
+            map = plot_location_on_map(st.session_state.coordinates[0], st.session_state.coordinates[1])
             st_folium(map, width=700, height=500)
-        else:
-            st.write("Voer de locatie in en klik op 'Opzoeken' om de kaart te tonen.")
 
-    with st.expander("3 day's Forecast for this location", expanded=False):
-        if st.session_state.forecast_data:
-            forecast_df = pd.DataFrame(st.session_state.forecast_data)
-            st.write(forecast_df.to_string(index=False))
-        else:
-            st.write("Voer de locatie in en klik op 'Opzoeken' om de voorspellingen te bekijken.")
+    if st.session_state.forecast_data:
+        with st.expander("3 day's Forecast for this location", expanded=True):
+            st.write("Weersvoorspellingen voor de komende drie dagen:")
+            for data in st.session_state.forecast_data:
+                st.write(f"Uur {data['hour']}: Temp Max: {data['temp_max']}°C, Temp Min: {data['temp_min']}°C, Precip: {data['precip']}mm, Cloud: {data['cloud']}%, Wind: {data['wind_dir']} {data['wind_speed']} km/h, Vis: {data['vis']} km")
 
 if __name__ == "__main__":
     main()
