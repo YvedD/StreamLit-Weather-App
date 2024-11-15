@@ -186,7 +186,7 @@ def main():
                         filtered_cloudcover_mid, filtered_cloudcover_high, wind_direction_names, wind_beauforts,
                         filtered_visibility_km, filtered_precipitation):
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str} : Temp. {temp:.1f}°C - Neersl. {precip}mm - Bew. {cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%) - {wind_dir} {wind_bf}Bf - Zicht. {vis:.1f}km"
+                    line = f"{time_str} : Temp. {temp:.1f}°C-Neersl. {precip}mm-Bew. {cloud}% (L:{cloud_low}%,M:{cloud_mid}%,H:{cloud_high}%)-{wind_dir}{wind_bf}Bf-Visi. {vis:.1f}km"
                     st.code(line)
                     all_data += line + "\n"
 
