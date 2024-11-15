@@ -1,124 +1,3 @@
-import requests
-import pandas as pd
-import numpy as np
-from geopy.geocoders import Nominatim
-from datetime import datetime, timedelta
-import streamlit as st
-
-# Zet de pagina in Wide Mode
-st.set_page_config(layout="wide")
-
-# CSS voor het instellen van de breedte
-st.markdown("""
-    <style>
-        .container {
-            width: 80%;
-            margin: auto;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Lijst van landen in Europa, Nabije Oosten en Azië
-countries = [
-    "België", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bahrain", "Belarus", "Bosnia and Herzegovina", 
-    "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Georgia", 
-    "Germany", "Greece", "Hungary", "Iceland", "Iran", "Iraq", "Ireland", "Israel", "Italy", "Jordan", "Kazakhstan", 
-    "Kosovo", "Kuwait", "Kyrgyzstan", "Latvia", "Lebanon", "Liechtenstein", "Lithuania", "Luxembourg", "Malta", 
-    "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", "Norway", "Oman", "Pakistan", "Palestine", 
-    "Poland", "Portugal", "Qatar", "Romania", "Russia", "San Marino", "Saudi Arabia", "Serbia", "Singapore", 
-    "Slovakia", "Slovenia", "South Korea", "Spain", "Sri Lanka", "Syria", "Sweden", "Switzerland", "Tajikistan", 
-    "Turkey", "Turkmenistan", "Ukraine", "United Arab Emirates", "United Kingdom", "Uzbekistan", "Yemen", 
-    "China", "Japan", "India", "Indonesia", "Malaysia", "Mongolia", "Nepal", "North Korea", "Philippines", "Singapore", 
-    "South Korea", "Thailand", "Vietnam"
-]
-
-# Functie om coördinaten op te halen
-def get_coordinates(location_name, country_name):
-    geolocator = Nominatim(user_agent="weather_app")
-    location = geolocator.geocode(f"{location_name}, {country_name}")
-    if location:
-        return location.latitude, location.longitude
-    else:
-        raise ValueError(f"Location '{location_name}, {country_name}' not found")
-
-# Functie om windrichting om te zetten naar Nederlandse benamingen
-def wind_direction_to_dutch(direction):
-    directions = {
-        'N': 'N', 'NNE': 'NNO', 'NE': 'NO', 'ENE': 'ONO', 'E': 'O', 'ESE': 'OZO', 'SE': 'ZO', 'SSE': 'ZZO',
-        'S': 'Z', 'SSW': 'ZZW', 'SW': 'ZW', 'WSW': 'WZW', 'W': 'W', 'WNW': 'WNW', 'NW': 'NW', 'NNW': 'NNW'
-    }
-    index = round(direction / 22.5) % 16
-    direction_name = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW'][index]
-    return directions.get(direction_name, 'Onbekend')
-
-# Functie om windsnelheid om te zetten naar de Beaufort-schaal
-def wind_speed_to_beaufort(speed_kmh):
-    speed = speed_kmh / 3.6
-    beaufort_scale = [(0.3, 0), (1.6, 1), (3.4, 2), (5.5, 3), (8.0, 4), (10.7, 5), (13.8, 6), (17.2, 7), 
-                      (20.8, 8), (24.5, 9), (28.2, 10), (32.1, 11)]
-    for threshold, bf in beaufort_scale:
-        if speed < threshold:
-            return bf
-    return 12
-
-# Functie om de juiste API URL en parameters te bepalen (historisch of vandaag)
-def get_api_url_and_params(date, latitude, longitude):
-    today = datetime.now().strftime("%Y-%m-%d")
-    yesterday = (datetime.now() - timedelta(days=1)).strftime("%Y-%m-%d")
-    if date == today or date == yesterday:
-        url = "https://api.open-meteo.com/v1/forecast"
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "hourly": ["temperature_2m", "apparent_temperature", "cloudcover", "cloudcover_low", "cloudcover_mid",
-                       "cloudcover_high", "wind_speed_10m", "wind_direction_10m", "visibility", "precipitation"],
-            "timezone": "Europe/Berlin",
-            "past_days": 1 if date == yesterday else 0
-        }
-    else:
-        url = "https://archive-api.open-meteo.com/v1/archive"
-        params = {
-            "latitude": latitude,
-            "longitude": longitude,
-            "start_date": date,
-            "end_date": date,
-            "hourly": ["temperature_2m", "wind_speed_10m", "wind_direction_10m", "precipitation", "cloudcover",
-                       "cloudcover_low", "cloudcover_mid", "cloudcover_high", "visibility"],
-            "timezone": "Europe/Berlin"
-        }
-    return url, params
-
-# Functie om 3-daagse voorspelling op te halen
-def get_forecast(latitude, longitude):
-    url = "https://api.open-meteo.com/v1/forecast"
-    params = {
-        "latitude": latitude,
-        "longitude": longitude,
-        "hourly": ["temperature_2m", "precipitation", "cloudcover", "cloudcover_low", "cloudcover_mid", 
-                   "cloudcover_high", "visibility", "wind_speed_10m", "wind_direction_10m"],
-        "timezone": "Europe/Berlin",
-        "forecast_days": 3
-    }
-    response = requests.get(url, params=params)
-    response.raise_for_status()
-    data = response.json()
-    hourly = data.get("hourly", {})
-    
-    # Data inlezen
-    times = pd.to_datetime(hourly.get("time", []))
-    temperatures = np.array(hourly.get("temperature_2m", []))
-    cloudcovers = np.array(hourly.get("cloudcover", []))
-    cloudcover_low = np.array(hourly.get("cloudcover_low", []))
-    cloudcover_mid = np.array(hourly.get("cloudcover_mid", []))
-    cloudcover_high = np.array(hourly.get("cloudcover_high", []))
-    wind_speeds = np.array(hourly.get("wind_speed_10m", []))
-    wind_directions = np.array(hourly.get("wind_direction_10m", []))
-    visibility = np.array(hourly.get("visibility", []))
-    precipitation = np.array(hourly.get("precipitation", []))
-    
-    return times, temperatures, cloudcovers, cloudcover_low, cloudcover_mid, cloudcover_high, wind_speeds, wind_directions, visibility, precipitation
-
-# Streamlit app
 def main():
     st.title("Weather Data Viewer")
 
@@ -181,9 +60,11 @@ def main():
                         filtered_cloudcover_mid, filtered_cloudcover_high, filtered_wind_directions, filtered_wind_speeds,
                         filtered_visibility_km, filtered_precipitation):
                     time_str = time.strftime("%H:%M")
-                    line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km"
-                    st.code(line)
-                    all_data += line + "\n"
+                    line = f"{time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_speed_to_beaufort(wind_speed)}Bf-Visi.{vis:.1f}km<br>"
+                    all_data += line  # Voeg de <br> tag toe aan het einde van elke regel
+
+                # Toon alle data met <br> tags voor automatische harde returns
+                st.markdown(all_data, unsafe_allow_html=True)  # Gebruik markdown om <br> te verwerken als echte lijnonderbrekingen
 
                 if st.button("Kopieer alle data"):
                     st.code(all_data)
@@ -203,10 +84,10 @@ def main():
                     time_str = forecast_time.strftime("%H:%M")
                     wind_bf = wind_speed_to_beaufort(wind_speed)
                     vis_km = vis / 1000 if vis <= 100000 else 0
-                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km"
-                    forecast_text += line + "\n"
+                    line = f"{forecast_date} {time_str}: Temp.{temp:.1f}°C-Neersl.{precip}mm-Bew.{cloud}% (L:{cloud_low}%, M:{cloud_mid}%, H:{cloud_high}%)-{wind_direction_to_dutch(wind_dir)} {wind_bf}Bf-Visi.{vis_km:.1f}km<br>"
+                    forecast_text += line  # Voeg de <br> tag toe aan de voorspelling
 
-                st.text(forecast_text)
+                st.markdown(forecast_text, unsafe_allow_html=True)  # Gebruik markdown om de voorspelling te tonen met <br> tags
 
             except requests.exceptions.RequestException as e:
                 st.error(f"Fout bij API-aanroep: {e}")
@@ -215,6 +96,3 @@ def main():
 
         st.markdown("</div>", unsafe_allow_html=True)
 
-# Voer de main functie uit
-if __name__ == "__main__":
-    main()
