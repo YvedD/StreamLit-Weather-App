@@ -39,7 +39,7 @@ def main():
             selected_location = st.selectbox("Selecteer de juiste locatie:", location_display_names)
             
             # Zoek geselecteerde locatie coördinaten
-            selected_data = next((lat, lon for name, lat, lon in location_choices if name == selected_location), None)
+            selected_data = next(((lat, lon) for name, lat, lon in location_choices if name == selected_location), None)
             
             if selected_data:
                 st.write(f"**Geselecteerde locatie coördinaten:** Latitude: {selected_data[0]}, Longitude: {selected_data[1]}")
