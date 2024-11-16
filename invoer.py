@@ -75,7 +75,7 @@ def show_input_form():
     )
 
     # Laat de gebruiker de taal kiezen
-    language = st.selectbox("Select Language/Kies uw taal", ["English", "Dutch"])
+    language = st.selectbox("Select Language/Kies uw taal", ["English", "Nederlands"])
 
     # Kies de landenlijst en de standaardwaarde op basis van de taal
     if language == "English":
