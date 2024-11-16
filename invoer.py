@@ -93,8 +93,8 @@ def show_input_form():
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**Land**: {country}, **Locatie**: {location}")
-            st.write(f"{latitude:.2f}°N {longitude:.2f}°E")
+            st.write(f"**Land**: {country}, **Locatie**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+            #st.write(f"{latitude:.2f}°N {longitude:.2f}°E")
             if sunrise and sunset:
                 st.write(f"**Zonsopkomst**: {sunrise}, **Zonsondergang**: {sunset}")
         else:
