@@ -74,44 +74,45 @@ def show_input_form():
         unsafe_allow_html=True
     )
 
-    # Taalkeuze door middel van een two-state switch
-    lang_choice = st.radio(
-        "Select Language/Kies uw taal",
-        options=["English", "Nederlands"],
-        index=0 if st.session_state.get("language", "English") == "English" else 1
-    )
-
-    # Sla de taalkeuze op in de session_state
-    st.session_state["language"] = lang_choice
-
-    # Kies de landenlijst en de standaardwaarde op basis van de taal
-    if lang_choice == "English":
-        countries = EUROPEAN_COUNTRIES_EN
-        country_label = "Select Country"
-        country_text = "Country"
-        location_label = "Location for weather"
-        location_text = "Location"
-        date_label = "Date"
-        start_hour_label = "Start Hour"
-        end_hour_label = "End Hour"
-        sunrise_label = "Sunrise"
-        sunset_label = "Sunset"
-        default_country = default_country_en
-    else:
-        countries = EUROPEAN_COUNTRIES_NL
-        country_label = "Selecteer land"
-        country_text = "Land"
-        location_label = "Locatie voor weergegevens"
-        location_text = "Locatie"
-        date_label = "Datum"
-        start_hour_label = "Beginuur"
-        end_hour_label = "Einduur"
-        sunrise_label = "Zonsopkomst"
-        sunset_label = "Zonsondergang"
-        default_country = default_country_nl
-
     # Expander die altijd uitgeklapt is
     with st.expander("Input Data", expanded=True):  # Dit maakt de expander standaard uitgeklapt
+
+        # Taalkeuze door middel van een two-state switch binnen de expander
+        lang_choice = st.radio(
+            "Select Language/Kies uw taal",
+            options=["English", "Nederlands"],
+            index=0 if st.session_state.get("language", "English") == "English" else 1,
+            key="language_selector"  # Zorgt ervoor dat het als een aparte state wordt behandeld
+        )
+
+        # Sla de taalkeuze op in de session_state
+        st.session_state["language"] = lang_choice
+
+        # Kies de landenlijst en de standaardwaarde op basis van de taal
+        if lang_choice == "English":
+            countries = EUROPEAN_COUNTRIES_EN
+            country_label = "Select Country"
+            country_text = "Country"
+            location_label = "Location for weather"
+            location_text = "Location"
+            date_label = "Date"
+            start_hour_label = "Start Hour"
+            end_hour_label = "End Hour"
+            sunrise_label = "Sunrise"
+            sunset_label = "Sunset"
+            default_country = default_country_en
+        else:
+            countries = EUROPEAN_COUNTRIES_NL
+            country_label = "Selecteer land"
+            country_text = "Land"
+            location_label = "Locatie voor weergegevens"
+            location_text = "Locatie"
+            date_label = "Datum"
+            start_hour_label = "Beginuur"
+            end_hour_label = "Einduur"
+            sunrise_label = "Zonsopkomst"
+            sunset_label = "Zonsondergang"
+            default_country = default_country_nl
 
         # Titel voor de invoer
         st.header(f"{location_label} ")
