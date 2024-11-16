@@ -58,31 +58,11 @@ def show_input_form():
     longitude = 2.9724
     selected_date = datetime.now().date() - timedelta(days=1)
 
-    # Voeg wat opmaak toe via markdown
-    st.markdown("""
-        <style>
-            .custom-container {
-                border: 2px solid #4CAF50;  /* Groene rand */
-                padding: 20px;
-                border-radius: 10px;  /* Ronde hoeken */
-                background-color: #f0f8f0;  /* Lichte groene achtergrondkleur */
-                margin-bottom: 20px;
-            }
-            .project-title {
-                font-size: 36px;
-                font-weight: bold;
-                color: #4CAF50;
-                margin-bottom: 20px;
-            }
-        </style>
-    """, unsafe_allow_html=True)
-
-    # Voeg projecttitel toe binnen de markdown
-    st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
+    # Voeg enkel de titel toe zonder onnodige opmaak
+    st.markdown('<div style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</div>', unsafe_allow_html=True)
 
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
-        st.markdown('<div class="custom-container">', unsafe_allow_html=True)
 
         # Titel voor de invoer
         st.header("Invoergegevens voor het weer")
@@ -110,6 +90,3 @@ def show_input_form():
                 st.write(f"**Zonsopkomst**: {sunrise}, **Zonsondergang**: {sunset}")
         else:
             st.write("Locatie niet gevonden.")
-
-        # Eind van de container HTML
-        st.markdown('</div>', unsafe_allow_html=True)
