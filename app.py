@@ -11,7 +11,7 @@ latitude = 51.2389
 longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
-# Open-Meteo API URL voor historische gegevens
+# API-URL configuratie voor Open-Meteo
 api_url = (
     f"https://historical-forecast-api.open-meteo.com/v1/forecast"
     f"?latitude={latitude}&longitude={longitude}"
@@ -21,7 +21,7 @@ api_url = (
     "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
 )
 
-# Ophalen weergegevens
+# Functie om weergegevens op te halen
 def fetch_weather_data(url):
     try:
         response = requests.get(url)
@@ -33,7 +33,7 @@ def fetch_weather_data(url):
 
 weather_data = fetch_weather_data(api_url)
 
-# Begin- en einduur instellen op basis van zonsopgang en zonsondergang
+# Begin- en einduur op basis van zonsopgang en zonsondergang
 sunrise = None
 sunset = None
 if weather_data:
@@ -50,6 +50,26 @@ st.title("Historische Weergegevens - Open-Meteo API")
 st.write(f"**Land**: {default_country}, **Locatie**: {default_location} ({latitude}, {longitude})")
 st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
 
+# Invoeropties voor de gebruiker
+country = st.selectbox("Selecteer land", ["België", "Nederland", "Frankrijk"], index=0)
+location = st.text_input("Locatie", value=default_location)
+selected_date = st.date_input("Datum", value=selected_date)
+start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=int(start_hour[:2]))
+end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=int(end_hour[:2]))
+
+# Aanpassen API-url op basis van gebruikersinput
+api_url = (
+    f"https://historical-forecast-api.open-meteo.com/v1/forecast"
+    f"?latitude={latitude}&longitude={longitude}"
+    f"&start_date={selected_date.strftime('%Y-%m-%d')}&end_date={selected_date.strftime('%Y-%m-%d')}"
+    "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
+    "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m"
+    "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
+)
+
+# Ophalen en verwerken van gegevens na wijziging van invoervelden
+weather_data = fetch_weather_data(api_url)
+
 # Expander met kopieerbare weergegevens per uur
 with st.expander("Historische Weergegevens - Kort Overzicht"):
     if weather_data:
@@ -64,7 +84,7 @@ with st.expander("Historische Weergegevens - Kort Overzicht"):
         wind_speeds = hourly_data["wind_speed_10m"]
         wind_directions = hourly_data["wind_direction_80m"]
 
-        # Tonen van weergegevens voor elk uur binnen de geselecteerde periode
+        # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
             hour = datetime.fromisoformat(time).strftime("%H:%M")
             if start_hour <= hour <= end_hour:
@@ -80,5 +100,5 @@ with st.expander("Historische Weergegevens - Kort Overzicht"):
 # Expander voor kaartweergave met marker
 with st.expander("Kaartweergave"):
     map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
-    folium.Marker([latitude, longitude], popup=f"{default_location} ({latitude}, {longitude})").add_to(map_folium)
+    folium.Marker([latitude, longitude], popup=f"{location} ({latitude}, {longitude})").add_to(map_folium)
     st_folium(map_folium, width=700)
