@@ -164,9 +164,8 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
-                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
-                    f"Wind:{wind_direction} {beaufort}Bf"
+                    f"{hour}: Temp:{temperatures[i]:.1f}°C - Neersl:{precipitation[i]:.1f}mm - Bew.Tot:{cloudcover[i]}%"
+                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - Wind:{wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
 
@@ -182,13 +181,27 @@ with st.expander("3-daagse weersvoorspelling"):
     forecast_data = fetch_3_day_forecast(latitude, longitude)
     if forecast_data:
         daily_forecasts = forecast_data["daily"]
-        for day in daily_forecasts["time"]:
+        hourly_data = forecast_data["hourly"]
+        
+        for i, day in enumerate(daily_forecasts["time"]):
             date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
+            sunrise = datetime.fromisoformat(daily_forecasts["sunrise"][i]).strftime("%H:%M")
+            sunset = datetime.fromisoformat(daily_forecasts["sunset"][i]).strftime("%H:%M")
+            
+            # Alleen uren binnen de zonsopgang en zonsondergang weergeven
             st.write(f"**{date}:**")
-            # Haal de bijbehorende gegevens voor elk uur op
-            for i, time in enumerate(forecast_data["hourly"]["time"]):
+            for j, time in enumerate(hourly_data["time"]):
                 hour = datetime.fromisoformat(time).strftime("%H:%M")
-                temperature = forecast_data["hourly"]["temperature_2m"][i]
-                precipitation = forecast_data["hourly"]["precipitation"][i]
-                cloudcover = forecast_data["hourly"]["cloud_cover"][i]
-                st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
+                if sunrise <= hour <= sunset:
+                    temperature = hourly_data["temperature_2m"][j]
+                    precipitation = hourly_data["precipitation"][j]
+                    cloudcover = hourly_data["cloud_cover"][j]
+                    cloudcover_low = hourly_data["cloud_cover_low"][j]
+                    cloudcover_mid = hourly_data["cloud_cover_mid"][j]
+                    cloudcover_high = hourly_data["cloud_cover_high"][j]
+                    wind_direction = get_wind_direction(hourly_data["wind_direction_10m"][j])
+                    wind_speed = wind_speed_to_beaufort(hourly_data["wind_speed_10m"][j])
+
+                    st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - "
+                             f"Cloud Cover: {cloudcover}% (Low: {cloudcover_low}%, Mid: {cloudcover_mid}%, High: {cloudcover_high}%) - "
+                             f"Wind: {wind_direction} {wind_speed}Bf")
