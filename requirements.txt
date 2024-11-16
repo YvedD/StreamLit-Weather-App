@@ -6,3 +6,6 @@ streamlit
 pycountry
 folium
 streamlit-folium
+pillow
+seaborn
+matplotlib
