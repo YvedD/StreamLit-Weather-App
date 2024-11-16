@@ -49,8 +49,8 @@ selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
 end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
-# Ophalen van coördinaten en weergegevens op basis van nieuwe locatie en datum
-if country == "België" and location == "Bredene":
+# Update coördinaten voor nieuwe locaties indien nodig
+if country == "België" and location.lower() == "bredene":
     latitude, longitude = 51.2389, 2.9724
 # Voeg hier meer locaties toe als gewenst, of integreer met een externe service om dynamisch locaties om te zetten naar coördinaten
 
