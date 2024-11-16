@@ -65,10 +65,10 @@ def fetch_weather_data(latitude, longitude, start_date, end_date, start_hour, en
                 for key in filtered_data.keys():
                     filtered_data[key].append(data['hourly'][key][i])
 
-        return filtered_data
+        return data['daily'], filtered_data
     else:
         st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
-        return None
+        return None, None
 
 # Functie om een locatie op de kaart te tonen
 def show_location_on_map(latitude, longitude, location_name):
@@ -116,7 +116,8 @@ if location:
     start_hour = int(start_time[:2])  # Haal het uur uit de starttijd
     end_hour = int(end_time[:2])      # Haal het uur uit de eindtijd
 
-    weather_data = fetch_weather_data(latitude, longitude, start_date_str, end_date_str, start_hour, end_hour)
+    # Haal de weergegevens op, inclusief de dagelijkse gegevens voor zonsopgang en zonsondergang
+    daily_data, weather_data = fetch_weather_data(latitude, longitude, start_date_str, end_date_str, start_hour, end_hour)
 
     if weather_data:
         # Verkrijg de gegevens van de API response
@@ -130,6 +131,14 @@ if location:
         cloudcover_high = weather_data['cloud_cover_high']
         precipitation = weather_data['precipitation']
 
+        # Verkrijg de zonsopgang en zonsondergang van de dagelijkse data
+        sunrise = daily_data['sunrise'][0]
+        sunset = daily_data['sunset'][0]
+
+        # Toon de zonsopgang en zonsondergang, locatie en gps-gegevens boven de expanders
+        st.markdown(f"**Land**: {country}, **Locatie**: {location_name} ({latitude:.4f}, {longitude:.4f})")
+        st.markdown(f"Zonsopgang: {sunrise}, Zonsondergang: {sunset}")
+        
         # Toon de historische weergegevens in de eerste expander
         with st.expander("Historische Weergegevens - Kort Overzicht"):
             for i in range(len(times)):
