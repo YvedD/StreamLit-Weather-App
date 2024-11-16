@@ -1,6 +1,8 @@
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
+from timezonefinder import TimezoneFinder
+import pytz
 
 # Lijst van Europese landen in Engels en Nederlands
 EUROPEAN_COUNTRIES_EN = [
@@ -38,19 +40,28 @@ def get_gps_coordinates(location):
         st.error(f"Error fetching GPS coordinates: {e}")  # Error message in English
         return None, None
 
-# Functie om zonsopkomst en zonsondergang te berekenen
+# Functie om zonsopkomst en zonsondergang te berekenen, rekening houdend met de tijdzone
 def get_sun_times(lat, lon, date):
-    api_url = (
-        f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
-    )
+    # Haal de tijdzone op voor de locatie
+    tz_finder = TimezoneFinder()
+    timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
+
+    # Converteer naar UTC tijd en haal de tijden op
+    api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
         if 'results' in data:
-            sunrise = datetime.fromisoformat(data['results']['sunrise']).strftime('%H:%M')
-            sunset = datetime.fromisoformat(data['results']['sunset']).strftime('%H:%M')
-            return sunrise, sunset
+            sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
+            sunset_utc = datetime.fromisoformat(data['results']['sunset'])
+
+            # Converteer naar lokale tijdzone met inachtneming van zomertijd
+            local_tz = pytz.timezone(timezone_str)
+            sunrise_local = sunrise_utc.astimezone(local_tz)
+            sunset_local = sunset_utc.astimezone(local_tz)
+
+            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
         else:
             st.error("Sunrise and sunset times not found.")  # Error message in English
             return None, None
