@@ -1,12 +1,10 @@
-#invoer.py - een blackbox om op een geformateerde manier de basisgegevens van de gebruikers te verkrijgen
-
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
 
 # Lijst van Europese landen voor de dropdown
 EUROPEAN_COUNTRIES = [
-    "Belgium", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
+    "België", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
     "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia", "Germany", 
     "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", 
     "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", 
@@ -83,8 +81,9 @@ def show_input_form():
     st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
 
     # Expander die altijd uitgeklapt is
-    with st.expander("Input by user", expanded=True):  # Dit maakt de expander standaard uitgeklapt
-    
+    with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
+        st.markdown('<div class="custom-container">', unsafe_allow_html=True)
+
         # Titel voor de invoer
         st.header("Invoergegevens voor het weer")
 
