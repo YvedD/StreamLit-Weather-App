@@ -4,7 +4,7 @@ import requests
 
 # Lijst van Europese landen voor de dropdown
 EUROPEAN_COUNTRIES = [
-    "België", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
+    "Belgium", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
     "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia", "Germany", 
     "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", 
     "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", 
@@ -52,7 +52,7 @@ def get_sun_times(lat, lon, date):
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
     # Standaardwaarden voor locatie en datum
-    default_country = "België"
+    default_country = "Belgium"
     default_location = "Bredene"
     latitude = 51.2389
     longitude = 2.9724
