@@ -160,3 +160,7 @@ with st.expander("Kaartweergave van deze locatie"):
         map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
+
+# Derde expander voor de "3 day forecast"
+with st.expander("3 day forecast for this location"):
+    st.write("under construction")
