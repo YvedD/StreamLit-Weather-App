@@ -2,6 +2,16 @@ import streamlit as st
 from datetime import datetime, timedelta
 import requests
 
+# Lijst van Europese landen voor de dropdown
+EUROPEAN_COUNTRIES = [
+    "België", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
+    "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia", "Germany", 
+    "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", 
+    "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", 
+    "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia", 
+    "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "United Kingdom", "Vatican City"
+]
+
 # Functie om GPS-coördinaten op te halen via geocoding service
 def get_gps_coordinates(location):
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
@@ -72,11 +82,13 @@ def show_input_form():
 
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
+        st.markdown('<div class="custom-container">', unsafe_allow_html=True)
+
         # Titel voor de invoer
         st.header("Invoergegevens voor het weer")
 
         # Formulier voor het invoeren van gegevens
-        country = st.selectbox("Selecteer land", ["België"], index=0)  # Aanpassing voor slechts één land
+        country = st.selectbox("Selecteer land", EUROPEAN_COUNTRIES, index=EUROPEAN_COUNTRIES.index(default_country))  # Lijst van Europese landen
         location = st.text_input("Locatie", value=default_location)
         selected_date = st.date_input("Datum", value=selected_date)
         start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
@@ -94,7 +106,6 @@ def show_input_form():
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
             st.write(f"**Land**: {country}, **Locatie**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
-            #st.write(f"{latitude:.2f}°N {longitude:.2f}°E")
             if sunrise and sunset:
                 st.write(f"**Zonsopkomst**: {sunrise}, **Zonsondergang**: {sunset}")
         else:
