@@ -22,6 +22,23 @@ def fetch_weather_data(lat, lon, date):
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
         return None
 
+# Functie om GPS-coördinaten op te halen via geocoding service
+def get_gps_coordinates(location):
+    api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
+    try:
+        response = requests.get(api_url)
+        data = response.json()
+        if data:
+            lat = float(data[0]["lat"])
+            lon = float(data[0]["lon"])
+            return lat, lon
+        else:
+            st.error("Locatie niet gevonden.")
+            return None, None
+    except requests.RequestException as e:
+        st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
+        return None, None
+
 # Lijst van Europese landen voor de dropdown
 european_countries = [
     "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Wit-Rusland", "België", "Bosnië en Herzegovina",
@@ -49,10 +66,8 @@ selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
 end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
-# Update coördinaten voor nieuwe locaties indien nodig
-if country == "België" and location.lower() == "bredene":
-    latitude, longitude = 51.2389, 2.9724
-# Voeg hier meer locaties toe als gewenst, of integreer met een externe service om dynamisch locaties om te zetten naar coördinaten
+# Verkrijg de GPS-coördinaten voor de nieuwe locatie
+latitude, longitude = get_gps_coordinates(location)
 
 # Weerdata ophalen
 weather_data = fetch_weather_data(latitude, longitude, selected_date)
