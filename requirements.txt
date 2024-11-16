@@ -5,3 +5,5 @@ folium
 streamlit-folium
 seaborn
 matplotlib
+timezonefinder
+pytz
