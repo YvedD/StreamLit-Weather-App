@@ -88,13 +88,13 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
-# Functie om de weersvoorspelling voor 1 dag op te halen
-def fetch_1_day_forecast(lat, lon):
+# Functie om de 3-daagse weersvoorspelling op te halen
+def fetch_3_day_forecast(lat, lon):
     api_url = (
         f"https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}"
+        f"?latitude={lat}&longitude={lon}?"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
-        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=1"
+        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=3"
     )
     try:
         response = requests.get(api_url)
@@ -112,7 +112,7 @@ longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
 # Titel en instructies
-st.title("Weersvoorspelling voor 1 Dag - Open-Meteo API")
+st.title("Historische Weergegevens - Open-Meteo API")
 
 # Formulier voor het invoeren van gegevens
 country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
@@ -125,12 +125,14 @@ end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], ind
 latitude, longitude = get_gps_coordinates(location)
 
 # Weerdata ophalen
-weather_data = fetch_1_day_forecast(latitude, longitude)
+weather_data = fetch_weather_data(latitude, longitude, selected_date, start_hour, end_hour)
 
 # Begin- en einduur op basis van zonsopgang en zonsondergang
 if weather_data:
     sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
+    start_hour = sunrise if start_hour == "08:00" else start_hour
+    end_hour = sunset if end_hour == "16:00" else end_hour
 else:
     sunrise, sunset = "08:00", "16:00"
 
@@ -155,15 +157,15 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
             hour = datetime.fromisoformat(time).strftime("%H:%M")
-            if sunrise <= hour <= sunset:
+            if start_hour <= hour <= end_hour:
                 # Zet windrichting om naar NW-formaat
                 wind_direction = get_wind_direction(wind_directions[i])
                 # Zet windsnelheid om naar Beaufort schaal
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour}: Temp:{temperatures[i]:.1f}°C - Neersl:{precipitation[i]:.1f}mm - Bew.Tot:{cloudcover[i]}%"
-                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - "
+                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
+                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
                     f"Wind:{wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
@@ -175,9 +177,9 @@ with st.expander("Kaartweergave van deze locatie"):
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
 
-# Derde expander voor de 1-daagse weersvoorspelling
-with st.expander("1-daagse weersvoorspelling"):
-    forecast_data = fetch_1_day_forecast(latitude, longitude)
+# Derde expander voor de 3-daagse weersvoorspelling
+with st.expander("3-daagse weersvoorspelling"):
+    forecast_data = fetch_3_day_forecast(latitude, longitude)
     if forecast_data:
         daily_forecasts = forecast_data["daily"]
         for day in daily_forecasts["time"]:
