@@ -65,6 +65,11 @@ hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
 start_hour = st.selectbox("Startuur:", hours, index=6)  # Startuur is 06:00 als standaard
 end_hour = st.selectbox("Einduur:", hours, index=20)  # Einduur is 20:00 als standaard
 
+# Dummy string voor initiële weergave (indien geen wijzigingen)
+default_location = "België - Bredene - Gisteren - 08:00 tot 16:00"
+weather_info_display = st.empty()
+weather_info_display.text(f"Standaard weerinformatie: {default_location}")
+
 # Functie om weerdata op te halen
 def fetch_weather_data(lat, lon, start, end):
     url = (
@@ -82,87 +87,79 @@ def fetch_weather_data(lat, lon, start, end):
         return None
 
 # Knop om weergegevens op te vragen
-if st.button("Weersgegevens opvragen"):
-    # Bereken de start- en einddatums voor historische gegevens (8 dagen terug)
-    start_date = selected_date - timedelta(days=8)
-    end_date = selected_date
+if country or location_name or selected_date or start_hour or end_hour:
+    # Update de weergegevens zodra de gebruiker wijzigingen aanbrengt
+    weather_info_display.text(f"Gegevens opgevraagd voor: {country} - {location_name} - {selected_date} - {start_hour} tot {end_hour}")
 
-    # Initialiseer geolocator
+# Functie voor het ophalen van locatie-coördinaten
+def get_coordinates(location_name, country):
     geolocator = Nominatim(user_agent="weather_app")
     location = geolocator.geocode(f"{location_name}, {country}")
-
     if location:
-        latitude, longitude = location.latitude, location.longitude
-
-        # Maak drie expanders voor overzicht, voorspellingen en historische gegevens
-        with st.expander("Locatie Overzicht"):
-            # Kaart met marker
-            st.header("Locatie op kaart")
-            map_obj = folium.Map(location=[latitude, longitude], zoom_start=6)
-            folium.Marker([latitude, longitude], tooltip=location_name, icon=folium.Icon(color="red")).add_to(map_obj)
-            st_folium(map_obj, width=700, height=400)
-
-        # Extra expander voor tekstueel historische gegevens
-        with st.expander("Historische Weergegevens - Kort Overzicht"):
-            # Historische gegevens ophalen
-            historical_data = fetch_weather_data(latitude, longitude, start_date, end_date)
-            if historical_data:
-                hourly = historical_data['hourly']
-                times = [datetime.strptime(hourly['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(hourly['time']))]
-                temperatures = hourly['temperature_2m']
-                wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
-                wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly['wind_direction_10m']]
-                cloudcover = hourly.get('cloudcover', [])
-                cloudcover_low = hourly.get('cloudcover_low', [])
-                cloudcover_mid = hourly.get('cloudcover_mid', [])
-                cloudcover_high = hourly.get('cloudcover_high', [])
-                precipitation = hourly.get('precipitation', [])
-
-                # Filteren op geselecteerde datum en tijdsbereik
-                start_datetime = datetime.combine(selected_date, datetime.strptime(start_hour, "%H:%M").time())
-                end_datetime = datetime.combine(selected_date, datetime.strptime(end_hour, "%H:%M").time())
-
-                # Kort overzicht per uur binnen de geselecteerde tijdsperiode
-                for i in range(len(times)):
-                    if start_datetime <= times[i] <= end_datetime:
-                        # Alleen gegevens tonen als ze daadwerkelijk beschikbaar zijn
-                        if temperatures[i] is not None and precipitation[i] is not None and cloudcover[i] is not None:
-                            weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
-                            st.code(weather_info)
-
-        # Historische gegevens grafieken
-        with st.expander("Historische Weergegevens - Grafieken"):
-            if historical_data:
-                sns.set(style="whitegrid")
-
-                # Filter alleen tijden binnen de geselecteerde datum en tijdsbereik voor grafieken
-                filtered_times = [time for time in times if start_datetime <= time <= end_datetime]
-                filtered_temperatures = [temperatures[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-                filtered_wind_speeds = [wind_speeds[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-                filtered_cloudcover = [cloudcover[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-                filtered_precipitation = [precipitation[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-
-                # Temperatuur en Windsnelheid Plot
-                fig, ax1 = plt.subplots(figsize=(12, 6))
-                sns.lineplot(x=filtered_times, y=filtered_temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
-                sns.lineplot(x=filtered_times, y=filtered_wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
-                ax1.set_xlabel("Datum en Tijd")
-                ax1.set_ylabel("Temperatuur / Windsnelheid")
-                ax1.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
-
-                # Bewolking en Zichtbaarheid Plot
-                fig2, ax2 = plt.subplots(figsize=(12, 6))
-                sns.lineplot(x=filtered_times, y=filtered_cloudcover, color="gray", ax=ax2, label="Bewolkingsgraad (%)")
-                sns.lineplot(x=filtered_times, y=filtered_precipitation, color="purple", ax=ax2, label="Neerslag (mm)")
-                ax2.set_xlabel("Datum en Tijd")
-                ax2.set_ylabel("Bewolking / Neerslag")
-                ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
-
-                # Weergeven van de grafieken
-                st.pyplot(fig)
-                st.pyplot(fig2)
-            else:
-                st.error("Er zijn geen historische weergegevens gevonden.")
+        return location.latitude, location.longitude
     else:
         st.error(f"Kan locatie '{location_name}, {country}' niet vinden.")
+        return None, None
 
+# Haal de coördinaten op voor de opgegeven locatie
+latitude, longitude = get_coordinates(location_name, country)
+
+# Verwerk de gegevens als coördinaten beschikbaar zijn
+if latitude and longitude:
+    start_datetime = datetime.combine(selected_date, datetime.strptime(start_hour, "%H:%M").time())
+    end_datetime = datetime.combine(selected_date, datetime.strptime(end_hour, "%H:%M").time())
+
+    # Haal weergegevens op voor de opgegeven periode
+    historical_data = fetch_weather_data(latitude, longitude, start_datetime.date(), end_datetime.date())
+    
+    # Display voor de expander als gegevens beschikbaar zijn
+    if historical_data:
+        with st.expander("Historische Weergegevens - Kort Overzicht"):
+            hourly = historical_data['hourly']
+            times = [datetime.strptime(hourly['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(hourly['time']))]
+            temperatures = hourly['temperature_2m']
+            wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
+            wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly['wind_direction_10m']]
+            cloudcover = hourly.get('cloudcover', [])
+            cloudcover_low = hourly.get('cloudcover_low', [])
+            cloudcover_mid = hourly.get('cloudcover_mid', [])
+            cloudcover_high = hourly.get('cloudcover_high', [])
+            precipitation = hourly.get('precipitation', [])
+            
+            # Filteren op geselecteerde datum en tijdsbereik
+            for i in range(len(times)):
+                if start_datetime <= times[i] <= end_datetime:
+                    if temperatures[i] is not None and precipitation[i] is not None and cloudcover[i] is not None:
+                        weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
+                        st.code(weather_info)
+        
+        # Grafieken
+        with st.expander("Historische Weergegevens - Grafieken"):
+            sns.set(style="whitegrid")
+            filtered_times = [time for time in times if start_datetime <= time <= end_datetime]
+            filtered_temperatures = [temperatures[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_wind_speeds = [wind_speeds[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_cloudcover = [cloudcover[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_precipitation = [precipitation[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+
+            # Temperatuur en Windsnelheid Plot
+            fig, ax1 = plt.subplots(figsize=(12, 6))
+            sns.lineplot(x=filtered_times, y=filtered_temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
+            sns.lineplot(x=filtered_times, y=filtered_wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
+            ax1.set_xlabel("Datum en Tijd")
+            ax1.set_ylabel("Temperatuur / Windsnelheid")
+            ax1.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
+
+            # Bewolking en Neerslag Plot
+            fig2, ax2 = plt.subplots(figsize=(12, 6))
+            sns.lineplot(x=filtered_times, y=filtered_cloudcover, color="orange", ax=ax2, label="Bewolking (%)")
+            sns.lineplot(x=filtered_times, y=filtered_precipitation, color="purple", ax=ax2, label="Neerslag (mm)")
+            ax2.set_xlabel("Datum en Tijd")
+            ax2.set_ylabel("Bewolking / Neerslag")
+            ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
+
+            # Weergeven van de grafieken
+            st.pyplot(fig)
+            st.pyplot(fig2)
+    else:
+        st.error("Er zijn geen historische weergegevens gevonden.")
