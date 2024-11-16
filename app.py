@@ -74,7 +74,8 @@ def fetch_weather_data(latitude, longitude, start_date, end_date, start_hour, en
 def show_location_on_map(latitude, longitude, location_name):
     m = folium.Map(location=[latitude, longitude], zoom_start=12)
     folium.Marker([latitude, longitude], popup=location_name).add_to(m)
-    folium_static(m)
+    # Pas de breedte van de kaart aan zodat deze past binnen de expander
+    folium_static(m, width=700)  # Hier stellen we de breedte in op 700 pixels
 
 # Hoofdcode van de app
 st.title("Weerdata en Kaartweergave")
