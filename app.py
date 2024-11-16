@@ -98,31 +98,12 @@ selected_date = datetime.now() - timedelta(days=1)
 # Titel en instructies
 st.title("Historische Weergegevens - Open-Meteo API")
 
-# CSS om invoervelden in een rechthoek met afgeronde hoeken te plaatsen
-st.markdown("""
-    <style>
-        .input-box {
-            border: 2px solid #4CAF50;
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            background-color: #f9f9f9;
-        }
-        .input-box h3 {
-            margin: 0;
-        }
-    </style>
-""", unsafe_allow_html=True)
-
-# Formulier voor het invoeren van gegevens binnen een rechthoek
-with st.container():
-    st.markdown('<div class="input-box">', unsafe_allow_html=True)
-    country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
-    location = st.text_input("Locatie", value=default_location)
-    selected_date = st.date_input("Datum", value=selected_date)
-    start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
-    end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
-    st.markdown('</div>', unsafe_allow_html=True)
+# Formulier voor het invoeren van gegevens
+country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
+location = st.text_input("Locatie", value=default_location)
+selected_date = st.date_input("Datum", value=selected_date)
+start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
+end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
 # Verkrijg de GPS-coördinaten voor de nieuwe locatie
 latitude, longitude = get_gps_coordinates(location)
