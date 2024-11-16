@@ -169,16 +169,28 @@ with st.expander("Kaartweergave van deze locatie"):
 
 # Derde expander voor de 3-daagse weersvoorspelling
 with st.expander("3-daagse weersvoorspelling"):
+    # Haal de drie dagen weersvoorspelling op
     forecast_data = fetch_3_day_forecast(latitude, longitude)
+    
     if forecast_data:
         daily_forecasts = forecast_data["daily"]
-        for day in daily_forecasts["time"]:
-            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
-            st.write(f"**{date}:**")
-            # Haal de bijbehorende gegevens voor elk uur op
-            for i, time in enumerate(forecast_data["hourly"]["time"]):
-                hour = datetime.fromisoformat(time).strftime("%H:%M")
-                temperature = forecast_data["hourly"]["temperature_2m"][i]
-                precipitation = forecast_data["hourly"]["precipitation"][i]
-                cloudcover = forecast_data["hourly"]["cloud_cover"][i]
+        hourly_forecasts = forecast_data["hourly"]
+        
+        # Startdatum aanpassen naar de datum die door de gebruiker is ingevoerd
+        base_date = selected_date
+        
+        for i in range(3):
+            # Bereken de datum voor de huidige dag in de iteratie
+            forecast_date = base_date + timedelta(days=i)
+            date_str = forecast_date.strftime("%A %d %B %Y")
+            
+            st.write(f"**{date_str}:**")
+            
+            # Haal de data voor de huidige dag (24 uur) en toon deze
+            for j in range(24):  # We tonen nu enkel 24 uur per dag
+                hour = (forecast_date + timedelta(hours=j)).strftime("%H:%M")
+                temperature = hourly_forecasts["temperature_2m"][i*24 + j]
+                precipitation = hourly_forecasts["precipitation"][i*24 + j]
+                cloudcover = hourly_forecasts["cloud_cover"][i*24 + j]
+                
                 st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
