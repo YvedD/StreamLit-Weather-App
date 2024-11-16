@@ -64,9 +64,10 @@ country = st.selectbox("Land:", european_countries, index=european_countries.ind
 location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Bredene")
 selected_date = st.date_input("Selecteer de datum:", default_date)
 
-# Daglichturen van gisteren (voorbeeld: 07:00 - 19:00)
-start_hour = "07:00"
-end_hour = "19:00"
+# Volle uren selecties (tussen 00:00 en 23:00)
+hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
+start_hour = st.selectbox("Startuur:", hours, index=7)  # Standaard 07:00
+end_hour = st.selectbox("Einduur:", hours, index=19)  # Standaard 19:00
 
 # Bereken de start- en einddatums voor historische gegevens (8 dagen terug)
 start_date = selected_date - timedelta(days=8)
