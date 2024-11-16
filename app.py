@@ -85,8 +85,8 @@ default_country = "België"
 latitude = 51.2389
 longitude = 2.9724
 selected_date = (datetime.now() - timedelta(days=1)).date()
-default_start_hour = "08:06"
-default_end_hour = "16:59"
+default_start_hour = "08:00"
+default_end_hour = "16:00"
 
 # Land selecteren
 country = st.selectbox("Selecteer land:", ["België", "Nederland", "Duitsland", "Frankrijk", "Luxemburg"], index=0)
@@ -119,4 +119,4 @@ with st.expander("Weergegevens voor de gevraagde tijdsperiode", expanded=True):
 with st.expander("Kaartweergave van deze locatie", expanded=True):
     st.markdown("<style>div.stContainer {max-width: 100%;}</style>", unsafe_allow_html=True)  # Houd kaart binnen de expander
     map_folium = generate_map(latitude, longitude)
-    st_folium(map_folium, width=600)  # Experimenteer met breedte om de kaart perfect te laten passen
+    st_folium(map_folium, width=700)  # Experimenteer met breedte om de kaart perfect te laten passen
