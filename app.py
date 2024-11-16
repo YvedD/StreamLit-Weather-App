@@ -88,13 +88,13 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
-# Functie om de 3-daagse weersvoorspelling op te halen
-def fetch_3_day_forecast(lat, lon):
+# Functie om de weersvoorspelling voor 1 dag op te halen
+def fetch_1_day_forecast(lat, lon):
     api_url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
-        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=3"
+        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=1"
     )
     try:
         response = requests.get(api_url)
@@ -118,21 +118,17 @@ st.title("Historische Weergegevens - Open-Meteo API")
 country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
-start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
-end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
 # Verkrijg de GPS-coördinaten voor de nieuwe locatie
 latitude, longitude = get_gps_coordinates(location)
 
 # Weerdata ophalen
-weather_data = fetch_weather_data(latitude, longitude, selected_date, start_hour, end_hour)
+weather_data = fetch_weather_data(latitude, longitude, selected_date, "08:00", "16:00")
 
 # Begin- en einduur op basis van zonsopgang en zonsondergang
 if weather_data:
     sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-    start_hour = sunrise if start_hour == "08:00" else start_hour
-    end_hour = sunset if end_hour == "16:00" else end_hour
 else:
     sunrise, sunset = "08:00", "16:00"
 
@@ -157,7 +153,7 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
             hour = datetime.fromisoformat(time).strftime("%H:%M")
-            if start_hour <= hour <= end_hour:
+            if sunrise <= hour <= sunset:
                 # Zet windrichting om naar NW-formaat
                 wind_direction = get_wind_direction(wind_directions[i])
                 # Zet windsnelheid om naar Beaufort schaal
@@ -175,33 +171,3 @@ with st.expander("Kaartweergave van deze locatie"):
         map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
-
-# Derde expander voor de 3-daagse weersvoorspelling
-with st.expander("3-daagse weersvoorspelling"):
-    forecast_data = fetch_3_day_forecast(latitude, longitude)
-    if forecast_data:
-        daily_forecasts = forecast_data["daily"]
-        hourly_data = forecast_data["hourly"]
-        
-        for i, day in enumerate(daily_forecasts["time"]):
-            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
-            sunrise = datetime.fromisoformat(daily_forecasts["sunrise"][i]).strftime("%H:%M")
-            sunset = datetime.fromisoformat(daily_forecasts["sunset"][i]).strftime("%H:%M")
-            
-            # Alleen uren binnen de zonsopgang en zonsondergang weergeven
-            st.write(f"**{date}:**")
-            for j, time in enumerate(hourly_data["time"]):
-                hour = datetime.fromisoformat(time).strftime("%H:%M")
-                if sunrise <= hour <= sunset:
-                    temperature = hourly_data["temperature_2m"][j]
-                    precipitation = hourly_data["precipitation"][j]
-                    cloudcover = hourly_data["cloud_cover"][j]
-                    cloudcover_low = hourly_data["cloud_cover_low"][j]
-                    cloudcover_mid = hourly_data["cloud_cover_mid"][j]
-                    cloudcover_high = hourly_data["cloud_cover_high"][j]
-                    wind_direction = get_wind_direction(hourly_data["wind_direction_10m"][j])
-                    wind_speed = wind_speed_to_beaufort(hourly_data["wind_speed_10m"][j])
-
-                    st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - "
-                             f"Cloud Cover: {cloudcover}% (Low: {cloudcover_low}%, Mid: {cloudcover_mid}%, High: {cloudcover_high}%) - "
-                             f"Wind: {wind_direction} {wind_speed}Bf")
