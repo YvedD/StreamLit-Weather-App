@@ -152,7 +152,8 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
         wind_speeds = hourly_data["wind_speed_10m"]
-        wind_directions = hourly_data["wind_direction_10m"]
+        # Hier wordt een standaardwaarde gebruikt als wind_direction_10m niet bestaat
+        wind_directions = hourly_data.get("wind_direction_80m", [0] * len(times))
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -164,20 +165,24 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
-                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
-                    f"Wind:{wind_direction} {beaufort}Bf"
+                    f"{hour}:Temp:{temperatures[i]:.1f}°C, "
+                    f"Neerslag:{precipitation[i]:.1f}mm, "
+                    f"Bewolking:{cloudcover[i]}% "
+                    f"(Laag:{cloudcover_low[i]}%, Midden:{cloudcover_mid[i]}%, Hoog:{cloudcover_high[i]}%), "
+                    f"Windsnelheid:{wind_speeds[i]}km/u ({beaufort}Bft, {wind_direction})"
                 )
-                st.code(weather_info)
+                st.write(weather_info)
+    else:
+        st.write("Geen weergegevens gevonden voor de geselecteerde locatie en tijd.")
 
-# Expander voor de kaartweergave
+# Kaartweergave van de geselecteerde locatie
 with st.expander("Kaartweergave van deze locatie"):
     if latitude and longitude:
         map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
 
-# Expander voor de weersvoorspelling voor morgen, als de datum vandaag is
+# Expander voor weersvoorspelling voor morgen als de datum vandaag is
 with st.expander("Voorspelling voor morgen"):
     if selected_date == datetime.now().date():
         forecast_data = fetch_tomorrow_forecast(latitude, longitude)
@@ -186,13 +191,14 @@ with st.expander("Voorspelling voor morgen"):
             tomorrow = (datetime.now().date() + timedelta(days=1)).strftime("%A %d %B %Y")
             st.write(f"**{tomorrow}:**")
 
-            # Toon de weersvoorspelling per uur voor morgen
             for j, time in enumerate(hourly_data["time"]):
                 forecast_hour = datetime.fromisoformat(time).strftime("%H:%M")
                 if "00:00" <= forecast_hour <= "23:59":  # hele dag
                     temperature = hourly_data["temperature_2m"][j]
                     precipitation = hourly_data["precipitation"][j]
                     cloudcover = hourly_data["cloud_cover"][j]
-                    st.write(f"{forecast_hour}: Temp: {temperature}°C - Neerslag: {precipitation}mm - Bewolking: {cloudcover}%")
+                    st.write(
+                        f"{forecast_hour}: Temp: {temperature}°C - Neerslag: {precipitation}mm - Bewolking: {cloudcover}%"
+                    )
     else:
         st.write("Voorspelling beschikbaar voor morgen indien datum gelijk is aan vandaag.")
