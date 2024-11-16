@@ -58,11 +58,17 @@ def show_input_form():
                 background-color: #f0f8f0;  /* Lichte groene achtergrondkleur */
                 margin-bottom: 20px;
             }
+            .project-title {
+                font-size: 36px;
+                font-weight: bold;
+                color: #4CAF50;
+                margin-bottom: 20px;
+            }
         </style>
     """, unsafe_allow_html=True)
 
-    # Toon titel voor het project boven de expander
-    st.title("Migration Weather Data")
+    # Voeg projecttitel toe binnen de markdown
+    st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
 
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
