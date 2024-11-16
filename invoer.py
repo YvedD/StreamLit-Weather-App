@@ -82,7 +82,8 @@ def show_input_form():
             "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
             index=0 if st.session_state.get("language", "English") == "English" else 1,
-            key="language_selector"  # Zorgt ervoor dat het als een aparte state wordt behandeld
+            key="language_selector",  # Zorgt ervoor dat het als een aparte state wordt behandeld
+            horizontal=True  # Zorgt ervoor dat de radio-buttons naast elkaar komen te staan
         )
 
         # Sla de taalkeuze op in de session_state
