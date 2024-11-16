@@ -59,7 +59,10 @@ def show_input_form():
     selected_date = datetime.now().date() - timedelta(days=1)
 
     # Voeg enkel de titel toe boven de expander
-    st.markdown('<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</h1>', unsafe_allow_html=True)
+    st.markdown(
+        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</h1>',
+        unsafe_allow_html=True
+    )
 
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
