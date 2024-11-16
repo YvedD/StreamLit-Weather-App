@@ -75,24 +75,25 @@ if location:
         folium.Marker([latitude, longitude], tooltip=location_name, icon=folium.Icon(color="red")).add_to(map_obj)
         st_folium(map_obj, width=700, height=400)
 
-    # Functie om weerdata op te halen
-    def fetch_weather_data(lat, lon, start, end):
-        url = (
-            f"https://archive-api.open-meteo.com/v1/archive"
-            f"?latitude={lat}&longitude={lon}"
-            f"&start_date={start}&end_date={end}"
-            f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,precipitation,visibility"
-            f"&timezone=Europe/Berlin"
-        )
-        response = requests.get(url)
-        if response.status_code == 200:
-            return response.json()
-        else:
-            st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
-            return None
+    # Extra expander voor tekstuele historische gegevens
+    with st.expander("Historische Weergegevens - Tekstueel Overzicht"):
+        # Functie om weerdata op te halen
+        def fetch_weather_data(lat, lon, start, end):
+            url = (
+                f"https://archive-api.open-meteo.com/v1/archive"
+                f"?latitude={lat}&longitude={lon}"
+                f"&start_date={start}&end_date={end}"
+                f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,precipitation,visibility"
+                f"&timezone=Europe/Berlin"
+            )
+            response = requests.get(url)
+            if response.status_code == 200:
+                return response.json()
+            else:
+                st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
+                return None
 
-    # Historische gegevens ophalen
-    with st.expander("Historische Weergegevens"):
+        # Historische gegevens ophalen
         historical_data = fetch_weather_data(latitude, longitude, start_date, end_date)
         if historical_data:
             hourly = historical_data['hourly']
@@ -101,10 +102,27 @@ if location:
             wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
             wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly['wind_direction_10m']]
             cloudcover = hourly.get('cloudcover', [])
+            cloudcover_low = hourly.get('cloudcover_low', [])
+            cloudcover_mid = hourly.get('cloudcover_mid', [])
+            cloudcover_high = hourly.get('cloudcover_high', [])
             precipitation = hourly.get('precipitation', [])
-            visibility = hourly.get('visibility', [])
 
-            # Seaborn plots
+            # Tekstueel overzicht per uur
+            for i in range(len(times)):
+                st.write(f"**Tijdstip:** {times[i]}")
+                st.write(f"- Temperatuur: {temperatures[i]:.1f} °C")
+                st.write(f"- Neerslag: {precipitation[i]:.1f} mm")
+                st.write(f"- Bewolkingsgraad totaal: {cloudcover[i]}%")
+                st.write(f"- Bewolkingsgraad laag: {cloudcover_low[i]}%")
+                st.write(f"- Bewolkingsgraad midden: {cloudcover_mid[i]}%")
+                st.write(f"- Bewolkingsgraad hoog: {cloudcover_high[i]}%")
+                st.write(f"- Windrichting: {wind_directions[i]}")
+                st.write(f"- Windsnelheid (Beaufort): {wind_speeds[i]}")
+                st.write("---")  # Horizontale lijn als scheiding
+
+    # Historische gegevens grafieken
+    with st.expander("Historische Weergegevens - Grafieken"):
+        if historical_data:
             sns.set(style="whitegrid")
             
             # Temperatuur en Windsnelheid Plot
@@ -118,9 +136,8 @@ if location:
             # Bewolking en Zichtbaarheid Plot
             fig2, ax2 = plt.subplots(figsize=(12, 6))
             sns.lineplot(x=times, y=cloudcover, color="gray", ax=ax2, label="Bewolkingsgraad (%)")
-            sns.lineplot(x=times, y=visibility, color="purple", ax=ax2, label="Zichtbaarheid (km)")
             ax2.set_xlabel("Datum en Tijd")
-            ax2.set_ylabel("Bewolkingsgraad / Zichtbaarheid")
+            ax2.set_ylabel("Bewolkingsgraad")
             ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
             # Neerslag Plot
@@ -134,14 +151,3 @@ if location:
             st.pyplot(fig)
             st.pyplot(fig2)
             st.pyplot(fig3)
-
-    # Voorspelde gegevens ophalen en weergeven
-    with st.expander("Voorspelde Weergegevens"):
-        forecast_start_date = start_date_input
-        forecast_end_date = start_date_input + timedelta(days=8)
-        forecast_data = fetch_weather_data(latitude, longitude, forecast_start_date, forecast_end_date)
-        if forecast_data:
-            # Voorbeeld van hoe voorspelde gegevens kunnen worden weergegeven; kan verder worden aangepast
-            st.write("Voorspelde weergegevens nog toe te voegen.")
-else:
-    st.error("Locatie niet gevonden. Controleer de ingevoerde locatie en probeer opnieuw.")
