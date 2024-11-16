@@ -1,151 +1,122 @@
 import streamlit as st
-from datetime import datetime, timedelta
 import requests
-from geopy.geocoders import Nominatim
 import folium
-from streamlit_folium import folium_static
+from datetime import datetime, timedelta
+from streamlit_folium import st_folium
 
-# Functies voor windrichting en omrekening naar Beaufort
-def degrees_to_direction(degrees):
-    directions = ["N", "NE", "E", "SE", "S", "SW", "W", "NW"]
-    ix = int((degrees + 22.5) / 45)
-    return directions[ix % 8]
-
-def kmh_to_beaufort(speed_kmh):
-    if speed_kmh < 1:
-        return 0
-    elif speed_kmh <= 5:
-        return 1
-    elif speed_kmh <= 11:
-        return 2
-    elif speed_kmh <= 19:
-        return 3
-    elif speed_kmh <= 28:
-        return 4
-    elif speed_kmh <= 38:
-        return 5
-    elif speed_kmh <= 49:
-        return 6
-    elif speed_kmh <= 61:
-        return 7
-    elif speed_kmh <= 74:
-        return 8
-    elif speed_kmh <= 88:
-        return 9
-    elif speed_kmh <= 102:
-        return 10
-    elif speed_kmh <= 117:
-        return 11
-    else:
-        return 12
-
-# Functie om weergegevens op te halen van de Open-Meteo API
-def fetch_weather_data(latitude, longitude, start_date, end_date, start_hour, end_hour):
-    url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={start_date}&end_date={end_date}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m&daily=sunrise,sunset&timezone=Europe%2FBerlin"
-    
-    response = requests.get(url)
+# Functie om weergegevens op te halen
+def fetch_weather_data(latitude, longitude, date):
+    url = f"https://historical-forecast-api.open-meteo.com/v1/forecast"
+    params = {
+        "latitude": latitude,
+        "longitude": longitude,
+        "start_date": date,
+        "end_date": date,
+        "hourly": "temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
+                  "visibility,wind_speed_10m,wind_direction_80m",
+        "daily": "sunrise,sunset",
+        "timezone": "Europe/Berlin"
+    }
+    response = requests.get(url, params=params)
     if response.status_code == 200:
-        data = response.json()
-        filtered_data = {
-            'time': [],
-            'temperature_2m': [],
-            'precipitation': [],
-            'cloud_cover': [],
-            'cloud_cover_low': [],
-            'cloud_cover_mid': [],
-            'cloud_cover_high': [],
-            'wind_speed_10m': [],
-            'wind_direction_80m': []
-        }
-
-        # Filter data based on the selected time range
-        for i, time in enumerate(data['hourly']['time']):
-            time_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M")
-            # Adjusted filter to include the end hour as well
-            if start_hour <= time_obj.hour <= end_hour:
-                for key in filtered_data.keys():
-                    filtered_data[key].append(data['hourly'][key][i])
-
-        return data['daily'], filtered_data
+        return response.json()
     else:
-        st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
-        return None, None
+        st.error("Fout bij het ophalen van weergegevens")
+        return None
 
-# Functie om een locatie op de kaart te tonen
-def show_location_on_map(latitude, longitude, location_name):
-    m = folium.Map(location=[latitude, longitude], zoom_start=12)
-    folium.Marker([latitude, longitude], popup=location_name).add_to(m)
-    # Pas de breedte van de kaart aan zodat deze past binnen de expander
-    folium_static(m, width=700)  # Hier stellen we de breedte in op 700 pixels
+# Functie om de weergegevens correct te verwerken en weer te geven
+def process_weather_data(data, start_hour, end_hour):
+    if not data:
+        return None
+    hourly_data = data['hourly']
+    daily_data = data['daily']
+    
+    times = hourly_data['time']
+    temperatures = hourly_data['temperature_2m']
+    precipitation = hourly_data['precipitation']
+    cloudcover = hourly_data['cloud_cover']
+    cloudcover_low = hourly_data['cloud_cover_low']
+    cloudcover_mid = hourly_data['cloud_cover_mid']
+    cloudcover_high = hourly_data['cloud_cover_high']
+    wind_speeds = hourly_data['wind_speed_10m']
+    wind_directions = hourly_data['wind_direction_80m']
+    
+    # Zonsopgang en zonsondergang
+    sunrise = daily_data['sunrise'][0][-5:]
+    sunset = daily_data['sunset'][0][-5:]
+    
+    # Start en eindtijd index vinden
+    start_idx = times.index(f"{selected_date}T{start_hour}:00")
+    end_idx = times.index(f"{selected_date}T{end_hour}:00") + 1
 
-# Hoofdcode van de app
-st.title("Weerdata en Kaartweergave")
+    # Weerdata output opbouwen
+    weather_info = []
+    for i in range(start_idx, end_idx):
+        info = (f"{times[i][-5:]} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - "
+                f"Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
+                f"Wind: {convert_wind_direction(wind_directions[i])} {convert_to_beaufort(wind_speeds[i])}Bf")
+        weather_info.append(info)
+    return sunrise, sunset, weather_info
 
-# Standaardwaarden voor de invoervelden
+# Functie voor windrichting conversie
+def convert_wind_direction(degrees):
+    directions = ['N', 'NNO', 'NO', 'ONO', 'O', 'OZO', 'ZO', 'ZZO', 'Z', 'ZZW', 'ZW', 'WZW', 'W', 'WNW', 'NW', 'NNW']
+    idx = round(degrees / 22.5) % 16
+    return directions[idx]
+
+# Functie om wind in km/u om te zetten naar de Beaufort-schaal
+def convert_to_beaufort(wind_speed_kmh):
+    beaufort_scale = [0, 1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117]
+    for i, speed in enumerate(beaufort_scale):
+        if wind_speed_kmh < speed:
+            return i - 1
+    return 12
+
+# Functie om een kaart te genereren
+def generate_map(latitude, longitude):
+    # Creëer de folium kaart
+    m = folium.Map(location=[latitude, longitude], zoom_start=12, width='100%', height='100%')
+    # Voeg een marker toe voor de locatie
+    folium.Marker([latitude, longitude], popup="Bredene").add_to(m)
+    return m
+
+# Standaardinstellingen
 default_country = "België"
-default_location = "Bredene"
-default_date = datetime.today() - timedelta(days=1)  # Gisteren
-default_start_time = "08:00"
-default_end_time = "16:00"
+latitude = 51.2389
+longitude = 2.9724
+selected_date = (datetime.now() - timedelta(days=1)).date()
+default_start_hour = "08:06"
+default_end_hour = "16:59"
 
-# Lijst van Europese landen voor de dropdown
-countries = ["België", "Nederland", "Frankrijk", "Duitsland", "Luxemburg"]
+# Land selecteren
+country = st.selectbox("Selecteer land:", ["België", "Nederland", "Duitsland", "Frankrijk", "Luxemburg"], index=0)
 
-# Gebruikersinvoer
-country = st.selectbox("Land", countries, index=countries.index(default_country))
-location_name = st.text_input("Locatie", value=default_location)
+# Datum, startuur en einduur instellen
+selected_date = st.date_input("Datum", selected_date)
+start_hour = st.selectbox("Beginuur", [f"{str(i).zfill(2)}:00" for i in range(24)], index=int(default_start_hour[:2]))
+end_hour = st.selectbox("Einduur", [f"{str(i).zfill(2)}:00" for i in range(24)], index=int(default_end_hour[:2]))
 
-# Maak het datumveld en tijdvelden dynamisch
-selected_date = st.date_input("Selecteer een datum", default_date)
-start_time = st.selectbox("Selecteer startuur", [f"{i:02}:00" for i in range(24)], index=8)  # Standaardwaarde 08:00
-end_time = st.selectbox("Selecteer einduur", [f"{i:02}:00" for i in range(24)], index=16)  # Standaardwaarde 16:00
+# Weergegevens ophalen en verwerken
+data = fetch_weather_data(latitude, longitude, selected_date)
+sunrise, sunset, weather_info = process_weather_data(data, start_hour[:2], end_hour[:2])
 
-# Haal de geografische coördinaten op
-geolocator = Nominatim(user_agent="weather_app")
-location = geolocator.geocode(f"{location_name}, {country}")
+# Toon locatie-informatie en zonsopgang/zonsopgang tijden
+if sunrise and sunset:
+    st.markdown(
+        f"**Land:** {country}  \n"
+        f"**Locatie:** Bredene ({latitude}, {longitude})  \n"
+        f"**Zonsopgang:** {sunrise}  \n"
+        f"**Zonsondergang:** {sunset}  \n"
+    )
 
-if location:
-    latitude, longitude = location.latitude, location.longitude
-    
-    # Verkrijg de historische weerdata
-    start_date = selected_date  # De startdatum wordt ingesteld op de geselecteerde datum
-    end_date = selected_date    # De einddatum wordt ingesteld op dezelfde geselecteerde datum
-    
-    # Gebruik de geselecteerde datums en tijdsopties
-    start_date_str = start_date.strftime('%Y-%m-%d')
-    end_date_str = end_date.strftime('%Y-%m-%d')
-    start_hour = int(start_time[:2])  # Haal het uur uit de starttijd
-    end_hour = int(end_time[:2])      # Haal het uur uit de eindtijd
+# Historische weergegevens in een expander
+with st.expander("Weergegevens voor de gevraagde tijdsperiode", expanded=True):
+    if weather_info:
+        for info in weather_info:
+            st.code(info, language="")
 
-    # Haal de weergegevens op, inclusief de dagelijkse gegevens voor zonsopgang en zonsondergang
-    daily_data, weather_data = fetch_weather_data(latitude, longitude, start_date_str, end_date_str, start_hour, end_hour)
-
-    if weather_data:
-        # Verkrijg de gegevens van de API response
-        times = [datetime.strptime(weather_data['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(weather_data['time']))]
-        temperatures = weather_data['temperature_2m']
-        wind_speeds = [kmh_to_beaufort(speed) for speed in weather_data['wind_speed_10m']]
-        wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in weather_data['wind_direction_80m']]
-        cloudcover = weather_data['cloud_cover']
-        cloudcover_low = weather_data['cloud_cover_low']
-        cloudcover_mid = weather_data['cloud_cover_mid']
-        cloudcover_high = weather_data['cloud_cover_high']
-        precipitation = weather_data['precipitation']
-
-        # Verkrijg de zonsopgang en zonsondergang van de dagelijkse data
-        sunrise = daily_data['sunrise'][0]
-        sunset = daily_data['sunset'][0]
-
-        # Toon de locatie-informatie boven de expanders met de gewenste opmaak
-        st.markdown(f"**Land**: België, **Locatie**: Bredene ({latitude:.4f}, {longitude:.4f})")
-        st.markdown(f"**Zonsopgang**: {sunrise[11:16]}, **Zonsondergang**: {sunset[11:16]}")
-        
-        # Toon de historische weergegevens in de eerste expander
-        with st.expander("Historische Weergegevens - Kort Overzicht"):
-            for i in range(len(times)):
-                weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
-                st.code(weather_info, language="plaintext")
-
-        # Toon de kaart in de tweede expander
-        with st.expander("Kaart Weergave"):
-            show_location_on_map(latitude, longitude, location_name)
+# Kaartweergave in een tweede expander
+with st.expander("Kaartweergave van deze locatie", expanded=True):
+    st.markdown("<style>div.stContainer {max-width: 100%;}</style>", unsafe_allow_html=True)  # Houd kaart binnen de expander
+    map_folium = generate_map(latitude, longitude)
+    st_folium(map_folium, width=600)  # Experimenteer met breedte om de kaart perfect te laten passen
