@@ -83,7 +83,7 @@ def show_input_form():
     st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
 
     # Expander die altijd uitgeklapt is
-    with st.expander("", expanded=True):  # Dit maakt de expander standaard uitgeklapt
+    with st.expander("Input by user", expanded=True):  # Dit maakt de expander standaard uitgeklapt
     
         # Titel voor de invoer
         st.header("Invoergegevens voor het weer")
