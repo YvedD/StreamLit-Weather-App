@@ -125,7 +125,7 @@ st.write(f"**Land**: {country}, **Locatie**: {location} ({latitude}, {longitude}
 st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
 
 # Expander met kopieerbare weergegevens per uur
-with st.expander("Historische Weergegevens - Kort Overzicht"):
+with st.expander("Weergegevens voor deze locatie en tijdspanne"):
     if weather_data:
         hourly_data = weather_data["hourly"]
         times = hourly_data["time"]
@@ -148,14 +148,14 @@ with st.expander("Historische Weergegevens - Kort Overzicht"):
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% "
-                    f"(LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
-                    f"Wind: {wind_direction} {beaufort} Bf"
+                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
+                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
+                    f"Wind:{wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
 
 # Expander voor de kaartweergave
-with st.expander("Kaartweergave"):
+with st.expander("Kaartweergave van deze locatie"):
     if latitude and longitude:
         map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
