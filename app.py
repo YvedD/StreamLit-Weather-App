@@ -51,22 +51,42 @@ european_countries = [
 
 # Functie om de windrichting om te zetten naar de "NW" notatie
 def get_wind_direction(degrees):
-    if (0 <= degrees < 22.5) or (337.5 <= degrees < 360):
-        return "N"
-    elif 22.5 <= degrees < 67.5:
-        return "NE"
-    elif 67.5 <= degrees < 112.5:
-        return "E"
-    elif 112.5 <= degrees < 157.5:
-        return "SE"
-    elif 157.5 <= degrees < 202.5:
-        return "S"
-    elif 202.5 <= degrees < 247.5:
-        return "SW"
-    elif 247.5 <= degrees < 292.5:
-        return "W"
-    elif 292.5 <= degrees < 337.5:
-        return "NW"
+    directions = [
+        ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
+        ("O", 90), ("ZO", 112.5), ("Z", 135), ("ZZO", 157.5),
+        ("ZSW", 180), ("SW", 202.5), ("WZW", 225), ("W", 247.5),
+        ("WNW", 270), ("NW", 292.5), ("NNW", 315)
+    ]
+    for direction, angle in directions:
+        if degrees < angle:
+            return direction
+    return "N"  # Default if no match
+
+# Functie om de windsnelheid om te zetten naar de Beaufort-schaal
+def wind_speed_to_beaufort(speed):
+    if speed < 1:
+        return 0
+    elif speed <= 5:
+        return 1
+    elif speed <= 11:
+        return 2
+    elif speed <= 19:
+        return 3
+    elif speed <= 28:
+        return 4
+    elif speed <= 38:
+        return 5
+    elif speed <= 49:
+        return 6
+    elif speed <= 61:
+        return 7
+    elif speed <= 74:
+        return 8
+    elif speed <= 88:
+        return 9
+    elif speed <= 102:
+        return 10
+    return 11  # Orkaan
 
 # Standaardwaarden voor locatie en datum
 default_country = "België"
@@ -124,18 +144,18 @@ with st.expander("Historische Weergegevens - Kort Overzicht"):
             if start_hour <= hour <= end_hour:
                 # Zet windrichting om naar NW-formaat
                 wind_direction = get_wind_direction(wind_directions[i])
+                # Zet windsnelheid om naar Beaufort schaal
+                beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour} : Temp.: {temperatures[i]:.1f} °C - "
-                    f"Neersl.: {precipitation[i]:.1f} mm - "
-                    f"Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, "
-                    f"MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
-                    f"Wind: {wind_direction} {wind_speeds[i]} km/u"
+                    f"{hour} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% "
+                    f"(LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
+                    f"Wind: {wind_direction} ({beaufort} Bf)"
                 )
-                st.code(weather_info, language="")
+                st.code(weather_info)
 
-# Expander voor kaartweergave met marker
+# Expander met kaartweergave
 with st.expander("Kaartweergave"):
     map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
-    folium.Marker([latitude, longitude], popup=f"{location} ({latitude}, {longitude})").add_to(map_folium)
+    folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
     st_folium(map_folium, width=700)
