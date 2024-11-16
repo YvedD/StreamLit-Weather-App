@@ -49,7 +49,7 @@ def show_input_form():
     selected_date = datetime.now().date() - timedelta(days=1)
 
     # De container met opmaak voor de invoer
-    with st.container():
+    with st.container():  # Dit zorgt ervoor dat alles binnen de container staat
         # Voeg wat opmaak toe via markdown
         st.markdown("""
             <style>
@@ -63,6 +63,7 @@ def show_input_form():
             </style>
         """, unsafe_allow_html=True)
 
+        # Begin van de container HTML
         st.markdown('<div class="custom-container">', unsafe_allow_html=True)
 
         # Titel voor de invoer
@@ -93,5 +94,5 @@ def show_input_form():
         else:
             st.write("Locatie niet gevonden.")
 
-        # Sluit de container tag af
+        # Eind van de container HTML
         st.markdown('</div>', unsafe_allow_html=True)
