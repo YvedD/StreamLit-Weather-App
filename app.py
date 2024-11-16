@@ -161,5 +161,9 @@ if latitude and longitude:
             # Weergeven van de grafieken
             st.pyplot(fig)
             st.pyplot(fig2)
-    else:
-        st.error("Er zijn geen historische weergegevens gevonden.")
+    
+    # Kaartweergave van locatie
+    with st.expander("Kaartweergave van locatie"):
+        m = folium.Map(location=[latitude, longitude], zoom_start=12)
+        folium.Marker([latitude, longitude], popup=f"{location_name}, {country}").add_to(m)
+        st_folium(m, width=700, height=500)
