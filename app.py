@@ -112,7 +112,7 @@ longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
 # Titel en instructies
-st.title("Historische Weergegevens - Open-Meteo API")
+st.title("Weersvoorspelling voor 1 Dag - Open-Meteo API")
 
 # Formulier voor het invoeren van gegevens
 country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
@@ -123,7 +123,7 @@ selected_date = st.date_input("Datum", value=selected_date)
 latitude, longitude = get_gps_coordinates(location)
 
 # Weerdata ophalen
-weather_data = fetch_weather_data(latitude, longitude, selected_date, "08:00", "16:00")
+weather_data = fetch_1_day_forecast(latitude, longitude)
 
 # Begin- en einduur op basis van zonsopgang en zonsondergang
 if weather_data:
