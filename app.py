@@ -136,9 +136,9 @@ if location:
         sunrise = daily_data['sunrise'][0]
         sunset = daily_data['sunset'][0]
 
-        # Toon de zonsopgang en zonsondergang, locatie en gps-gegevens boven de expanders
-        st.markdown(f"**Land**: {country}, **Locatie**: {location_name} ({latitude:.4f}, {longitude:.4f})")
-        st.markdown(f"Zonsopgang: {sunrise}, Zonsondergang: {sunset}")
+        # Toon de locatie-informatie boven de expanders met de gewenste opmaak
+        st.markdown(f"**Land**: België, **Locatie**: Bredene ({latitude:.4f}, {longitude:.4f})")
+        st.markdown(f"**Zonsopgang**: {sunrise[11:16]}, **Zonsondergang**: {sunset[11:16]}")
         
         # Toon de historische weergegevens in de eerste expander
         with st.expander("Historische Weergegevens - Kort Overzicht"):
