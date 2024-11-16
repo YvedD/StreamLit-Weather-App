@@ -19,6 +19,21 @@ def get_sun_times(latitude, longitude, date):
         st.error(f"Fout bij het ophalen van zonsopkomst en zonsondergang: {e}")
         return None, None
 
+def format_coordinates(latitude, longitude):
+    """
+    Functie om de coördinaten te formatteren in het gewenste formaat: 51.23°N 2.99°E
+    """
+    lat_deg = int(latitude)
+    lon_deg = int(longitude)
+    lat_min = (latitude - lat_deg) * 60
+    lon_min = (longitude - lon_deg) * 60
+
+    # Format van de coördinaten: 51.23°N 2.99°E
+    formatted_lat = f"{abs(lat_deg) + lat_min / 60:.2f}°{'N' if latitude >= 0 else 'S'}"
+    formatted_lon = f"{abs(lon_deg) + lon_min / 60:.2f}°{'E' if longitude >= 0 else 'W'}"
+    
+    return formatted_lat, formatted_lon
+
 def gebruikers_invoer():
     # Standaardwaarden voor België en Bredene
     default_land = "België"
@@ -49,6 +64,14 @@ def gebruikers_invoer():
 
     # Haal zonsopkomst en zonsondergang op voor de gekozen datum
     sunrise, sunset = get_sun_times(latitude, longitude, datum)
+
+    # Format de coördinaten
+    formatted_lat, formatted_lon = format_coordinates(latitude, longitude)
+
+    # Toon de gegevens van land, locatie, coördinaten, zonsopkomst en zonsondergang
+    st.write(f"**Land:** {land}, **Locatie:** {locatie}")
+    st.write(f"{formatted_lat} {formatted_lon}")
+    st.write(f"**Sunrise:** {sunrise}, **Sunset:** {sunset}")
 
     # Retourneer alle invoervelden en tijden
     return land, locatie, datum, begin_uur, eind_uur, latitude, longitude, sunrise, sunset
