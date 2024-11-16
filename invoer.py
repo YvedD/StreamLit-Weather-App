@@ -1,3 +1,5 @@
+#invoer.py - een blackbox om op een geformateerde manier de basisgegevens van de gebruikers te verkrijgen
+
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
