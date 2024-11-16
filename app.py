@@ -159,4 +159,4 @@ with st.expander("Voorspelling voor morgen"):
                         f"{period}: Temp: {temperature}°C - Neerslag: {precipitation}mm - Bewolking: {cloudcover}%"
                     )
     else:
-        st.write("Voorspelling beschikbaar voor morgen indien datum gelijk is aan vandaag.")
+        st.write("Voorspelling ENKEL beschikbaar voor morgen indien datum gelijk is aan vandaag.")
