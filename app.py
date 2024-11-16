@@ -49,6 +49,25 @@ european_countries = [
     "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad", "Noord-Macedonië"
 ]
 
+# Functie om de windrichting om te zetten naar de "NW" notatie
+def get_wind_direction(degrees):
+    if (0 <= degrees < 22.5) or (337.5 <= degrees < 360):
+        return "N"
+    elif 22.5 <= degrees < 67.5:
+        return "NE"
+    elif 67.5 <= degrees < 112.5:
+        return "E"
+    elif 112.5 <= degrees < 157.5:
+        return "SE"
+    elif 157.5 <= degrees < 202.5:
+        return "S"
+    elif 202.5 <= degrees < 247.5:
+        return "SW"
+    elif 247.5 <= degrees < 292.5:
+        return "W"
+    elif 292.5 <= degrees < 337.5:
+        return "NW"
+
 # Standaardwaarden voor locatie en datum
 default_country = "België"
 default_location = "Bredene"
@@ -103,12 +122,15 @@ with st.expander("Historische Weergegevens - Kort Overzicht"):
         for i, time in enumerate(times):
             hour = datetime.fromisoformat(time).strftime("%H:%M")
             if start_hour <= hour <= end_hour:
+                # Zet windrichting om naar NW-formaat
+                wind_direction = get_wind_direction(wind_directions[i])
+                
                 weather_info = (
                     f"{hour} : Temp.: {temperatures[i]:.1f} °C - "
                     f"Neersl.: {precipitation[i]:.1f} mm - "
                     f"Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, "
                     f"MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
-                    f"Wind: {wind_directions[i]}° {wind_speeds[i]} km/u"
+                    f"Wind: {wind_direction} {wind_speeds[i]} km/u"
                 )
                 st.code(weather_info, language="")
 
