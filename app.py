@@ -22,6 +22,16 @@ def fetch_weather_data(lat, lon, date):
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
         return None
 
+# Lijst van Europese landen voor de dropdown
+european_countries = [
+    "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Wit-Rusland", "België", "Bosnië en Herzegovina",
+    "Bulgarije", "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Frankrijk", "Georgië",
+    "Duitsland", "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland",
+    "Liechtenstein", "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noorwegen",
+    "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slowakije", "Slovenië", "Spanje", "Zweden",
+    "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad", "Noord-Macedonië"
+]
+
 # Standaardwaarden voor locatie en datum
 default_country = "België"
 default_location = "Bredene"
@@ -33,7 +43,7 @@ selected_date = datetime.now() - timedelta(days=1)
 st.title("Historische Weergegevens - Open-Meteo API")
 
 # Invoeropties voor de gebruiker
-country = st.selectbox("Selecteer land", ["België", "Nederland", "Frankrijk"], index=0)
+country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
