@@ -54,16 +54,19 @@ european_countries = [
     "Luxemburg", "Andorra", "Liechtenstein", "Malta", "Cyprus"
 ]
 
+# Standaarddatum - vandaag minus 1 dag
+yesterday = datetime.now() - timedelta(days=1)
+default_date = yesterday.date()
+
 # Invoer voor locatie en datum/tijdinstellingen
 st.title("Weerdata Opvragen met Locatie Weergave")
 country = st.selectbox("Land:", european_countries, index=european_countries.index("België"))
 location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Bredene")
-selected_date = st.date_input("Selecteer de datum:", datetime.now().date())
+selected_date = st.date_input("Selecteer de datum:", default_date)
 
-# Volle uren selecties
-hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
-start_hour = st.selectbox("Startuur:", hours, index=0)
-end_hour = st.selectbox("Einduur:", hours, index=23)
+# Daglichturen van gisteren (voorbeeld: 07:00 - 19:00)
+start_hour = "07:00"
+end_hour = "19:00"
 
 # Bereken de start- en einddatums voor historische gegevens (8 dagen terug)
 start_date = selected_date - timedelta(days=8)
@@ -78,6 +81,19 @@ if location:
 
     # Maak een nieuwe expander voor de historische weergegevens op één rij
     with st.expander("Historische Weergegevens - Kort Overzicht"):
+        # Verklein lettertype voor beter overzicht
+        st.markdown(
+            """
+            <style>
+            .stTextInput input {
+                font-size: 16px;
+            }
+            .stTextArea textarea {
+                font-size: 16px;
+            }
+            </style>
+            """, unsafe_allow_html=True)
+
         # Functie om weerdata op te halen
         def fetch_weather_data(lat, lon, start, end):
             url = (
@@ -112,10 +128,11 @@ if location:
             start_datetime = datetime.combine(selected_date, datetime.strptime(start_hour, "%H:%M").time())
             end_datetime = datetime.combine(selected_date, datetime.strptime(end_hour, "%H:%M").time())
 
-            # Tekstueel overzicht per uur op één rij
+            # Tekstueel overzicht per uur op één rij met st.code voor kopieerbaarheid
             for i in range(len(times)):
                 if start_datetime <= times[i] <= end_datetime:
-                    st.write(f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf")
+                    weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
+                    st.code(weather_info)  # Maak de regel kopieerbaar
                     
     # Locatie Overzicht
     with st.expander("Locatie Overzicht"):
