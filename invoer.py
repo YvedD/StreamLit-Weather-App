@@ -61,6 +61,9 @@ def show_input_form():
         </style>
     """, unsafe_allow_html=True)
 
+    # Toon titel voor het project boven de expander
+    st.title("Migration Weather Data")
+
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
         st.markdown('<div class="custom-container">', unsafe_allow_html=True)
