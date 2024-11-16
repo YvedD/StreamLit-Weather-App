@@ -61,6 +61,10 @@ def fetch_weather_data(lat, lon, start_date, end_date):
         f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,precipitation,visibility"
         f"&timezone=Europe/Berlin"
     )
+    
+    # Print de URL om te controleren of alles goed is geformatteerd
+    print("API URL:", url)
+    
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
@@ -141,10 +145,7 @@ else:
             st.pyplot(fig)
 
         # Kaart met marker
-        with st.expander("Locatie op Kaart"):
-            import folium
+        with st.expander("Kaart Weergave"):
             m = folium.Map(location=[latitude, longitude], zoom_start=12)
             folium.Marker([latitude, longitude], popup=default_location).add_to(m)
-
-            # Voeg de kaart toe aan de Streamlit app
-            st.map(m)
+            folium_static(m)
