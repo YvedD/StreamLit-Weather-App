@@ -61,7 +61,8 @@ def get_sun_times(lat, lon, date):
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
     # Standaardwaarden voor locatie en datum
-    default_country = "Belgium"
+    default_country_en = "Belgium"  # Engels
+    default_country_nl = "België"  # Nederlands
     default_location = "Bredene"
     latitude = 51.2389
     longitude = 2.9724
@@ -76,7 +77,7 @@ def show_input_form():
     # Laat de gebruiker de taal kiezen
     language = st.selectbox("Select Language", ["English", "Dutch"])
 
-    # Kies de landenlijst op basis van de taal
+    # Kies de landenlijst en de standaardwaarde op basis van de taal
     if language == "English":
         countries = EUROPEAN_COUNTRIES_EN
         country_label = "Select Country"
@@ -86,6 +87,7 @@ def show_input_form():
         end_hour_label = "End Hour"
         sunrise_label = "Sunrise"
         sunset_label = "Sunset"
+        default_country = default_country_en
     else:
         countries = EUROPEAN_COUNTRIES_NL
         country_label = "Selecteer land"
@@ -95,6 +97,7 @@ def show_input_form():
         end_hour_label = "Einduur"
         sunrise_label = "Zonsopkomst"
         sunset_label = "Zonsondergang"
+        default_country = default_country_nl
 
     # Expander die altijd uitgeklapt is
     with st.expander("Input Data", expanded=True):  # Dit maakt de expander standaard uitgeklapt
