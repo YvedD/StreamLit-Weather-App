@@ -88,6 +88,22 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
+# Functie om de 3-daagse weersvoorspelling op te halen
+def fetch_3_day_forecast(lat, lon):
+    api_url = (
+        f"https://api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}"
+        "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
+        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=3"
+    )
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        st.error(f"Fout bij het ophalen van de weersvoorspelling: {e}")
+        return None
+
 # Standaardwaarden voor locatie en datum
 default_country = "België"
 default_location = "Bredene"
@@ -161,6 +177,18 @@ with st.expander("Kaartweergave van deze locatie"):
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
 
-# Derde expander voor de "3 day forecast"
-with st.expander("3 day forecast for this location"):
-    st.write("under construction")
+# Derde expander voor de 3-daagse weersvoorspelling
+with st.expander("3-daagse weersvoorspelling"):
+    forecast_data = fetch_3_day_forecast(latitude, longitude)
+    if forecast_data:
+        daily_forecasts = forecast_data["daily"]
+        for day in daily_forecasts["time"]:
+            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
+            st.write(f"**{date}:**")
+            # Haal de bijbehorende gegevens voor elk uur op
+            for i, time in enumerate(forecast_data["hourly"]["time"]):
+                hour = datetime.fromisoformat(time).strftime("%H:%M")
+                temperature = forecast_data["hourly"]["temperature_2m"][i]
+                precipitation = forecast_data["hourly"]["precipitation"][i]
+                cloudcover = forecast_data["hourly"]["cloud_cover"][i]
+                st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
