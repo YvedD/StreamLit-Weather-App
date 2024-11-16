@@ -1,11 +1,12 @@
 import streamlit as st
-from geopy.geocoders import Nominatim
 import requests
+import json
+from geopy.geocoders import Nominatim
 import folium
+from datetime import datetime, timedelta
 from streamlit_folium import st_folium
 import seaborn as sns
 import matplotlib.pyplot as plt
-from datetime import datetime, timedelta
 
 # Functie om windrichtingen om te zetten naar afkortingen
 def degrees_to_direction(degrees):
@@ -15,7 +16,9 @@ def degrees_to_direction(degrees):
 
 # Functie om windsnelheid om te zetten naar de Beaufort-schaal
 def kmh_to_beaufort(kmh):
-    if kmh < 1:
+    if kmh is None:
+        return None
+    elif kmh < 1:
         return 0
     elif kmh <= 5:
         return 1
@@ -42,82 +45,103 @@ def kmh_to_beaufort(kmh):
     else:
         return 12
 
-# Streamlit-setup
-st.title("Weerdata Opvragen")
+# Invoer voor locatie en datum/tijdinstellingen
+st.title("Weerdata Opvragen met Locatie Weergave")
+country = st.text_input("Land (bijv. Nederland):", "Nederland")
+location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Amsterdam")
+start_date_input = st.date_input("Selecteer de datum:", datetime.now().date())
 
-# Invoervelden voor locatie en datumbereik
-location_name = st.text_input("Voer een locatie in (bijv. Amsterdam)")
-start_date = st.date_input("Startdatum", value=datetime.today() - timedelta(days=8))
-end_date = start_date + timedelta(days=1)
+# Volle uren selecties
+hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
+start_hour = st.selectbox("Startuur:", hours, index=0)
+end_hour = st.selectbox("Einduur:", hours, index=23)
 
-# Tijdsselectie voor volle uren
-hours = [f"{hour:02d}:00" for hour in range(24)]
-start_hour = st.selectbox("Begin uur", hours)
-end_hour = st.selectbox("Eind uur", hours)
+# Bereken de start- en einddatums voor historische gegevens
+start_date = start_date_input - timedelta(days=8)
+end_date = start_date_input
 
-# Weerdata ophalen bij klik op knop
-if st.button("Haal Weerdata Op"):
-    if not location_name:
-        st.error("Vul alstublieft een locatie in.")
-    else:
-        geolocator = Nominatim(user_agent="weather_app")
-        location = geolocator.geocode(location_name)
+# Initialiseer geolocator
+geolocator = Nominatim(user_agent="weather_app")
+location = geolocator.geocode(f"{location_name}, {country}")
 
-        if location is None:
-            st.error(f"Locatie '{location_name}' niet gevonden.")
+if location:
+    latitude, longitude = location.latitude, location.longitude
+
+    # Maak drie expanders voor overzicht, voorspellingen en historische gegevens
+    with st.expander("Locatie Overzicht"):
+        # Kaart met marker
+        st.header("Locatie op kaart")
+        map_obj = folium.Map(location=[latitude, longitude], zoom_start=6)
+        folium.Marker([latitude, longitude], tooltip=location_name, icon=folium.Icon(color="red")).add_to(map_obj)
+        st_folium(map_obj, width=700, height=400)
+
+    # Functie om weerdata op te halen
+    def fetch_weather_data(lat, lon, start, end):
+        url = (
+            f"https://archive-api.open-meteo.com/v1/archive"
+            f"?latitude={lat}&longitude={lon}"
+            f"&start_date={start}&end_date={end}"
+            f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,precipitation,visibility"
+            f"&timezone=Europe/Berlin"
+        )
+        response = requests.get(url)
+        if response.status_code == 200:
+            return response.json()
         else:
-            latitude, longitude = location.latitude, location.longitude
+            st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
+            return None
 
-            # Open-Meteo API endpoint
-            url = (
-                f"https://archive-api.open-meteo.com/v1/archive"
-                f"?latitude={latitude}&longitude={longitude}"
-                f"&start_date={start_date}&end_date={end_date}"
-                f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,precipitation,visibility"
-                f"&timezone=Europe/Berlin"
-            )
+    # Historische gegevens ophalen
+    with st.expander("Historische Weergegevens"):
+        historical_data = fetch_weather_data(latitude, longitude, start_date, end_date)
+        if historical_data:
+            hourly = historical_data['hourly']
+            times = [datetime.strptime(hourly['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(hourly['time']))]
+            temperatures = hourly['temperature_2m']
+            wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
+            wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly['wind_direction_10m']]
+            cloudcover = hourly.get('cloudcover', [])
+            precipitation = hourly.get('precipitation', [])
+            visibility = hourly.get('visibility', [])
 
-            try:
-                response = requests.get(url)
-                if response.status_code == 200:
-                    data = response.json()
-                    hourly = data['hourly']
+            # Seaborn plots
+            sns.set(style="whitegrid")
+            
+            # Temperatuur en Windsnelheid Plot
+            fig, ax1 = plt.subplots(figsize=(12, 6))
+            sns.lineplot(x=times, y=temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
+            sns.lineplot(x=times, y=wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
+            ax1.set_xlabel("Datum en Tijd")
+            ax1.set_ylabel("Temperatuur / Windsnelheid")
+            ax1.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
-                    # Weergegevens extraheren
-                    hours_range = range(len(hourly['temperature_2m']))
-                    temperatures = hourly['temperature_2m']
-                    wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
-                    wind_directions = hourly['wind_direction_10m']
-                    cloudcover = hourly['cloudcover']
-                    precipitation = hourly['precipitation']
-                    visibility = hourly['visibility']
+            # Bewolking en Zichtbaarheid Plot
+            fig2, ax2 = plt.subplots(figsize=(12, 6))
+            sns.lineplot(x=times, y=cloudcover, color="gray", ax=ax2, label="Bewolkingsgraad (%)")
+            sns.lineplot(x=times, y=visibility, color="purple", ax=ax2, label="Zichtbaarheid (km)")
+            ax2.set_xlabel("Datum en Tijd")
+            ax2.set_ylabel("Bewolkingsgraad / Zichtbaarheid")
+            ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
-                    # Plotting met Seaborn en Matplotlib
-                    fig, ax = plt.subplots(figsize=(10, 6))
-                    sns.lineplot(x=hours_range, y=temperatures, label='Temperatuur (°C)', ax=ax)
-                    sns.lineplot(x=hours_range, y=wind_speeds, label='Windsnelheid (Beaufort)', ax=ax)
-                    sns.lineplot(x=hours_range, y=cloudcover, label='Bewolkingsgraad (%)', ax=ax)
-                    sns.lineplot(x=hours_range, y=visibility, label='Zichtbaarheid (km)', ax=ax)
-                    sns.lineplot(x=hours_range, y=precipitation, label='Neerslag (mm)', ax=ax)
+            # Neerslag Plot
+            fig3, ax3 = plt.subplots(figsize=(12, 6))
+            sns.lineplot(x=times, y=precipitation, color="blue", ax=ax3, label="Neerslag (mm)")
+            ax3.set_xlabel("Datum en Tijd")
+            ax3.set_ylabel("Neerslag")
+            ax3.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
-                    ax.set_title(f"Weerdata voor {location_name} van {start_date} tot {end_date}")
-                    ax.set_xlabel("Uur van de dag")
-                    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
-                    plt.xticks(hours_range, hours, rotation=45)
+            # Grafieken weergeven in Streamlit
+            st.pyplot(fig)
+            st.pyplot(fig2)
+            st.pyplot(fig3)
 
-                    st.pyplot(fig)
-
-                    # Kaart met marker
-                    m = folium.Map(location=[latitude, longitude], zoom_start=10)
-                    folium.Marker(
-                        [latitude, longitude],
-                        popup=f"{location_name} (Lat: {latitude}, Lon: {longitude})",
-                        icon=folium.Icon(color="red")
-                    ).add_to(m)
-
-                    # Kaart weergeven in Streamlit
-                    st_folium(m, width=700, height=500)
-                else:
-                    st.error(f"Fout bij ophalen van gegevens: {response.status_code}")
-            except Exception as e:
-                st.error(f"Er is een fout opgetreden: {str(e)}")
+    # Voorspelde gegevens ophalen en weergeven
+    with st.expander("Voorspelde Weergegevens"):
+        forecast_start_date = start_date_input
+        forecast_end_date = start_date_input + timedelta(days=8)
+        forecast_data = fetch_weather_data(latitude, longitude, forecast_start_date, forecast_end_date)
+        if forecast_data:
+            # Voorbeeld van hoe voorspelde gegevens kunnen worden weergegeven; kan verder worden aangepast
+            st.write("Voorspelde weergegevens nog toe te voegen.")
+else:
+    st.error("Locatie niet gevonden. Controleer de ingevoerde locatie en probeer opnieuw.")
