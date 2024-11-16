@@ -118,6 +118,8 @@ st.title("Weersvoorspelling voor 1 Dag - Open-Meteo API")
 country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
+start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
+end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
 # Verkrijg de GPS-coördinaten voor de nieuwe locatie
 latitude, longitude = get_gps_coordinates(location)
@@ -161,7 +163,8 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
                 
                 weather_info = (
                     f"{hour}: Temp:{temperatures[i]:.1f}°C - Neersl:{precipitation[i]:.1f}mm - Bew.Tot:{cloudcover[i]}%"
-                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - Wind:{wind_direction} {beaufort}Bf"
+                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - "
+                    f"Wind:{wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
 
@@ -171,3 +174,19 @@ with st.expander("Kaartweergave van deze locatie"):
         map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
+
+# Derde expander voor de 1-daagse weersvoorspelling
+with st.expander("1-daagse weersvoorspelling"):
+    forecast_data = fetch_1_day_forecast(latitude, longitude)
+    if forecast_data:
+        daily_forecasts = forecast_data["daily"]
+        for day in daily_forecasts["time"]:
+            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
+            st.write(f"**{date}:**")
+            # Haal de bijbehorende gegevens voor elk uur op
+            for i, time in enumerate(forecast_data["hourly"]["time"]):
+                hour = datetime.fromisoformat(time).strftime("%H:%M")
+                temperature = forecast_data["hourly"]["temperature_2m"][i]
+                precipitation = forecast_data["hourly"]["precipitation"][i]
+                cloudcover = forecast_data["hourly"]["cloud_cover"][i]
+                st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
