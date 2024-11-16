@@ -1,36 +1,13 @@
-import tkinter as tk
-from tkinter import ttk, messagebox
-import requests
+import streamlit as st
 from geopy.geocoders import Nominatim
+import requests
 import folium
-from folium.plugins import MarkerCluster
-from io import BytesIO
-from PIL import Image, ImageTk
+from streamlit_folium import st_folium
 import seaborn as sns
 import matplotlib.pyplot as plt
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from datetime import datetime, timedelta
 
-# Functie om een kaart te maken en een marker op de locatie te zetten
-def update_map(location_name):
-    geolocator = Nominatim(user_agent="weather_app")
-    location = geolocator.geocode(location_name)
-    
-    if location is None:
-        messagebox.showerror("Fout", f"Locatie '{location_name}' niet gevonden.")
-        return None
-
-    # Maak de kaart met een marker voor de opgegeven locatie
-    map_center = [location.latitude, location.longitude]
-    m = folium.Map(location=map_center, zoom_start=6)
-    folium.Marker(location=map_center, popup=location_name, tooltip="Locatie").add_to(m)
-    
-    # Converteer kaart naar een afbeelding om in de GUI weer te geven
-    data = BytesIO()
-    m.save(data, close_file=False)
-    data.seek(0)
-    return Image.open(data)
-
-# Functie om windrichting om te zetten naar afkortingen
+# Functie om windrichtingen om te zetten naar afkortingen
 def degrees_to_direction(degrees):
     directions = ['N', 'NNO', 'NO', 'ONO', 'O', 'OZO', 'ZO', 'ZZO', 'Z', 'ZZW', 'ZW', 'WZW', 'W', 'WNW', 'NW', 'NNW']
     index = round(degrees / 22.5) % 16
@@ -65,118 +42,82 @@ def kmh_to_beaufort(kmh):
     else:
         return 12
 
-# Functie om weergegevens op te halen en te tonen
-def get_weather():
-    location_name = location_entry.get().strip()
-    start_hour = start_hour_combobox.get()
-    end_hour = end_hour_combobox.get()
+# Streamlit-setup
+st.title("Weerdata Opvragen")
 
-    if not location_name or not start_hour or not end_hour:
-        messagebox.showerror("Fout", "Vul alstublieft alle velden in.")
-        return
+# Invoervelden voor locatie en datumbereik
+location_name = st.text_input("Voer een locatie in (bijv. Amsterdam)")
+start_date = st.date_input("Startdatum", value=datetime.today() - timedelta(days=8))
+end_date = start_date + timedelta(days=1)
 
-    # Verwijder eerdere resultaten uit de listbox
-    listbox.delete(0, tk.END)
+# Tijdsselectie voor volle uren
+hours = [f"{hour:02d}:00" for hour in range(24)]
+start_hour = st.selectbox("Begin uur", hours)
+end_hour = st.selectbox("Eind uur", hours)
 
-    # Toon kaart met marker
-    map_image = update_map(location_name)
-    if map_image:
-        map_image_tk = ImageTk.PhotoImage(map_image)
-        map_label.config(image=map_image_tk)
-        map_label.image = map_image_tk
+# Weerdata ophalen bij klik op knop
+if st.button("Haal Weerdata Op"):
+    if not location_name:
+        st.error("Vul alstublieft een locatie in.")
+    else:
+        geolocator = Nominatim(user_agent="weather_app")
+        location = geolocator.geocode(location_name)
 
-    # Haal weergegevens op en toon in listbox (deze sectie blijft nagenoeg hetzelfde als eerder)
-    # ...
-
-# Functie om geselecteerde weergegevens te tonen
-def show_weather(event):
-    selection = event.widget.curselection()
-    if not selection:
-        return
-
-    index = selection[0]
-    location_name = event.widget.get(index)
-    data = weather_data.get(location_name)
-
-    if data is None or isinstance(data, str):
-        messagebox.showerror("Fout", f"Geen weergegevens beschikbaar voor {location_name}.")
-        return
-
-    hourly = data['hourly']
-    hours = list(range(len(hourly['temperature_2m'])))
-    temperatures = hourly['temperature_2m']
-    wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
-    wind_directions = hourly['wind_direction_10m']
-    cloudcover = hourly.get('cloudcover', [])
-    precipitation = hourly.get('precipitation', [])
-    visibility = hourly.get('visibility', [])
-
-    # Alleen wijzigingen in windrichting weergeven
-    wind_directions_text = []
-    previous_direction = None
-    for deg in wind_directions:
-        current_direction = degrees_to_direction(deg)
-        if current_direction != previous_direction:
-            wind_directions_text.append(current_direction)
-            previous_direction = current_direction
+        if location is None:
+            st.error(f"Locatie '{location_name}' niet gevonden.")
         else:
-            wind_directions_text.append('')  # Geen label weergeven
+            latitude, longitude = location.latitude, location.longitude
 
-    # Plotten met Seaborn
-    plt.figure(figsize=(12, 6))
-    sns.lineplot(x=hours, y=temperatures, label='Temperatuur (°C)')
-    sns.lineplot(x=hours, y=wind_speeds, label='Windsnelheid (Beaufort)')
-    sns.lineplot(x=hours, y=cloudcover, label='Bewolkingsgraad (%)')
-    sns.lineplot(x=hours, y=visibility, label='Zichtbaarheid (km)')
-    sns.lineplot(x=hours, y=precipitation, label='Neerslag (mm)')
+            # Open-Meteo API endpoint
+            url = (
+                f"https://archive-api.open-meteo.com/v1/archive"
+                f"?latitude={latitude}&longitude={longitude}"
+                f"&start_date={start_date}&end_date={end_date}"
+                f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,precipitation,visibility"
+                f"&timezone=Europe/Berlin"
+            )
 
-    plt.title(f"Weerdata voor {location_name}")
-    plt.xlabel('Uren vanaf start')
-    plt.ylabel('Waarden')
-    plt.legend(loc='upper right')
-    plt.grid(True)
+            try:
+                response = requests.get(url)
+                if response.status_code == 200:
+                    data = response.json()
+                    hourly = data['hourly']
 
-    # Voeg windrichtingen toe als tekstlabels op de x-as
-    for i in range(len(hours)):
-        if wind_directions_text[i]:  # Alleen labels als er een verandering is
-            plt.text(hours[i], wind_speeds[i], wind_directions_text[i], fontsize=8, rotation=45)
+                    # Weergegevens extraheren
+                    hours_range = range(len(hourly['temperature_2m']))
+                    temperatures = hourly['temperature_2m']
+                    wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
+                    wind_directions = hourly['wind_direction_10m']
+                    cloudcover = hourly['cloudcover']
+                    precipitation = hourly['precipitation']
+                    visibility = hourly['visibility']
 
-    plt.show()
+                    # Plotting met Seaborn en Matplotlib
+                    fig, ax = plt.subplots(figsize=(10, 6))
+                    sns.lineplot(x=hours_range, y=temperatures, label='Temperatuur (°C)', ax=ax)
+                    sns.lineplot(x=hours_range, y=wind_speeds, label='Windsnelheid (Beaufort)', ax=ax)
+                    sns.lineplot(x=hours_range, y=cloudcover, label='Bewolkingsgraad (%)', ax=ax)
+                    sns.lineplot(x=hours_range, y=visibility, label='Zichtbaarheid (km)', ax=ax)
+                    sns.lineplot(x=hours_range, y=precipitation, label='Neerslag (mm)', ax=ax)
 
-# Tkinter GUI
-root = tk.Tk()
-root.title("Weerdata Opvragen")
+                    ax.set_title(f"Weerdata voor {location_name} van {start_date} tot {end_date}")
+                    ax.set_xlabel("Uur van de dag")
+                    ax.legend(loc='upper left', bbox_to_anchor=(1, 1))
+                    plt.xticks(hours_range, hours, rotation=45)
 
-# Lijst met volle uren voor de combobox
-hours_list = [f"{hour:02d}:00" for hour in range(24)]
+                    st.pyplot(fig)
 
-# Kaart weergeven bovenaan in de GUI
-map_label = tk.Label(root)
-map_label.grid(row=0, column=0, columnspan=2, padx=10, pady=10)
+                    # Kaart met marker
+                    m = folium.Map(location=[latitude, longitude], zoom_start=10)
+                    folium.Marker(
+                        [latitude, longitude],
+                        popup=f"{location_name} (Lat: {latitude}, Lon: {longitude})",
+                        icon=folium.Icon(color="red")
+                    ).add_to(m)
 
-# Labels en invoervelden
-tk.Label(root, text="Locatie:").grid(row=1, column=0, padx=10, pady=10)
-location_entry = tk.Entry(root, width=30)
-location_entry.grid(row=1, column=1, padx=10, pady=10)
-
-tk.Label(root, text="Begin Uur:").grid(row=2, column=0, padx=10, pady=10)
-start_hour_combobox = ttk.Combobox(root, values=hours_list, state="readonly", width=5)
-start_hour_combobox.grid(row=2, column=1, padx=10, pady=10)
-
-tk.Label(root, text="Eind Uur:").grid(row=3, column=0, padx=10, pady=10)
-end_hour_combobox = ttk.Combobox(root, values=hours_list, state="readonly", width=5)
-end_hour_combobox.grid(row=3, column=1, padx=10, pady=10)
-
-# Listbox om resultaten te tonen
-listbox = tk.Listbox(root, height=10, width=50)
-listbox.grid(row=4, column=0, columnspan=2, padx=10, pady=10)
-listbox.bind('<<ListboxSelect>>', show_weather)
-
-# Knop om weergegevens op te halen
-tk.Button(root, text="Haal Weerdata Op", command=get_weather).grid(row=5, column=0, columnspan=2, pady=10)
-
-# Variabele om weergegevens op te slaan
-weather_data = {}
-
-# Start de GUI
-root.mainloop()
+                    # Kaart weergeven in Streamlit
+                    st_folium(m, width=700, height=500)
+                else:
+                    st.error(f"Fout bij ophalen van gegevens: {response.status_code}")
+            except Exception as e:
+                st.error(f"Er is een fout opgetreden: {str(e)}")
