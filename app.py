@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import json
 from geopy.geocoders import Nominatim
 import folium
 from datetime import datetime, timedelta
@@ -49,16 +48,16 @@ def kmh_to_beaufort(kmh):
 st.title("Weerdata Opvragen met Locatie Weergave")
 country = st.text_input("Land (bijv. Nederland):", "Nederland")
 location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Amsterdam")
-start_date_input = st.date_input("Selecteer de datum:", datetime.now().date())
+selected_date = st.date_input("Selecteer de datum:", datetime.now().date())
 
 # Volle uren selecties
 hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
 start_hour = st.selectbox("Startuur:", hours, index=0)
 end_hour = st.selectbox("Einduur:", hours, index=23)
 
-# Bereken de start- en einddatums voor historische gegevens
-start_date = start_date_input - timedelta(days=8)
-end_date = start_date_input
+# Bereken de start- en einddatums voor historische gegevens (8 dagen terug)
+start_date = selected_date - timedelta(days=8)
+end_date = selected_date
 
 # Initialiseer geolocator
 geolocator = Nominatim(user_agent="weather_app")
@@ -107,42 +106,54 @@ if location:
             cloudcover_high = hourly.get('cloudcover_high', [])
             precipitation = hourly.get('precipitation', [])
 
-            # Tekstueel overzicht per uur
+            # Filteren op geselecteerde datum en tijdsbereik
+            start_datetime = datetime.combine(selected_date, datetime.strptime(start_hour, "%H:%M").time())
+            end_datetime = datetime.combine(selected_date, datetime.strptime(end_hour, "%H:%M").time())
+            
+            # Tekstueel overzicht per uur binnen de geselecteerde tijdsperiode
             for i in range(len(times)):
-                st.write(f"**Tijdstip:** {times[i]}")
-                st.write(f"- Temperatuur: {temperatures[i]:.1f} °C")
-                st.write(f"- Neerslag: {precipitation[i]:.1f} mm")
-                st.write(f"- Bewolkingsgraad totaal: {cloudcover[i]}%")
-                st.write(f"- Bewolkingsgraad laag: {cloudcover_low[i]}%")
-                st.write(f"- Bewolkingsgraad midden: {cloudcover_mid[i]}%")
-                st.write(f"- Bewolkingsgraad hoog: {cloudcover_high[i]}%")
-                st.write(f"- Windrichting: {wind_directions[i]}")
-                st.write(f"- Windsnelheid (Beaufort): {wind_speeds[i]}")
-                st.write("---")  # Horizontale lijn als scheiding
+                if start_datetime <= times[i] <= end_datetime:
+                    st.write(f"**Tijdstip:** {times[i].strftime('%Y-%m-%d %H:%M')}")
+                    st.write(f"- Temperatuur: {temperatures[i]:.1f} °C")
+                    st.write(f"- Neerslag: {precipitation[i]:.1f} mm")
+                    st.write(f"- Bewolkingsgraad totaal: {cloudcover[i]}%")
+                    st.write(f"- Bewolkingsgraad laag: {cloudcover_low[i]}%")
+                    st.write(f"- Bewolkingsgraad midden: {cloudcover_mid[i]}%")
+                    st.write(f"- Bewolkingsgraad hoog: {cloudcover_high[i]}%")
+                    st.write(f"- Windrichting: {wind_directions[i]}")
+                    st.write(f"- Windsnelheid (Beaufort): {wind_speeds[i]}")
+                    st.write("---")  # Horizontale lijn als scheiding
 
     # Historische gegevens grafieken
     with st.expander("Historische Weergegevens - Grafieken"):
         if historical_data:
             sns.set(style="whitegrid")
             
+            # Filter alleen tijden binnen de geselecteerde datum en tijdsbereik voor grafieken
+            filtered_times = [time for time in times if start_datetime <= time <= end_datetime]
+            filtered_temperatures = [temperatures[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_wind_speeds = [wind_speeds[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_cloudcover = [cloudcover[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+            filtered_precipitation = [precipitation[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
+
             # Temperatuur en Windsnelheid Plot
             fig, ax1 = plt.subplots(figsize=(12, 6))
-            sns.lineplot(x=times, y=temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
-            sns.lineplot(x=times, y=wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
+            sns.lineplot(x=filtered_times, y=filtered_temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
+            sns.lineplot(x=filtered_times, y=filtered_wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
             ax1.set_xlabel("Datum en Tijd")
             ax1.set_ylabel("Temperatuur / Windsnelheid")
             ax1.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
             # Bewolking en Zichtbaarheid Plot
             fig2, ax2 = plt.subplots(figsize=(12, 6))
-            sns.lineplot(x=times, y=cloudcover, color="gray", ax=ax2, label="Bewolkingsgraad (%)")
+            sns.lineplot(x=filtered_times, y=filtered_cloudcover, color="gray", ax=ax2, label="Bewolkingsgraad (%)")
             ax2.set_xlabel("Datum en Tijd")
             ax2.set_ylabel("Bewolkingsgraad")
             ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
 
             # Neerslag Plot
             fig3, ax3 = plt.subplots(figsize=(12, 6))
-            sns.lineplot(x=times, y=precipitation, color="blue", ax=ax3, label="Neerslag (mm)")
+            sns.lineplot(x=filtered_times, y=filtered_precipitation, color="blue", ax=ax3, label="Neerslag (mm)")
             ax3.set_xlabel("Datum en Tijd")
             ax3.set_ylabel("Neerslag")
             ax3.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
