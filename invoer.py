@@ -74,17 +74,15 @@ def show_input_form():
         unsafe_allow_html=True
     )
 
-    # Taalkeuze door middel van links
-    lang_choice = st.session_state.get("language", "English")  # Default to English if no selection
+    # Taalkeuze door middel van een two-state switch
+    lang_choice = st.radio(
+        "Select Language/Kies uw taal",
+        options=["English", "Nederlands"],
+        index=0 if st.session_state.get("language", "English") == "English" else 1
+    )
 
-    # Maak de taalkeuze via links
-    col1, col2 = st.columns([1, 1])
-    with col1:
-        if st.markdown('<a href="javascript:void(0);" onclick="window.location.reload();">English</a>', unsafe_allow_html=True):
-            st.session_state["language"] = "English"
-    with col2:
-        if st.markdown('<a href="javascript:void(0);" onclick="window.location.reload();">Nederlands</a>', unsafe_allow_html=True):
-            st.session_state["language"] = "Nederlands"
+    # Sla de taalkeuze op in de session_state
+    st.session_state["language"] = lang_choice
 
     # Kies de landenlijst en de standaardwaarde op basis van de taal
     if lang_choice == "English":
