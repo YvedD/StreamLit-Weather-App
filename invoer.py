@@ -48,22 +48,21 @@ def show_input_form():
     longitude = 2.9724
     selected_date = datetime.now().date() - timedelta(days=1)
 
-    # De container met opmaak voor de invoer
-    with st.container():  # Dit zorgt ervoor dat alles binnen de container staat
-        # Voeg wat opmaak toe via markdown
-        st.markdown("""
-            <style>
-                .custom-container {
-                    border: 2px solid #4CAF50;  /* Groene rand */
-                    padding: 20px;
-                    border-radius: 10px;  /* Ronde hoeken */
-                    background-color: #f0f8f0;  /* Lichte groene achtergrondkleur */
-                    margin-bottom: 20px;
-                }
-            </style>
-        """, unsafe_allow_html=True)
+    # Voeg wat opmaak toe via markdown
+    st.markdown("""
+        <style>
+            .custom-container {
+                border: 2px solid #4CAF50;  /* Groene rand */
+                padding: 20px;
+                border-radius: 10px;  /* Ronde hoeken */
+                background-color: #f0f8f0;  /* Lichte groene achtergrondkleur */
+                margin-bottom: 20px;
+            }
+        </style>
+    """, unsafe_allow_html=True)
 
-        # Begin van de container HTML
+    # Expander die altijd uitgeklapt is
+    with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
         st.markdown('<div class="custom-container">', unsafe_allow_html=True)
 
         # Titel voor de invoer
