@@ -74,27 +74,25 @@ def show_input_form():
         unsafe_allow_html=True
     )
 
-    # Controleer of de taal al in de sessie staat, anders stel een standaardtaal in
-    if 'language' not in st.session_state:
-        st.session_state.language = 'English'  # Standaardtaal
+    # Taalkeuze door middel van links
+    lang_choice = st.session_state.get("language", "English")  # Default to English if no selection
 
-    # Taalkeuze via links bovenaan
-    st.markdown("""
-        <a href="javascript:void(0);" onclick="document.getElementById('english').click()">English</a> | 
-        <a href="javascript:void(0);" onclick="document.getElementById('dutch').click()">Nederlands</a>
-        """, unsafe_allow_html=True)
-    
-    # Verander de taal afhankelijk van de link waarop geklikt wordt
-    if st.button('English', key='english'):
-        st.session_state.language = 'English'
-    if st.button('Nederlands', key='dutch'):
-        st.session_state.language = 'Nederlands'
+    # Maak de taalkeuze via links
+    col1, col2 = st.columns([1, 1])
+    with col1:
+        if st.markdown('<a href="javascript:void(0);" onclick="window.location.reload();">English</a>', unsafe_allow_html=True):
+            st.session_state["language"] = "English"
+    with col2:
+        if st.markdown('<a href="javascript:void(0);" onclick="window.location.reload();">Nederlands</a>', unsafe_allow_html=True):
+            st.session_state["language"] = "Nederlands"
 
     # Kies de landenlijst en de standaardwaarde op basis van de taal
-    if st.session_state.language == "English":
+    if lang_choice == "English":
         countries = EUROPEAN_COUNTRIES_EN
         country_label = "Select Country"
+        country_text = "Country"
         location_label = "Location for weather"
+        location_text = "Location"
         date_label = "Date"
         start_hour_label = "Start Hour"
         end_hour_label = "End Hour"
@@ -104,7 +102,9 @@ def show_input_form():
     else:
         countries = EUROPEAN_COUNTRIES_NL
         country_label = "Selecteer land"
+        country_text = "Land"
         location_label = "Locatie voor weergegevens"
+        location_text = "Locatie"
         date_label = "Datum"
         start_hour_label = "Beginuur"
         end_hour_label = "Einduur"
@@ -136,9 +136,8 @@ def show_input_form():
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**{country_label}**: {country}, **{location_label}**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+            st.write(f"**{country_text}**: {country}, **{location_text}**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
             if sunrise and sunset:
                 st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
         else:
             st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
-
