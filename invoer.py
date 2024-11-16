@@ -81,7 +81,9 @@ def show_input_form():
     if language == "English":
         countries = EUROPEAN_COUNTRIES_EN
         country_label = "Select Country"
-        location_label = "Location"
+        counrtry_text = "Country"
+        location_label = "Location for weather"
+        location_text = "Location"
         date_label = "Date"
         start_hour_label = "Start Hour"
         end_hour_label = "End Hour"
@@ -91,7 +93,9 @@ def show_input_form():
     else:
         countries = EUROPEAN_COUNTRIES_NL
         country_label = "Selecteer land"
-        location_label = "Locatie"
+        counrtry_text = "Land"
+        location_label = "Locatie voor weergegevens"
+        location_text = "Locatie"
         date_label = "Datum"
         start_hour_label = "Beginuur"
         end_hour_label = "Einduur"
@@ -103,7 +107,7 @@ def show_input_form():
     with st.expander("Input Data", expanded=True):  # Dit maakt de expander standaard uitgeklapt
 
         # Titel voor de invoer
-        st.header(f"{location_label} for Weather")
+        st.header(f"{location_label} ")
 
         # Formulier voor het invoeren van gegevens
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
@@ -123,7 +127,7 @@ def show_input_form():
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+            st.write(f"**{country_text}y**: {country}, **{location_text}**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
             if sunrise and sunset:
                 st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
         else:
