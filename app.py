@@ -93,6 +93,10 @@ selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
 end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
+# Weergeven van geselecteerde locatie- en tijdgegevens
+st.write(f"**Land**: {country}, **Locatie**: {location} ({latitude}, {longitude})")
+st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
+
 # Verkrijg de GPS-coördinaten voor de nieuwe locatie
 latitude, longitude = get_gps_coordinates(location)
 
