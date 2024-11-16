@@ -88,13 +88,13 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
-# Functie om de 3-daagse weersvoorspelling op te halen
-def fetch_3_day_forecast(lat, lon):
+# Functie om de voorspelling voor morgen op te halen
+def fetch_tomorrow_forecast(lat, lon):
     api_url = (
         f"https://api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
-        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=3"
+        "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=2"
     )
     try:
         response = requests.get(api_url)
@@ -109,7 +109,7 @@ default_country = "België"
 default_location = "Bredene"
 latitude = 51.2389
 longitude = 2.9724
-selected_date = datetime.now() - timedelta(days=1)
+selected_date = datetime.now().date() - timedelta(days=1)
 
 # Titel en instructies
 st.title("Historische Weergegevens - Open-Meteo API")
@@ -152,7 +152,7 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
         wind_speeds = hourly_data["wind_speed_10m"]
-        wind_directions = hourly_data["wind_direction_80m"]
+        wind_directions = hourly_data["wind_direction_10m"]
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -177,22 +177,22 @@ with st.expander("Kaartweergave van deze locatie"):
         folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
         st_folium(map_folium, width=700)
 
-# Derde expander voor de 3-daagse weersvoorspelling
-with st.expander("3-daagse weersvoorspelling"):
-    forecast_data = fetch_3_day_forecast(latitude, longitude)
-    if forecast_data:
-        daily_forecasts = forecast_data["daily"]
-        hourly_data = forecast_data["hourly"]
-        
-        for i, day in enumerate(daily_forecasts["time"]):
-            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
-            st.write(f"**{date}:**")
-            
-            # Haal de bijbehorende gegevens voor elk uur op en toon voor de drie dagen
+# Expander voor de weersvoorspelling voor morgen, als de datum vandaag is
+with st.expander("Voorspelling voor morgen"):
+    if selected_date == datetime.now().date():
+        forecast_data = fetch_tomorrow_forecast(latitude, longitude)
+        if forecast_data:
+            hourly_data = forecast_data["hourly"]
+            tomorrow = (datetime.now().date() + timedelta(days=1)).strftime("%A %d %B %Y")
+            st.write(f"**{tomorrow}:**")
+
+            # Toon de weersvoorspelling per uur voor morgen
             for j, time in enumerate(hourly_data["time"]):
                 forecast_hour = datetime.fromisoformat(time).strftime("%H:%M")
-                temperature = hourly_data["temperature_2m"][j]
-                precipitation = hourly_data["precipitation"][j]
-                cloudcover = hourly_data["cloud_cover"][j]
-                
-                st.write(f"{forecast_hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
+                if "00:00" <= forecast_hour <= "23:59":  # hele dag
+                    temperature = hourly_data["temperature_2m"][j]
+                    precipitation = hourly_data["precipitation"][j]
+                    cloudcover = hourly_data["cloud_cover"][j]
+                    st.write(f"{forecast_hour}: Temp: {temperature}°C - Neerslag: {precipitation}mm - Bewolking: {cloudcover}%")
+    else:
+        st.write("Voorspelling beschikbaar voor morgen indien datum gelijk is aan vandaag.")
