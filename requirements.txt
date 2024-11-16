@@ -1,11 +1,7 @@
-requests
-pandas
-numpy
-geopy
 streamlit
-pycountry
+geopy
+requests
 folium
 streamlit-folium
-pillow
 seaborn
 matplotlib
