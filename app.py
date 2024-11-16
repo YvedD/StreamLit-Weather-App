@@ -4,6 +4,24 @@ import requests
 import folium
 from streamlit_folium import st_folium
 
+# Functie om weergegevens op te halen op basis van locatie en datum
+def fetch_weather_data(lat, lon, date):
+    api_url = (
+        f"https://historical-forecast-api.open-meteo.com/v1/forecast"
+        f"?latitude={lat}&longitude={lon}"
+        f"&start_date={date.strftime('%Y-%m-%d')}&end_date={date.strftime('%Y-%m-%d')}"
+        "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
+        "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m"
+        "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
+    )
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        return response.json()
+    except requests.RequestException as e:
+        st.error(f"Fout bij het ophalen van weergegevens: {e}")
+        return None
+
 # Standaardwaarden voor locatie en datum
 default_country = "België"
 default_location = "Bredene"
@@ -11,64 +29,36 @@ latitude = 51.2389
 longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
-# API-URL configuratie voor Open-Meteo
-api_url = (
-    f"https://historical-forecast-api.open-meteo.com/v1/forecast"
-    f"?latitude={latitude}&longitude={longitude}"
-    f"&start_date={selected_date.strftime('%Y-%m-%d')}&end_date={selected_date.strftime('%Y-%m-%d')}"
-    "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
-    "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m"
-    "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
-)
-
-# Functie om weergegevens op te halen
-def fetch_weather_data(url):
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        return response.json()
-    except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van weergegevens: {e}")
-        return None
-
-weather_data = fetch_weather_data(api_url)
-
-# Begin- en einduur op basis van zonsopgang en zonsondergang
-sunrise = None
-sunset = None
-if weather_data:
-    sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
-    sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-    start_hour = sunrise
-    end_hour = sunset
-else:
-    start_hour = "08:00"
-    end_hour = "16:00"
-
-# Gebruikersinterface voor land, locatie, datum, begin- en eindtijd
+# Titel en instructies
 st.title("Historische Weergegevens - Open-Meteo API")
-st.write(f"**Land**: {default_country}, **Locatie**: {default_location} ({latitude}, {longitude})")
-st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
 
 # Invoeropties voor de gebruiker
 country = st.selectbox("Selecteer land", ["België", "Nederland", "Frankrijk"], index=0)
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
-start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=int(start_hour[:2]))
-end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=int(end_hour[:2]))
+start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
+end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
-# Aanpassen API-url op basis van gebruikersinput
-api_url = (
-    f"https://historical-forecast-api.open-meteo.com/v1/forecast"
-    f"?latitude={latitude}&longitude={longitude}"
-    f"&start_date={selected_date.strftime('%Y-%m-%d')}&end_date={selected_date.strftime('%Y-%m-%d')}"
-    "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
-    "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m"
-    "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
-)
+# Ophalen van coördinaten en weergegevens op basis van nieuwe locatie en datum
+if country == "België" and location == "Bredene":
+    latitude, longitude = 51.2389, 2.9724
+# Voeg hier meer locaties toe als gewenst, of integreer met een externe service om dynamisch locaties om te zetten naar coördinaten
 
-# Ophalen en verwerken van gegevens na wijziging van invoervelden
-weather_data = fetch_weather_data(api_url)
+# Weerdata ophalen
+weather_data = fetch_weather_data(latitude, longitude, selected_date)
+
+# Begin- en einduur op basis van zonsopgang en zonsondergang
+if weather_data:
+    sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
+    sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
+    start_hour = sunrise if start_hour == "08:00" else start_hour
+    end_hour = sunset if end_hour == "16:00" else end_hour
+else:
+    sunrise, sunset = "08:00", "16:00"
+
+# Weergeven van geselecteerde locatie- en tijdgegevens
+st.write(f"**Land**: {country}, **Locatie**: {location} ({latitude}, {longitude})")
+st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
 
 # Expander met kopieerbare weergegevens per uur
 with st.expander("Historische Weergegevens - Kort Overzicht"):
