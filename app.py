@@ -56,8 +56,8 @@ european_countries = [
 
 # Invoer voor locatie en datum/tijdinstellingen
 st.title("Weerdata Opvragen met Locatie Weergave")
-country = st.selectbox("Land:", european_countries, index=european_countries.index("Nederland"))
-location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Amsterdam")
+country = st.selectbox("Land:", european_countries, index=european_countries.index("België"))
+location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", "Bredene")
 selected_date = st.date_input("Selecteer de datum:", datetime.now().date())
 
 # Volle uren selecties
@@ -76,16 +76,8 @@ location = geolocator.geocode(f"{location_name}, {country}")
 if location:
     latitude, longitude = location.latitude, location.longitude
 
-    # Maak drie expanders voor overzicht, voorspellingen en historische gegevens
-    with st.expander("Locatie Overzicht"):
-        # Kaart met marker
-        st.header("Locatie op kaart")
-        map_obj = folium.Map(location=[latitude, longitude], zoom_start=6)
-        folium.Marker([latitude, longitude], tooltip=location_name, icon=folium.Icon(color="red")).add_to(map_obj)
-        st_folium(map_obj, width=700, height=400)
-
-    # Extra expander voor tekstuele historische gegevens
-    with st.expander("Historische Weergegevens - Tekstueel Overzicht"):
+    # Maak een nieuwe expander voor de historische weergegevens op één rij
+    with st.expander("Historische Weergegevens - Kort Overzicht"):
         # Functie om weerdata op te halen
         def fetch_weather_data(lat, lon, start, end):
             url = (
@@ -119,20 +111,19 @@ if location:
             # Filteren op geselecteerde datum en tijdsbereik
             start_datetime = datetime.combine(selected_date, datetime.strptime(start_hour, "%H:%M").time())
             end_datetime = datetime.combine(selected_date, datetime.strptime(end_hour, "%H:%M").time())
-            
-            # Tekstueel overzicht per uur binnen de geselecteerde tijdsperiode
+
+            # Tekstueel overzicht per uur op één rij
             for i in range(len(times)):
                 if start_datetime <= times[i] <= end_datetime:
-                    st.write(f"**Tijdstip:** {times[i].strftime('%Y-%m-%d %H:%M')}")
-                    st.write(f"- Temperatuur: {temperatures[i]:.1f} °C")
-                    st.write(f"- Neerslag: {precipitation[i]:.1f} mm")
-                    st.write(f"- Bewolkingsgraad totaal: {cloudcover[i]}%")
-                    st.write(f"- Bewolkingsgraad laag: {cloudcover_low[i]}%")
-                    st.write(f"- Bewolkingsgraad midden: {cloudcover_mid[i]}%")
-                    st.write(f"- Bewolkingsgraad hoog: {cloudcover_high[i]}%")
-                    st.write(f"- Windrichting: {wind_directions[i]}")
-                    st.write(f"- Windsnelheid (Beaufort): {wind_speeds[i]}")
-                    st.write("---")  # Horizontale lijn als scheiding
+                    st.write(f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf")
+                    
+    # Locatie Overzicht
+    with st.expander("Locatie Overzicht"):
+        # Kaart met marker
+        st.header("Locatie op kaart")
+        map_obj = folium.Map(location=[latitude, longitude], zoom_start=6)
+        folium.Marker([latitude, longitude], tooltip=location_name, icon=folium.Icon(color="red")).add_to(map_obj)
+        st_folium(map_obj, width=700, height=400)
 
     # Historische gegevens grafieken
     with st.expander("Historische Weergegevens - Grafieken"):
