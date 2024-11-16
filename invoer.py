@@ -82,8 +82,7 @@ def show_input_form():
 
     # Expander die altijd uitgeklapt is
     with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
-        st.markdown('<div class="custom-container">', unsafe_allow_html=True)
-
+    
         # Titel voor de invoer
         st.header("Invoergegevens voor het weer")
 
