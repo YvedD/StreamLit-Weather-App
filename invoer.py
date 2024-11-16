@@ -2,14 +2,23 @@ import streamlit as st
 from datetime import datetime, timedelta
 import requests
 
-# Lijst van Europese landen voor de dropdown
-EUROPEAN_COUNTRIES = [
+# Lijst van Europese landen in Engels en Nederlands
+EUROPEAN_COUNTRIES_EN = [
     "Belgium", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
     "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia", "Germany", 
     "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", 
     "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", 
     "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia", 
     "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "United Kingdom", "Vatican City"
+]
+
+EUROPEAN_COUNTRIES_NL = [
+    "België", "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Bulgarije", "Bosnië en Herzegovina", 
+    "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Georgië", "Duitsland", 
+    "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland", "Liechtenstein", 
+    "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noord-Macedonië", 
+    "Noorwegen", "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slovenië", "Slovenië", 
+    "Spanje", "Zweden", "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad"
 ]
 
 # Functie om GPS-coördinaten op te halen via geocoding service
@@ -23,10 +32,10 @@ def get_gps_coordinates(location):
             lon = float(data[0]["lon"])
             return lat, lon
         else:
-            st.error("Locatie niet gevonden.")
+            st.error("Location not found.")  # Error in English
             return None, None
     except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
+        st.error(f"Error fetching GPS coordinates: {e}")  # Error message in English
         return None, None
 
 # Functie om zonsopkomst en zonsondergang te berekenen
@@ -43,10 +52,10 @@ def get_sun_times(lat, lon, date):
             sunset = datetime.fromisoformat(data['results']['sunset']).strftime('%H:%M')
             return sunrise, sunset
         else:
-            st.error("Zonsopkomst- en zonsondergangstijden niet gevonden.")
+            st.error("Sunrise and sunset times not found.")  # Error message in English
             return None, None
     except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van zonsopkomst/zonsondergang: {e}")
+        st.error(f"Error fetching sunrise/sunset times: {e}")  # Error message in English
         return None, None
 
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
@@ -64,18 +73,41 @@ def show_input_form():
         unsafe_allow_html=True
     )
 
+    # Laat de gebruiker de taal kiezen
+    language = st.selectbox("Select Language", ["English", "Dutch"])
+
+    # Kies de landenlijst op basis van de taal
+    if language == "English":
+        countries = EUROPEAN_COUNTRIES_EN
+        country_label = "Select Country"
+        location_label = "Location"
+        date_label = "Date"
+        start_hour_label = "Start Hour"
+        end_hour_label = "End Hour"
+        sunrise_label = "Sunrise"
+        sunset_label = "Sunset"
+    else:
+        countries = EUROPEAN_COUNTRIES_NL
+        country_label = "Selecteer land"
+        location_label = "Locatie"
+        date_label = "Datum"
+        start_hour_label = "Beginuur"
+        end_hour_label = "Einduur"
+        sunrise_label = "Zonsopkomst"
+        sunset_label = "Zonsondergang"
+
     # Expander die altijd uitgeklapt is
-    with st.expander("Invoer Gegevens", expanded=True):  # Dit maakt de expander standaard uitgeklapt
+    with st.expander("Input Data", expanded=True):  # Dit maakt de expander standaard uitgeklapt
 
         # Titel voor de invoer
-        st.header("Invoergegevens voor het weer")
+        st.header(f"{location_label} for Weather")
 
         # Formulier voor het invoeren van gegevens
-        country = st.selectbox("Selecteer land", EUROPEAN_COUNTRIES, index=EUROPEAN_COUNTRIES.index(default_country))  # Lijst van Europese landen
-        location = st.text_input("Locatie", value=default_location)
-        selected_date = st.date_input("Datum", value=selected_date)
-        start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
-        end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
+        country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
+        location = st.text_input(location_label, value=default_location)
+        selected_date = st.date_input(date_label, value=selected_date)
+        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
+        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
 
         # Verkrijg de GPS-coördinaten voor de nieuwe locatie
         latitude, longitude = get_gps_coordinates(location)
@@ -88,8 +120,8 @@ def show_input_form():
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**Land**: {country}, **Locatie**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+            st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
             if sunrise and sunset:
-                st.write(f"**Zonsopkomst**: {sunrise}, **Zonsondergang**: {sunset}")
+                st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
         else:
-            st.write("Locatie niet gevonden.")
+            st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
