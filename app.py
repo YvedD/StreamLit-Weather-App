@@ -39,17 +39,7 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
         return None, None
 
-# Lijst van Europese landen voor de dropdown
-european_countries = [
-    "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Wit-Rusland", "België", "Bosnië en Herzegovina",
-    "Bulgarije", "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Frankrijk", "Georgië",
-    "Duitsland", "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland",
-    "Liechtenstein", "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noorwegen",
-    "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slowakije", "Slovenië", "Spanje", "Zweden",
-    "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad", "Noord-Macedonië"
-]
-
-# Functie om de windrichting om te zetten naar de "NW" notatie
+# Functie om windrichting om te zetten naar richtingen zoals NW
 def get_wind_direction(degrees):
     directions = [
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
@@ -61,6 +51,17 @@ def get_wind_direction(degrees):
         if degrees < angle:
             return direction
     return "N"  # Default if no match
+
+# Functie om windkracht om te rekenen naar de Beaufortschaal
+def wind_speed_to_beaufort(speed_kmh):
+    # Beaufortschaal berekening
+    thresholds = [
+        1, 5, 11, 19, 28, 38, 49, 61, 74, 88, 102, 117, float("inf")
+    ]
+    for beaufort, threshold in enumerate(thresholds):
+        if speed_kmh <= threshold:
+            return beaufort
+    return 12  # Return maximum Beaufort
 
 # Functie om de voorspelling voor morgen op te halen
 def fetch_tomorrow_forecast(lat, lon):
@@ -86,7 +87,7 @@ longitude = 2.9724
 selected_date = datetime.now().date() - timedelta(days=1)
 
 # Formulier voor het invoeren van gegevens
-country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
+country = st.selectbox("Selecteer land", ["België"], index=0)  # Aanpassing voor slechts één land
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
@@ -98,7 +99,7 @@ latitude, longitude = get_gps_coordinates(location)
 # Weerdata ophalen
 weather_data = fetch_weather_data(latitude, longitude, selected_date, start_hour, end_hour)
 
-# Expander met kopieerbare weergegevens per uur
+# Expander met kopieerbare weergegevens per uur met uitgebreide informatie
 with st.expander("Weergegevens voor deze locatie en tijdspanne"):
     if weather_data:
         hourly_data = weather_data["hourly"]
@@ -106,6 +107,12 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
         temperatures = hourly_data["temperature_2m"]
         precipitation = hourly_data["precipitation"]
         cloudcover = hourly_data["cloud_cover"]
+        cloudcover_low = hourly_data["cloud_cover_low"]
+        cloudcover_mid = hourly_data["cloud_cover_mid"]
+        cloudcover_high = hourly_data["cloud_cover_high"]
+        visibility = hourly_data["visibility"]
+        wind_speeds = hourly_data["wind_speed_10m"]
+        wind_directions = hourly_data["wind_direction_80m"]
 
         # Toon gegevens met st.code per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -113,13 +120,24 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
             if start_hour <= hour <= end_hour:
                 weather_info = (
                     f"{hour}: Temp: {temperatures[i]:.1f}°C, "
-                    f"Neerslag: {precipitation[i]:.1f}mm, Bewolking: {cloudcover[i]}%"
+                    f"Neerslag: {precipitation[i]:.1f}mm, Bewolking: {cloudcover[i]}%, "
+                    f"Low: {cloudcover_low[i]}%, Mid: {cloudcover_mid[i]}%, High: {cloudcover_high[i]}%, "
+                    f"Windrichting: {get_wind_direction(wind_directions[i])}, "
+                    f"Windkracht (Beaufort): {wind_speed_to_beaufort(wind_speeds[i])}, "
+                    f"Zichtbaarheid: {visibility[i] / 1000:.1f} km"
                 )
                 st.code(weather_info, language="text")
     else:
         st.write("Geen weergegevens gevonden voor de geselecteerde locatie en tijd.")
 
-# Expander voor weersvoorspelling voor morgen (enkel relevant per 4 uur)
+# Expander voor kaartweergave
+with st.expander("Kaartweergave van locatie"):
+    # Toon kaart met markering op de gekozen locatie
+    m = folium.Map(location=[latitude, longitude], zoom_start=10)
+    folium.Marker([latitude, longitude], tooltip=location).add_to(m)
+    st_folium(m, width=700, height=500)
+
+# Expander voor weersvoorspelling voor morgen (enkel relevant als datum vandaag is)
 with st.expander("Voorspelling voor morgen"):
     if selected_date == datetime.now().date():
         forecast_data = fetch_tomorrow_forecast(latitude, longitude)
