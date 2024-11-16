@@ -5,7 +5,7 @@ import folium
 from streamlit_folium import st_folium
 
 # Functie om weergegevens op te halen op basis van locatie en datum
-def fetch_weather_data(lat, lon, date):
+def fetch_weather_data(lat, lon, date, start_hour, end_hour):
     api_url = (
         f"https://historical-forecast-api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
@@ -109,7 +109,7 @@ end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], ind
 latitude, longitude = get_gps_coordinates(location)
 
 # Weerdata ophalen
-weather_data = fetch_weather_data(latitude, longitude, selected_date)
+weather_data = fetch_weather_data(latitude, longitude, selected_date, start_hour, end_hour)
 
 # Begin- en einduur op basis van zonsopgang en zonsondergang
 if weather_data:
