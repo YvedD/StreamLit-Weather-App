@@ -39,6 +39,16 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
         return None, None
 
+# Lijst van Europese landen voor de dropdown
+european_countries = [
+    "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Wit-Rusland", "België", "Bosnië en Herzegovina",
+    "Bulgarije", "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Frankrijk", "Georgië",
+    "Duitsland", "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland",
+    "Liechtenstein", "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noorwegen",
+    "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slowakije", "Slovenië", "Spanje", "Zweden",
+    "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad", "Noord-Macedonië"
+]
+
 # Functie om de windrichting om te zetten naar de "NW" notatie
 def get_wind_direction(degrees):
     directions = [
@@ -102,10 +112,10 @@ longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
 # Titel en instructies
-st.title("Weersvoorspelling - Open-Meteo API")
+st.title("Historische Weergegevens - Open-Meteo API")
 
 # Formulier voor het invoeren van gegevens
-country = st.selectbox("Selecteer land", ["België", "Nederland", "Frankrijk", "Duitsland", "Luxemburg"], index=0)
+country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
@@ -154,9 +164,9 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour}: Temp:{temperatures[i]:.1f}°C - Neersl:{precipitation[i]:.1f}mm - Bewolking:{cloudcover[i]}%"
-                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - "
-                    f"Wind: {wind_direction} {beaufort}Bf"
+                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
+                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
+                    f"Wind:{wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
 
@@ -169,28 +179,20 @@ with st.expander("Kaartweergave van deze locatie"):
 
 # Derde expander voor de 3-daagse weersvoorspelling
 with st.expander("3-daagse weersvoorspelling"):
-    # Haal de drie dagen weersvoorspelling op
     forecast_data = fetch_3_day_forecast(latitude, longitude)
-    
     if forecast_data:
         daily_forecasts = forecast_data["daily"]
-        hourly_forecasts = forecast_data["hourly"]
+        hourly_data = forecast_data["hourly"]
         
-        # Startdatum aanpassen naar de datum die door de gebruiker is ingevoerd
-        base_date = selected_date
-        
-        for i in range(3):
-            # Bereken de datum voor de huidige dag in de iteratie
-            forecast_date = base_date + timedelta(days=i)
-            date_str = forecast_date.strftime("%A %d %B %Y")
+        for i, day in enumerate(daily_forecasts["time"]):
+            date = datetime.fromisoformat(day).strftime("%A %d %B %Y")
+            st.write(f"**{date}:**")
             
-            st.write(f"**{date_str}:**")
-            
-            # Haal de data voor de huidige dag (24 uur) en toon deze
-            for j in range(24):  # We tonen nu enkel 24 uur per dag
-                hour = (forecast_date + timedelta(hours=j)).strftime("%H:%M")
-                temperature = hourly_forecasts["temperature_2m"][i*24 + j]
-                precipitation = hourly_forecasts["precipitation"][i*24 + j]
-                cloudcover = hourly_forecasts["cloud_cover"][i*24 + j]
+            # Haal de bijbehorende gegevens voor elk uur op en toon voor de drie dagen
+            for j, time in enumerate(hourly_data["time"]):
+                forecast_hour = datetime.fromisoformat(time).strftime("%H:%M")
+                temperature = hourly_data["temperature_2m"][j]
+                precipitation = hourly_data["precipitation"][j]
+                cloudcover = hourly_data["cloud_cover"][j]
                 
-                st.write(f"{hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
+                st.write(f"{forecast_hour}: Temp: {temperature}°C - Precip: {precipitation}mm - Cloud Cover: {cloudcover}%")
