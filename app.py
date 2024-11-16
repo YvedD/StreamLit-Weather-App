@@ -61,7 +61,8 @@ def fetch_weather_data(latitude, longitude, start_date, end_date, start_hour, en
         # Filter data based on the selected time range
         for i, time in enumerate(data['hourly']['time']):
             time_obj = datetime.strptime(time, "%Y-%m-%dT%H:%M")
-            if start_hour <= time_obj.hour < end_hour:
+            # Adjusted filter to include the end hour as well
+            if start_hour <= time_obj.hour <= end_hour:
                 for key in filtered_data.keys():
                     filtered_data[key].append(data['hourly'][key][i])
 
