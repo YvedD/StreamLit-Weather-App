@@ -39,16 +39,6 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
         return None, None
 
-# Lijst van Europese landen voor de dropdown
-european_countries = [
-    "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Wit-Rusland", "België", "Bosnië en Herzegovina",
-    "Bulgarije", "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Frankrijk", "Georgië",
-    "Duitsland", "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland",
-    "Liechtenstein", "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noorwegen",
-    "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slowakije", "Slovenië", "Spanje", "Zweden",
-    "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad", "Noord-Macedonië"
-]
-
 # Functie om de windrichting om te zetten naar de "NW" notatie
 def get_wind_direction(degrees):
     directions = [
@@ -92,7 +82,7 @@ def wind_speed_to_beaufort(speed):
 def fetch_3_day_forecast(lat, lon):
     api_url = (
         f"https://api.open-meteo.com/v1/forecast"
-        f"?latitude={lat}&longitude={lon}?"
+        f"?latitude={lat}&longitude={lon}"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
         "visibility,wind_speed_10m,wind_direction_10m&daily=sunrise,sunset&timezone=Europe%2FBerlin&forecast_days=3"
     )
@@ -112,10 +102,10 @@ longitude = 2.9724
 selected_date = datetime.now() - timedelta(days=1)
 
 # Titel en instructies
-st.title("Historische Weergegevens - Open-Meteo API")
+st.title("Weersvoorspelling - Open-Meteo API")
 
 # Formulier voor het invoeren van gegevens
-country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
+country = st.selectbox("Selecteer land", ["België", "Nederland", "Frankrijk", "Duitsland", "Luxemburg"], index=0)
 location = st.text_input("Locatie", value=default_location)
 selected_date = st.date_input("Datum", value=selected_date)
 start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
@@ -164,9 +154,9 @@ with st.expander("Weergegevens voor deze locatie en tijdspanne"):
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
                 weather_info = (
-                    f"{hour}:Temp:{temperatures[i]:.1f}°C-Neersl:{precipitation[i]:.1f}mm-Bew.Tot:{cloudcover[i]}%"
-                    f"(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)-"
-                    f"Wind:{wind_direction} {beaufort}Bf"
+                    f"{hour}: Temp:{temperatures[i]:.1f}°C - Neersl:{precipitation[i]:.1f}mm - Bewolking:{cloudcover[i]}%"
+                    f" (L:{cloudcover_low[i]}%, M:{cloudcover_mid[i]}%, H:{cloudcover_high[i]}%) - "
+                    f"Wind: {wind_direction} {beaufort}Bf"
                 )
                 st.code(weather_info)
 
