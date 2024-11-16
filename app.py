@@ -99,68 +99,63 @@ selected_date = datetime.now() - timedelta(days=1)
 st.title("Historische Weergegevens - Open-Meteo API")
 
 # Formulier voor het invoeren van gegevens
-with st.form(key='weather_form'):
-    country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
-    location = st.text_input("Locatie", value=default_location)
-    selected_date = st.date_input("Datum", value=selected_date)
-    start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
-    end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
-    
-    # Verzenden van formulier
-    submit_button = st.form_submit_button("Gegevens bijwerken")
+country = st.selectbox("Selecteer land", european_countries, index=european_countries.index(default_country))
+location = st.text_input("Locatie", value=default_location)
+selected_date = st.date_input("Datum", value=selected_date)
+start_hour = st.selectbox("Beginuur", [f"{hour:02d}:00" for hour in range(24)], index=8)
+end_hour = st.selectbox("Einduur", [f"{hour:02d}:00" for hour in range(24)], index=16)
 
-# Verkrijg de GPS-coördinaten voor de nieuwe locatie en land
-if submit_button:
-    latitude, longitude = get_gps_coordinates(location)
+# Verkrijg de GPS-coördinaten voor de nieuwe locatie
+latitude, longitude = get_gps_coordinates(location)
 
-    # Weerdata ophalen
-    weather_data = fetch_weather_data(latitude, longitude, selected_date)
+# Weerdata ophalen
+weather_data = fetch_weather_data(latitude, longitude, selected_date)
 
-    # Begin- en einduur op basis van zonsopgang en zonsondergang
+# Begin- en einduur op basis van zonsopgang en zonsondergang
+if weather_data:
+    sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
+    sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
+    start_hour = sunrise if start_hour == "08:00" else start_hour
+    end_hour = sunset if end_hour == "16:00" else end_hour
+else:
+    sunrise, sunset = "08:00", "16:00"
+
+# Weergeven van geselecteerde locatie- en tijdgegevens
+st.write(f"**Land**: {country}, **Locatie**: {location} ({latitude}, {longitude})")
+st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
+
+# Expander met kopieerbare weergegevens per uur
+with st.expander("Historische Weergegevens - Kort Overzicht"):
     if weather_data:
-        sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
-        sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-        start_hour = sunrise if start_hour == "08:00" else start_hour
-        end_hour = sunset if end_hour == "16:00" else end_hour
-    else:
-        sunrise, sunset = "08:00", "16:00"
+        hourly_data = weather_data["hourly"]
+        times = hourly_data["time"]
+        temperatures = hourly_data["temperature_2m"]
+        precipitation = hourly_data["precipitation"]
+        cloudcover = hourly_data["cloud_cover"]
+        cloudcover_low = hourly_data["cloud_cover_low"]
+        cloudcover_mid = hourly_data["cloud_cover_mid"]
+        cloudcover_high = hourly_data["cloud_cover_high"]
+        wind_speeds = hourly_data["wind_speed_10m"]
+        wind_directions = hourly_data["wind_direction_80m"]
 
-    # Weergeven van geselecteerde locatie- en tijdgegevens
-    st.write(f"**Land**: {country}, **Locatie**: {location} ({latitude}, {longitude})")
-    st.write(f"**Zonsopgang**: {sunrise}, **Zonsondergang**: {sunset}")
+        # Tonen van weergegevens per uur binnen geselecteerde periode
+        for i, time in enumerate(times):
+            hour = datetime.fromisoformat(time).strftime("%H:%M")
+            if start_hour <= hour <= end_hour:
+                # Zet windrichting om naar NW-formaat
+                wind_direction = get_wind_direction(wind_directions[i])
+                # Zet windsnelheid om naar Beaufort schaal
+                beaufort = wind_speed_to_beaufort(wind_speeds[i])
+                
+                weather_info = (
+                    f"{hour} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% "
+                    f"(LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
+                    f"Wind: {wind_direction} ({beaufort} Bf)"
+                )
+                st.code(weather_info)
 
-    # Expander met kopieerbare weergegevens per uur
-    with st.expander("Historische Weergegevens - Kort Overzicht"):
-        if weather_data:
-            hourly_data = weather_data["hourly"]
-            times = hourly_data["time"]
-            temperatures = hourly_data["temperature_2m"]
-            precipitation = hourly_data["precipitation"]
-            cloudcover = hourly_data["cloud_cover"]
-            cloudcover_low = hourly_data["cloud_cover_low"]
-            cloudcover_mid = hourly_data["cloud_cover_mid"]
-            cloudcover_high = hourly_data["cloud_cover_high"]
-            wind_speeds = hourly_data["wind_speed_10m"]
-            wind_directions = hourly_data["wind_direction_80m"]
-
-            # Tonen van weergegevens per uur binnen geselecteerde periode
-            for i, time in enumerate(times):
-                hour = datetime.fromisoformat(time).strftime("%H:%M")
-                if start_hour <= hour <= end_hour:
-                    # Zet windrichting om naar NW-formaat
-                    wind_direction = get_wind_direction(wind_directions[i])
-                    # Zet windsnelheid om naar Beaufort schaal
-                    beaufort = wind_speed_to_beaufort(wind_speeds[i])
-                    
-                    weather_info = (
-                        f"{hour} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% "
-                        f"(LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - "
-                        f"Wind: {wind_direction} ({beaufort} Bf)"
-                    )
-                    st.code(weather_info)
-
-    # Expander met kaartweergave
-    with st.expander("Kaartweergave"):
-        map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
-        folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
-        st_folium(map_folium, width=700)
+# Expander met kaartweergave
+with st.expander("Kaartweergave"):
+    map_folium = folium.Map(location=[latitude, longitude], zoom_start=12)
+    folium.Marker([latitude, longitude], popup=location).add_to(map_folium)
+    st_folium(map_folium, width=700)
