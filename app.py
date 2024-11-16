@@ -1,70 +1,71 @@
 import streamlit as st
 import requests
-import datetime
-from datetime import timedelta
+from datetime import datetime, timedelta
+import folium
 from geopy.geocoders import Nominatim
-import matplotlib.pyplot as plt
-import seaborn as sns
+from streamlit_folium import st_folium
 
-# Functie om geografische locatie (latitude, longitude) op te halen
-def get_lat_lon(location):
-    geolocator = Nominatim(user_agent="weather-app")
-    location = geolocator.geocode(location)
-    if location:
-        return location.latitude, location.longitude
-    else:
-        return None, None
-
-# Functie om windrichting om te zetten naar de Nederlandse naam
+# Functie om windrichtingen om te zetten naar afkortingen
 def degrees_to_direction(degrees):
-    if degrees is None:
-        return ''
     directions = ['N', 'NNO', 'NO', 'ONO', 'O', 'OZO', 'ZO', 'ZZO', 'Z', 'ZZW', 'ZW', 'WZW', 'W', 'WNW', 'NW', 'NNW']
     index = round(degrees / 22.5) % 16
     return directions[index]
 
-# Functie om snelheid in km/u om te zetten naar de Beaufort-schaal
+# Functie om windsnelheid om te zetten naar de Beaufort-schaal
 def kmh_to_beaufort(kmh):
-    if kmh < 1:
+    if kmh is None:
+        return None
+    elif kmh < 1:
         return 0
-    elif 1 <= kmh <= 5:
+    elif kmh <= 5:
         return 1
-    elif 6 <= kmh <= 11:
+    elif kmh <= 11:
         return 2
-    elif 12 <= kmh <= 19:
+    elif kmh <= 19:
         return 3
-    elif 20 <= kmh <= 28:
+    elif kmh <= 28:
         return 4
-    elif 29 <= kmh <= 38:
+    elif kmh <= 38:
         return 5
-    elif 39 <= kmh <= 49:
+    elif kmh <= 49:
         return 6
-    elif 50 <= kmh <= 61:
+    elif kmh <= 61:
         return 7
-    elif 62 <= kmh <= 74:
+    elif kmh <= 74:
         return 8
-    elif 75 <= kmh <= 88:
+    elif kmh <= 88:
         return 9
-    elif 89 <= kmh <= 102:
+    elif kmh <= 102:
         return 10
-    elif 103 <= kmh <= 117:
+    elif kmh <= 117:
         return 11
     else:
         return 12
 
-# Haal historische weergegevens op
+# Standaardwaarden
+country = "België"
+location_name = "Bredene"
+selected_date = datetime.now() - timedelta(days=1)  # Gisteren
+start_hour = "08:00"
+end_hour = "16:00"
+
+# Invoer voor locatie en datum/tijdinstellingen
+st.title("Weerdata Opvragen met Locatie Weergave")
+country = st.selectbox("Land:", ["België", "Nederland", "Duitsland", "Frankrijk", "Spanje", "Italië", "Portugal", 
+                                 "Oostenrijk", "Zwitserland", "Zweden", "Noorwegen", "Denemarken", "Finland", 
+                                 "Ierland", "Verenigd Koninkrijk", "Polen", "Tsjechië", "Slowakije", "Hongarije", 
+                                 "Griekenland", "Kroatië", "Slovenië", "Litouwen", "Letland", "Estland", "Roemenië", 
+                                 "Bulgarije", "Servië", "Bosnië en Herzegovina", "Montenegro", "Albanië", "IJsland", 
+                                 "Luxemburg", "Andorra", "Liechtenstein", "Malta", "Cyprus"], index=0)
+location_name = st.text_input("Stad/Locatie (bijv. Amsterdam):", location_name)
+selected_date = st.date_input("Selecteer de datum:", selected_date.date())
+hours = [f"{str(i).zfill(2)}:00" for i in range(24)]
+start_hour = st.selectbox("Startuur:", hours, index=8)  # Standaard 08:00
+end_hour = st.selectbox("Einduur:", hours, index=16)  # Standaard 16:00
+
+# Functie om weerdata op te halen
 def fetch_weather_data(lat, lon, start_date, end_date):
-    url = (
-        f"https://archive-api.open-meteo.com/v1/archive"
-        f"?latitude={lat}&longitude={lon}"
-        f"&start_date={start_date}&end_date={end_date}"
-        f"&hourly=temperature_2m,wind_speed_10m,wind_direction_10m,cloudcover,cloudcover_low,cloudcover_mid,cloudcover_high,precipitation,visibility"
-        f"&timezone=Europe/Berlin"
-    )
-    
-    # Print de URL om te controleren of alles goed is geformatteerd
-    print("API URL:", url)
-    
+    url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_80m&daily=sunrise,sunset&timezone=Europe%2FBerlin"
     response = requests.get(url)
     if response.status_code == 200:
         return response.json()
@@ -72,80 +73,46 @@ def fetch_weather_data(lat, lon, start_date, end_date):
         st.error(f"Fout bij het ophalen van weergegevens: {response.status_code}")
         return None
 
-# Standaard locatie instellen voor België - Bredene
-default_location = "Bredene, België"
-latitude, longitude = get_lat_lon(default_location)
+# Functie om de locatie op de kaart te tonen
+def show_location_on_map(lat, lon, location_name):
+    m = folium.Map(location=[lat, lon], zoom_start=12)
+    folium.Marker([lat, lon], popup=location_name).add_to(m)
+    st_folium(m)
 
-if latitude is None or longitude is None:
-    st.error("Kan geen locatie vinden. Zorg ervoor dat je locatie correct is.")
-else:
-    # Huidige datum instellen
-    selected_date = datetime.datetime.now() - timedelta(days=1)
+# Haal de geografische coördinaten op
+geolocator = Nominatim(user_agent="weather_app")
+location = geolocator.geocode(f"{location_name}, {country}")
 
-    # Invoer voor de gebruiker
-    start_hour = "08:00"
-    end_hour = "16:00"
+if location:
+    latitude, longitude = location.latitude, location.longitude
+    
+    # Toon de kaart in de tweede expander
+    with st.expander("Kaart Weergave"):
+        show_location_on_map(latitude, longitude, location_name)
 
-    # Verkrijg de historische gegevens
-    historical_data = fetch_weather_data(latitude, longitude, selected_date - timedelta(days=8), selected_date)
+    # Verkrijg de historische weerdata
+    start_date = selected_date - timedelta(days=1)  # Gisteren
+    end_date = selected_date  # Vandaag
+    weather_data = fetch_weather_data(latitude, longitude, start_date.date(), end_date.date())
 
-    if historical_data:
-        hourly = historical_data['hourly']
-        times = [datetime.datetime.strptime(hourly['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(hourly['time']))]
-        temperatures = hourly.get('temperature_2m', [])
-        wind_speeds = [kmh_to_beaufort(speed) for speed in hourly.get('wind_speed_10m', [])]
-        wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly.get('wind_direction_10m', [])]
-        cloudcover = hourly.get('cloudcover', [])
-        cloudcover_low = hourly.get('cloudcover_low', [])
-        cloudcover_mid = hourly.get('cloudcover_mid', [])
-        cloudcover_high = hourly.get('cloudcover_high', [])
-        precipitation = hourly.get('precipitation', [])
+    if weather_data:
+        # Verkrijg de gegevens van de API response
+        hourly = weather_data['hourly']
+        times = [datetime.strptime(hourly['time'][i], "%Y-%m-%dT%H:%M") for i in range(len(hourly['time']))]
+        temperatures = hourly['temperature_2m']
+        wind_speeds = [kmh_to_beaufort(speed) for speed in hourly['wind_speed_10m']]
+        wind_directions = [degrees_to_direction(deg) if deg is not None else '' for deg in hourly['wind_direction_80m']]
+        cloudcover = hourly['cloud_cover']
+        cloudcover_low = hourly['cloud_cover_low']
+        cloudcover_mid = hourly['cloud_cover_mid']
+        cloudcover_high = hourly['cloud_cover_high']
+        precipitation = hourly['precipitation']
 
-        # Filteren op geselecteerde datum en tijdsbereik
-        start_datetime = datetime.datetime.combine(selected_date, datetime.datetime.strptime(start_hour, "%H:%M").time())
-        end_datetime = datetime.datetime.combine(selected_date, datetime.datetime.strptime(end_hour, "%H:%M").time())
-
-        # Historische gegevens tonen
-        with st.expander("Historische Gegevens - Kort Overzicht"):
+        # Toon de historische weergegevens in de eerste expander
+        with st.expander("Historische Weergegevens - Kort Overzicht"):
             for i in range(len(times)):
-                if start_datetime <= times[i] <= end_datetime:
-                    if (i < len(temperatures) and i < len(precipitation) and
-                        i < len(cloudcover) and i < len(cloudcover_low) and 
-                        i < len(cloudcover_mid) and i < len(cloudcover_high) and
-                        i < len(wind_directions) and i < len(wind_speeds)):
-                        weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
-                        st.code(weather_info)
-                    else:
-                        st.warning(f"Gegevens ontbreken voor tijdstip {times[i].strftime('%H:%M')}")
+                weather_info = f"{times[i].strftime('%H:%M')} : Temp.: {temperatures[i]:.1f} °C - Neersl.: {precipitation[i]:.1f} mm - Bew.Tot.: {cloudcover[i]}% (LOW: {cloudcover_low[i]}%, MID: {cloudcover_mid[i]}%, HI: {cloudcover_high[i]}%) - Wind: {wind_directions[i]} {wind_speeds[i]}Bf"
+                st.code(weather_info, language="plaintext")
 
-        # Grafieken tonen
-        with st.expander("Historische Weergegevens - Grafieken"):
-            filtered_times = [time for time in times if start_datetime <= time <= end_datetime]
-            filtered_temperatures = [temperatures[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-            filtered_wind_speeds = [wind_speeds[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-            filtered_cloudcover = [cloudcover[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-            filtered_precipitation = [precipitation[i] for i in range(len(times)) if start_datetime <= times[i] <= end_datetime]
-
-            # Temperatuur en Windsnelheid Plot
-            fig, ax1 = plt.subplots(figsize=(12, 6))
-            sns.lineplot(x=filtered_times, y=filtered_temperatures, color="blue", ax=ax1, label="Temperatuur (°C)")
-            sns.lineplot(x=filtered_times, y=filtered_wind_speeds, color="green", ax=ax1, label="Windsnelheid (Beaufort)")
-            ax1.set_xlabel("Datum en Tijd")
-            ax1.set_ylabel("Temperatuur / Windsnelheid")
-            ax1.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
-
-            # Bewolking en Zichtbaarheid Plot
-            fig, ax2 = plt.subplots(figsize=(12, 6))
-            sns.lineplot(x=filtered_times, y=filtered_cloudcover, color="orange", ax=ax2, label="Bewolking (%)")
-            sns.lineplot(x=filtered_times, y=filtered_precipitation, color="purple", ax=ax2, label="Neerslag (mm)")
-            ax2.set_xlabel("Datum en Tijd")
-            ax2.set_ylabel("Bewolking en Neerslag")
-            ax2.legend(loc="upper left", bbox_to_anchor=(1.05, 1))
-
-            st.pyplot(fig)
-
-        # Kaart met marker
-        with st.expander("Kaart Weergave"):
-            m = folium.Map(location=[latitude, longitude], zoom_start=12)
-            folium.Marker([latitude, longitude], popup=default_location).add_to(m)
-            folium_static(m)
+        # Optioneel: Toon extra gegevens in de grafieken (indien gewenst)
+        # Hier kun je de code toevoegen voor grafieken als dat nodig is
