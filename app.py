@@ -8,7 +8,7 @@ def main():
     latitude, longitude, location = show_input_form()
 
     # Toon de data-expander na de kaart
-    show_data_expander(latitude, longitude, location)  # Toon de data-expander voor de opgegeven locatie
+    show_data_expander()  # Toon de data-expander voor de opgegeven locatie
 
     # Toon de kaart op basis van de invoer
     if latitude and longitude:
