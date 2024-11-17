@@ -1,29 +1,30 @@
 import streamlit as st
 
-# Functie voor de expander die gegevens toont
 def show_data_expander():
-    # Check of de benodigde gegevens aanwezig zijn in st.session_state
-    if 'latitude' in st.session_state and 'longitude' in st.session_state and 'location' in st.session_state:
-        latitude = st.session_state['latitude']
-        longitude = st.session_state['longitude']
-        location = st.session_state['location']
+    # Debugging: print alle session_state-gegevens om te controleren of ze aanwezig zijn
+    st.write("### Debugging session_state")
+    st.write(st.session_state)
 
-        # Maak een expander die altijd uitgeklapt is
-        with st.expander("Location Data", expanded=True):
-            st.write("### Location Details")
-            st.write(f"**Location:** {location}")
-            st.write(f"**Latitude:** {latitude:.2f}")
-            st.write(f"**Longitude:** {longitude:.2f}")
+    # Haal de gegevens uit session_state
+    country = st.session_state.get('country', 'Unknown')  # Haal het land op, met 'Unknown' als default
+    location = st.session_state.get('location', 'Unknown')  # Haal de locatie op
+    selected_date = st.session_state.get('selected_date', 'Unknown')  # Haal de datum op, met 'Unknown' als default
+    latitude = st.session_state.get('latitude', 'Unknown')  # Haal de latitude op
+    longitude = st.session_state.get('longitude', 'Unknown')  # Haal de longitude op
+    sunrise = st.session_state.get('sunrise', 'Unknown')  # Haal de sunrise op
+    sunset = st.session_state.get('sunset', 'Unknown')  # Haal de sunset op
 
-            # Toon alle andere gegevens die we mogelijk hebben opgeslagen in session_state
-            if 'sunrise' in st.session_state and 'sunset' in st.session_state:
-                sunrise = st.session_state['sunrise']
-                sunset = st.session_state['sunset']
-                st.write(f"**Sunrise:** {sunrise}")
-                st.write(f"**Sunset:** {sunset}")
+    # Maak een expander die altijd uitgeklapt is
+    with st.expander("Location Data", expanded=True):
+        st.write("### Location Details")
+        st.write(f"**Location:** {location}")
+        st.write(f"**Latitude:** {latitude}")
+        st.write(f"**Longitude:** {longitude}")
+        st.write(f"**Country:** {country}")
+        st.write(f"**Date:** {selected_date}")
 
-            # Als er geen sunrise of sunset beschikbaar zijn, geef een waarschuwing
-            else:
-                st.write("**Sunrise and Sunset data are not available.**")
-    else:
-        st.error("No location data found in session state.")  # Als er geen locatiegegevens in session_state zijn
+        if sunrise != 'Unknown' and sunset != 'Unknown':
+            st.write(f"**Sunrise:** {sunrise}")
+            st.write(f"**Sunset:** {sunset}")
+        else:
+            st.write("**Sunrise and Sunset data are not available.**")
