@@ -37,23 +37,31 @@ def get_sun_times(lat, lon, date):
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
         return None, None
 
-# Functie om actuele weergegevens op te halen via Open-Meteo API
-def get_weather_data(lat, lon, date):
-    api_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation,wind_speed_10m&start={date}T00:00:00Z&end={date}T23:59:59Z"
+# Functie om weergegevens op te halen via Open-Meteo API
+def get_weather_data(lat, lon, start_date, end_date):
+    api_url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}&hourly=temperature_2m,relative_humidity_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m&timezone=Europe%2FBerlin"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
 
-        # Haal de nodige weergegevens op (temperatuur, neerslag, wind)
-        temperature = data['hourly']['temperature_2m']
-        precipitation = data['hourly']['precipitation']
-        wind_speed = data['hourly']['wind_speed_10m']
+        # Haal alle benodigde weerparameters op
+        hourly_data = data['hourly']
+        temperature = hourly_data['temperature_2m']
+        humidity = hourly_data['relative_humidity_2m']
+        precipitation = hourly_data['precipitation']
+        cloud_cover = hourly_data['cloud_cover']
+        cloud_cover_low = hourly_data['cloud_cover_low']
+        cloud_cover_mid = hourly_data['cloud_cover_mid']
+        cloud_cover_high = hourly_data['cloud_cover_high']
+        visibility = hourly_data['visibility']
+        wind_speed = hourly_data['wind_speed_80m']
+        wind_direction = hourly_data['wind_direction_80m']
 
-        return temperature, precipitation, wind_speed
+        return temperature, humidity, precipitation, cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high, visibility, wind_speed, wind_direction
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
-        return None, None, None
+        return None, None, None, None, None, None, None, None, None, None
 
 # Functie om de weergegevens en zonsopkomst/zonsondergang te tonen
 def show_data_expander():
@@ -75,26 +83,27 @@ def show_data_expander():
         unsafe_allow_html=True
     )
 
-    # Expander voor weergegevens
-    with st.expander("Weather Data", expanded=True):
+    # Expander voor zonsopkomst en zonsondergang
+    with st.expander("Sunrise & Sunset Data", expanded=True):
         if latitude and longitude and sunrise and sunset:
             # Toon locatiegegevens en zonsopkomst/zonsondergang tijden
             st.write(f"**Country**: {country}, **Location**: {location}")
             st.write(f"**Date**: {selected_date}")
             st.write(f"**Start Hour**: {start_hour}, **End Hour**: {end_hour}")
             st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
-
-            # Haal weergegevens op van Open-Meteo
-            temperature, precipitation, wind_speed = get_weather_data(latitude, longitude, selected_date)
-
-            if temperature and precipitation and wind_speed:
-                st.write("**Weather Data (Hourly)**:")
-                for i, hour in enumerate(range(int(start_hour[:2]), int(end_hour[:2]) + 1)):
-                    # Alleen de relevante uren tonen
-                    if hour < len(temperature):
-                        st.write(f"Hour {hour}:00 - Temperature: {temperature[hour]}°C, "
-                                 f"Precipitation: {precipitation[hour]} mm, Wind Speed: {wind_speed[hour]} m/s")
-            else:
-                st.error("Weergegevens konden niet worden opgehaald.")
         else:
             st.error("Er ontbreken gegevens. Zorg ervoor dat locatie en zonsopkomst/zonsondergang zijn geladen.")
+
+    # Haal de weergegevens op van Open-Meteo
+    if latitude and longitude and selected_date:
+        temperature, humidity, precipitation, cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high, visibility, wind_speed, wind_direction = get_weather_data(latitude, longitude, selected_date, selected_date)
+
+        if temperature and humidity and precipitation and cloud_cover and visibility and wind_speed and wind_direction:
+            # Toon de gegevens in een andere expander voor de weerdata
+            with st.expander("Hourly Weather Data", expanded=True):
+                st.write(f"**Weather Data for {selected_date}:**")
+                st.write("Hour | Temperature (°C) | Humidity (%) | Precipitation (mm) | Cloud Cover (%) | Low Cloud Cover (%) | Mid Cloud Cover (%) | High Cloud Cover (%) | Visibility (km) | Wind Speed (m/s) | Wind Direction (°)")
+                for hour in range(len(temperature)):
+                    st.write(f"{hour}:00 | {temperature[hour]}°C | {humidity[hour]}% | {precipitation[hour]} mm | {cloud_cover[hour]}% | {cloud_cover_low[hour]}% | {cloud_cover_mid[hour]}% | {cloud_cover_high[hour]}% | {visibility[hour]} km | {wind_speed[hour]} m/s | {wind_direction[hour]}°")
+        else:
+            st.error("Weerdata konden niet worden opgehaald.")
