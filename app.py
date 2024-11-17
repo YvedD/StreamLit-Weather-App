@@ -15,7 +15,7 @@ def main():
         st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
 
     # Altijd de data-expander tonen (zelfstandig van de locatie)
-    show_data_expander(latitude, longitude, location)  # Toon de data-expander voor de opgegeven locatie
+    show_data_expander()  # Toon de data-expander voor de opgegeven locatie
 
 if __name__ == "__main__":
     main()
