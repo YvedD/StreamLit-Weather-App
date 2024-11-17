@@ -1,4 +1,3 @@
-# invoer.py
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
@@ -157,3 +156,6 @@ def show_input_form():
                 st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
         else:
             st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
+
+    return latitude, longitude, location  # Zorg dat de waarden worden teruggegeven
+
