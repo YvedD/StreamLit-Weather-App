@@ -91,7 +91,7 @@ def show_input_form():
         lang_choice = st.radio(
             "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
-            index=0 if st.session_state.get("language", "English") == "English" else 1,
+            index=1 if st.session_state.get("language", "English") == "English" else 1,
             key="language_selector",  # Zorgt ervoor dat het als een aparte state wordt behandeld
             horizontal=True  # Zorgt ervoor dat de radio-buttons naast elkaar komen te staan
         )
@@ -126,7 +126,7 @@ def show_input_form():
             default_country = default_country_nl
 
         # Titel voor de invoer
-        st.header(f"{location_label} ")
+        st.header(f"{location_label} " )
 
         # Formulier voor het invoeren van gegevens
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
@@ -144,6 +144,11 @@ def show_input_form():
         else:
             sunrise = sunset = None
 
+        # Sla de locatie-informatie op in de session_state
+        st.session_state["latitude"] = latitude
+        st.session_state["longitude"] = longitude
+        st.session_state["location"] = location
+
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
             st.write(f"**{country_text}**: {country}, **{location_text}**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
@@ -151,3 +156,5 @@ def show_input_form():
                 st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
         else:
             st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
+
+    return latitude, longitude, location  # Zorg dat de waarden worden teruggegeven
