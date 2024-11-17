@@ -2,11 +2,11 @@ import streamlit as st
 from datetime import datetime
 import pytz
 from dateutil import parser
-from timezonefinder import TimezoneFinder
 import requests
+from timezonefinder import TimezoneFinder
 
+# Functie om zonsopkomst en zonsondergang te berekenen
 def get_sun_times(lat, lon, date):
-    # Functie om zonsopkomst en zonsondergang te berekenen
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
 
@@ -37,6 +37,25 @@ def get_sun_times(lat, lon, date):
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
         return None, None
 
+# Functie om actuele weergegevens op te halen via Open-Meteo API
+def get_weather_data(lat, lon, date):
+    api_url = f"https://api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&hourly=temperature_2m,precipitation,wind_speed_10m&start={date}T00:00:00Z&end={date}T23:59:59Z"
+    try:
+        response = requests.get(api_url)
+        response.raise_for_status()
+        data = response.json()
+
+        # Haal de nodige weergegevens op (temperatuur, neerslag, wind)
+        temperature = data['hourly']['temperature_2m']
+        precipitation = data['hourly']['precipitation']
+        wind_speed = data['hourly']['wind_speed_10m']
+
+        return temperature, precipitation, wind_speed
+    except requests.RequestException as e:
+        st.error(f"Fout bij het ophalen van weergegevens: {e}")
+        return None, None, None
+
+# Functie om de weergegevens en zonsopkomst/zonsondergang te tonen
 def show_data_expander():
     # Verkrijg gegevens uit session_state
     country = st.session_state.get("country")
@@ -65,14 +84,17 @@ def show_data_expander():
             st.write(f"**Start Hour**: {start_hour}, **End Hour**: {end_hour}")
             st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
 
-            # Toon de gegevens voor de gekozen uren
-            sunrise_time = datetime.strptime(sunrise, "%H:%M")
-            sunset_time = datetime.strptime(sunset, "%H:%M")
+            # Haal weergegevens op van Open-Meteo
+            temperature, precipitation, wind_speed = get_weather_data(latitude, longitude, selected_date)
 
-            # Als de start- en einduren liggen tussen zonsopkomst en zonsondergang
-            hours = [f"{hour:02d}:00" for hour in range(int(sunrise_time.hour), int(sunset_time.hour) + 1)]
-            hours_in_range = [hour for hour in hours if start_hour <= hour <= end_hour]
-
-            st.write("Available Hours:", ", ".join(hours_in_range))
+            if temperature and precipitation and wind_speed:
+                st.write("**Weather Data (Hourly)**:")
+                for i, hour in enumerate(range(int(start_hour[:2]), int(end_hour[:2]) + 1)):
+                    # Alleen de relevante uren tonen
+                    if hour < len(temperature):
+                        st.write(f"Hour {hour}:00 - Temperature: {temperature[hour]}°C, "
+                                 f"Precipitation: {precipitation[hour]} mm, Wind Speed: {wind_speed[hour]} m/s")
+            else:
+                st.error("Weergegevens konden niet worden opgehaald.")
         else:
             st.error("Er ontbreken gegevens. Zorg ervoor dat locatie en zonsopkomst/zonsondergang zijn geladen.")
