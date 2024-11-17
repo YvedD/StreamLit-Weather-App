@@ -9,8 +9,8 @@ def main():
 
     # Toon de kaart op basis van de invoer
     if latitude and longitude:
-        # Eerst de kaart-expander tonen
-        show_map_expander(latitude, longitude, location)  # Toon de kaart met de juiste locatie
+        # Eerst de kaart-expander tonen zonder argumenten, want de waarden worden uit session_state gehaald
+        show_map_expander()  # Toon de kaart met de juiste locatie
     else:
         st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
 
