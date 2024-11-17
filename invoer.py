@@ -1,3 +1,4 @@
+#invoer.py
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
@@ -152,6 +153,7 @@ def show_input_form():
         st.session_state["longitude"] = longitude
         st.session_state["sunrise"] = sunrise
         st.session_state["sunset"] = sunset
+        st.session_state["language"] = lang_choice
 
         # Toon locatiegegevens en zonsopkomst/zondondergang tijden
         if latitude and longitude:
