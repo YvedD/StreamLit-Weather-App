@@ -29,7 +29,7 @@ def get_wind_direction(degrees, language="Nederlands"):
         ("N", 0), ("NNE", 22.5), ("NE", 45), ("ENE", 67.5),
         ("E", 90), ("ESE", 112.5), ("SE", 135), ("SSE", 157.5),
         ("S", 180), ("SSW", 202.5), ("SW", 225), ("WSW", 247.5),
-        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5), ("N", 360)
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5)
     ]
     
     # Nederlandse termen voor windrichtingen
@@ -37,7 +37,7 @@ def get_wind_direction(degrees, language="Nederlands"):
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
         ("O", 90), ("OZO", 112.5), ("ZO", 135), ("ZZO", 157.5),
         ("Z", 180), ("ZZW", 202.5), ("ZW", 225), ("WZW", 247.5),
-        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5), ("N", 360)
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5)
     ]
     
     directions = directions_dutch if language == "Nederlands" else directions_english
