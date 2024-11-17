@@ -128,3 +128,4 @@ def show_data_expander():
                 st.write(f"**Wind Beaufort:** {wind_beaufort} Bf")
                 st.write("---")
 
+
