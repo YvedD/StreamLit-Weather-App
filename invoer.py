@@ -41,29 +41,6 @@ def get_gps_coordinates(location):
         st.error(f"Error fetching GPS coordinates: {e}")
         return None, None
 
-# Functie om zonsopkomst en zonsondergang te berekenen
-def get_sun_times(lat, lon, date):
-    tz_finder = TimezoneFinder()
-    timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
-    api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        data = response.json()
-        if 'results' in data:
-            sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
-            sunset_utc = datetime.fromisoformat(data['results']['sunset'])
-            local_tz = pytz.timezone(timezone_str)
-            sunrise_local = sunrise_utc.astimezone(local_tz)
-            sunset_local = sunset_utc.astimezone(local_tz)
-            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
-        else:
-            st.error("Sunrise and sunset times not found.")
-            return None, None
-    except requests.RequestException as e:
-        st.error(f"Error fetching sunrise/sunset times: {e}")
-        return None, None
-
 def show_input_form():
     # Standaardwaarden voor locatie en datum
     default_location = "Bredene"
