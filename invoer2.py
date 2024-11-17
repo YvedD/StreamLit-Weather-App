@@ -144,10 +144,16 @@ def show_input_form():
         else:
             sunrise = sunset = None
 
-        # Sla de locatie-informatie op in de session_state
+        # Sla alle benodigde gegevens op in de session_state
+        st.session_state["country"] = country
+        st.session_state["location"] = location
+        st.session_state["selected_date"] = selected_date
+        st.session_state["start_hour"] = start_hour
+        st.session_state["end_hour"] = end_hour
         st.session_state["latitude"] = latitude
         st.session_state["longitude"] = longitude
-        st.session_state["location"] = location
+        st.session_state["sunrise"] = sunrise
+        st.session_state["sunset"] = sunset
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
