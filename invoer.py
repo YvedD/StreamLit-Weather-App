@@ -1,3 +1,4 @@
+# invoer.py
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
@@ -126,7 +127,7 @@ def show_input_form():
             default_country = default_country_nl
 
         # Titel voor de invoer
-        st.header(f"{location_label} ")
+        st.header(f"{location_label} " )
 
         # Formulier voor het invoeren van gegevens
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
@@ -143,6 +144,11 @@ def show_input_form():
             sunrise, sunset = get_sun_times(latitude, longitude, selected_date)
         else:
             sunrise = sunset = None
+
+        # Sla de locatie-informatie op in de session_state
+        st.session_state["latitude"] = latitude
+        st.session_state["longitude"] = longitude
+        st.session_state["location"] = location
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
