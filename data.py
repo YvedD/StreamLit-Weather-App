@@ -63,6 +63,20 @@ def get_weather_data(lat, lon, start_date, end_date):
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
         return None, None, None, None, None, None, None, None, None, None
 
+# Functie om windrichting te converteren naar kompasrichting
+def degrees_to_compass(degrees):
+    directions = [
+        (0, "N"), (22.5, "NNE"), (45, "NE"), (67.5, "ENE"),
+        (90, "E"), (112.5, "ESE"), (135, "SE"), (157.5, "SSE"),
+        (180, "S"), (202.5, "SSW"), (225, "SW"), (247.5, "WSW"),
+        (270, "W"), (292.5, "WNW"), (315, "NW"), (337.5, "NNW"), (360, "N")
+    ]
+    
+    for direction in directions:
+        if degrees <= direction[0]:
+            return direction[1]
+    return "N"  # Default to N if no match
+
 # Functie om de weergegevens en zonsopkomst/zonsondergang te tonen
 def show_data_expander():
     # Verkrijg gegevens uit session_state
@@ -88,8 +102,10 @@ def show_data_expander():
                 # Loop over alle uren en toon de gegevens per uur
                 for hour in range(len(temperature)):
                     hour_label = f"{hour}:00"
+                    # Zet windrichting om naar kompasrichting
+                    wind_dir_compass = degrees_to_compass(wind_direction[hour])
                     # Maak de gegevens per uur op één regel
-                    weather_info = f"{hour_label} | Temperature: {temperature[hour]}°C | Humidity: {humidity[hour]}% | Precipitation: {precipitation[hour]} mm | Cloud Cover: {cloud_cover[hour]}% | Low Cloud Cover: {cloud_cover_low[hour]}% | Mid Cloud Cover: {cloud_cover_mid[hour]}% | High Cloud Cover: {cloud_cover_high[hour]}% | Visibility: {visibility[hour]} km | Wind Speed: {wind_speed[hour]} m/s | Wind Direction: {wind_direction[hour]}°"
+                    weather_info = f"{hour_label} | Temperature: {temperature[hour]}°C | Humidity: {humidity[hour]}% | Precipitation: {precipitation[hour]} mm | Cloud Cover: {cloud_cover[hour]}% | Low Cloud Cover: {cloud_cover_low[hour]}% | Mid Cloud Cover: {cloud_cover_mid[hour]}% | High Cloud Cover: {cloud_cover_high[hour]}% | Visibility: {visibility[hour]} km | Wind Speed: {wind_speed[hour]} m/s | Wind Direction: {wind_dir_compass}"
                     st.markdown(weather_info)
 
         else:
