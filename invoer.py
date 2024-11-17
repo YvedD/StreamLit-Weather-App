@@ -1,4 +1,7 @@
 # invoer.py
+import streamlit as st
+from datetime import datetime, timedelta  # Zorg ervoor dat zowel datetime als timedelta zijn geïmporteerd
+
 def show_input_form():
     # Standaardwaarden voor locatie en datum
     default_country_en = "Belgium"
