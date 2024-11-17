@@ -63,64 +63,6 @@ def get_weather_data(lat, lon, start_date, end_date):
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
         return None, None, None, None, None, None, None, None, None, None
 
-# Functie om zonsopkomst en zonsondergang te berekenen
-def get_sun_times(lat, lon, date):
-    tz_finder = TimezoneFinder()
-    timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
-
-    if timezone_str is None:
-        st.error("Kan de tijdzone voor deze locatie niet vinden.")
-        return None, None
-
-    # API aanroepen voor zonsopkomst en zonsondergang
-    api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        data = response.json()
-        if 'results' in data:
-            sunrise_utc = parser.isoparse(data['results']['sunrise'])
-            sunset_utc = parser.isoparse(data['results']['sunset'])
-
-            # Converteer naar lokale tijdzone
-            local_tz = pytz.timezone(timezone_str)
-            sunrise_local = sunrise_utc.astimezone(local_tz)
-            sunset_local = sunset_utc.astimezone(local_tz)
-
-            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
-        else:
-            st.error("Zonsopkomst en zonsondergang niet gevonden.")
-            return None, None
-    except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
-        return None, None
-
-# Functie om weergegevens op te halen via Open-Meteo API
-def get_weather_data(lat, lon, start_date, end_date):
-    api_url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={lat}&longitude={lon}&start_date={start_date}&end_date={end_date}&hourly=temperature_2m,relative_humidity_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m&timezone=Europe%2FBerlin"
-    try:
-        response = requests.get(api_url)
-        response.raise_for_status()
-        data = response.json()
-
-        # Haal alle benodigde weerparameters op
-        hourly_data = data['hourly']
-        temperature = hourly_data['temperature_2m']
-        humidity = hourly_data['relative_humidity_2m']
-        precipitation = hourly_data['precipitation']
-        cloud_cover = hourly_data['cloud_cover']
-        cloud_cover_low = hourly_data['cloud_cover_low']
-        cloud_cover_mid = hourly_data['cloud_cover_mid']
-        cloud_cover_high = hourly_data['cloud_cover_high']
-        visibility = hourly_data['visibility']
-        wind_speed = hourly_data['wind_speed_80m']
-        wind_direction = hourly_data['wind_direction_80m']
-
-        return temperature, humidity, precipitation, cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high, visibility, wind_speed, wind_direction
-    except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van weergegevens: {e}")
-        return None, None, None, None, None, None, None, None, None, None
-
 # Functie om de weergegevens en zonsopkomst/zonsondergang te tonen
 def show_data_expander():
     # Verkrijg gegevens uit session_state
