@@ -130,8 +130,8 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
+        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0)
+        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23)
 
         # Verkrijg GPS-coördinaten voor de locatie
         latitude, longitude = get_gps_coordinates(location)
