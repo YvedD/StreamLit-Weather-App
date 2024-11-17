@@ -12,12 +12,20 @@ def show_data_expander():
     sunrise = st.session_state.get('sunrise', 'Unknown')  # Haal de sunrise op
     sunset = st.session_state.get('sunset', 'Unknown')  # Haal de sunset op
 
+    # Formatteer de coördinaten naar het gewenste formaat
+    if latitude != 'Unknown' and longitude != 'Unknown':
+        latitude_formatted = f"{abs(latitude):.2f}°{'N' if latitude > 0 else 'S'}"
+        longitude_formatted = f"{abs(longitude):.2f}°{'E' if longitude > 0 else 'W'}"
+    else:
+        latitude_formatted = longitude_formatted = "Unknown"
+
     # Maak een expander die altijd uitgeklapt is
     with st.expander("Location Data", expanded=True):
         st.write("### Location Details")
         st.write(f"**Location:** {location}")
         st.write(f"**Latitude:** {latitude}")
         st.write(f"**Longitude:** {longitude}")
+        st.write(f"**Formatted Coordinates:** {latitude_formatted} {longitude_formatted}")
         st.write(f"**Country:** {country}")
         st.write(f"**Date:** {selected_date}")
         st.write(f"**Start Hour:** {start_hour}")
