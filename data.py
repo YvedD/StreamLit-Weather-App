@@ -1,6 +1,6 @@
 import requests
 import streamlit as st
-from datetime import datetime
+from datetime import datetime, timedelta  # Voeg timedelta toe voor het verwerken van datums
 
 # Functie om historische weergegevens op te halen via Open-Meteo API
 def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
