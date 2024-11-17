@@ -63,42 +63,53 @@ def show_data_expander():
         wind_direction_data = data["hourly"]["wind_direction_80m"]
         time_data = data["hourly"]["time"]
 
+        # Converteer de start- en eindtijd naar datetime-objecten voor vergelijking
+        start_time = datetime.strptime(f"{selected_date} {start_hour}", "%Y-%m-%d %H:%M")
+        end_time = datetime.strptime(f"{selected_date} {end_hour}", "%Y-%m-%d %H:%M")
+
         # Lijst om geformatteerde outputregels op te slaan
         formatted_output = []
 
-        # Loop door elk uur om gegevens op te halen
+        # Loop door elk uur om gegevens op te halen die binnen de opgegeven tijdspanne vallen
         for i in range(len(time_data)):
-            # Tijd in het HH:MM formaat
-            time_str = datetime.fromisoformat(time_data[i]).strftime("%H:%M")
+            current_time = datetime.fromisoformat(time_data[i])
 
-            # Temperaturen, neerslag en bewolkingsniveaus
-            temperature = round(temperature_data[i], 1)
-            precipitation = round(precipitation_data[i], 1)
-            cloud_cover = round(cloud_cover_data[i], 1)
-            cloud_cover_low = round(cloud_cover_low_data[i], 1)
-            cloud_cover_mid = round(cloud_cover_mid_data[i], 1)
-            cloud_cover_high = round(cloud_cover_high_data[i], 1)
+            # Controleer of de huidige tijd binnen het gewenste bereik valt
+            if start_time <= current_time <= end_time:
+                # Tijd in het HH:MM formaat
+                time_str = current_time.strftime("%H:%M")
 
-            # Zichtbaarheid omzetten van meters naar kilometers en afronden
-            visibility = round(visibility_data[i] / 1000)
+                # Temperaturen, neerslag en bewolkingsniveaus
+                temperature = round(temperature_data[i], 1)
+                precipitation = round(precipitation_data[i], 1)
+                cloud_cover = round(cloud_cover_data[i], 1)
+                cloud_cover_low = round(cloud_cover_low_data[i], 1)
+                cloud_cover_mid = round(cloud_cover_mid_data[i], 1)
+                cloud_cover_high = round(cloud_cover_high_data[i], 1)
 
-            # Windrichting omzetten naar kompasrichting en windsnelheid naar Beaufort-schaal
-            wind_direction = wind_direction_to_compass(wind_direction_data[i])
-            wind_speed_kmh = round(wind_speed_data[i], 1)
-            wind_beaufort = wind_speed_to_beaufort(wind_speed_kmh)
+                # Zichtbaarheid omzetten van meters naar kilometers en afronden
+                visibility = round(visibility_data[i] / 1000)
 
-            # Format output als één regel
-            output_line = (
-                f"{time_str} Tmp: {temperature}°C-Precip: {precipitation} mm-"
-                f"Cloud: {cloud_cover}% (L:{cloud_cover_low}%,M:{cloud_cover_mid}%,H:{cloud_cover_high}%)-"
-                f"Visib:{visibility}km-Wnd: {wind_direction}: {wind_beaufort}Bf"
-            )
+                # Windrichting omzetten naar kompasrichting en windsnelheid naar Beaufort-schaal
+                wind_direction = wind_direction_to_compass(wind_direction_data[i])
+                wind_speed_kmh = round(wind_speed_data[i], 1)
+                wind_beaufort = wind_speed_to_beaufort(wind_speed_kmh)
 
-            # Voeg deze regel toe aan de lijst met geformatteerde uitvoer
-            formatted_output.append(output_line)
+                # Format output als één regel
+                output_line = (
+                    f"{time_str} Tmp: {temperature}°C-Precip: {precipitation} mm-"
+                    f"Cloud: {cloud_cover}% (L:{cloud_cover_low}%,M:{cloud_cover_mid}%,H:{cloud_cover_high}%)-"
+                    f"Visib:{visibility}km-Wnd: {wind_direction}: {wind_beaufort}Bf"
+                )
+
+                # Voeg deze regel toe aan de lijst met geformatteerde uitvoer
+                formatted_output.append(output_line)
 
         # Toon alle gegevens in een kopieerbaar blok
-        st.code("\n".join(formatted_output), language="text")
+        if formatted_output:
+            st.code("\n".join(formatted_output), language="text")
+        else:
+            st.write("Geen data beschikbaar binnen de opgegeven tijdspanne.")
 
     else:
         st.error("Geen gegevens beschikbaar voor de geselecteerde datum.")
