@@ -111,9 +111,9 @@ def show_data_expander():
         cloudcover_low = hourly_data["cloud_cover_low"]
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
+        visibility = hourly_data["visibility"]
         wind_speeds = hourly_data["wind_speed_80m"]
         wind_directions = hourly_data["wind_direction_80m"]
-        visibility = hourly_data["visibility"]
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -128,6 +128,6 @@ def show_data_expander():
                 weather_info = (
                     f"{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
                     f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
-                    f"Wnd:{wind_direction} {beaufort}Bf"|Vis:{visibility}
+                    f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility}"
                 )
                 st.code(weather_info)
