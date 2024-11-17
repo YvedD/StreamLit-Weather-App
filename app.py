@@ -11,11 +11,11 @@ def main():
     if latitude and longitude:
         # Eerst de kaart-expander tonen
         show_map_expander(latitude, longitude, location)  # Toon de kaart met de juiste locatie
-        
-        # Daarna de data-expander tonen (zonder verdere functionaliteit)
-        show_data_expander(latitude, longitude, location)  # Toon de data-expander voor de opgegeven locatie
     else:
         st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
+
+    # Altijd de data-expander tonen (zelfstandig van de locatie)
+    show_data_expander(latitude, longitude, location)  # Toon de data-expander voor de opgegeven locatie
 
 if __name__ == "__main__":
     main()
