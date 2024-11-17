@@ -76,7 +76,6 @@ def show_data_expander():
     sunrise = st.session_state.get("sunrise")
     sunset = st.session_state.get("sunset")
 
-
     # Haal de weergegevens op van Open-Meteo
     if latitude and longitude and selected_date:
         temperature, humidity, precipitation, cloud_cover, cloud_cover_low, cloud_cover_mid, cloud_cover_high, visibility, wind_speed, wind_direction = get_weather_data(latitude, longitude, selected_date, selected_date)
@@ -85,8 +84,38 @@ def show_data_expander():
             # Toon de gegevens in een andere expander voor de weerdata
             with st.expander("Hourly Weather Data", expanded=True):
                 st.write(f"**Weather Data for {selected_date}:**")
-                st.write("Hour | Temperature (°C) | Humidity (%) | Precipitation (mm) | Cloud Cover (%) | Low Cloud Cover (%) | Mid Cloud Cover (%) | High Cloud Cover (%) | Visibility (km) | Wind Speed (m/s) | Wind Direction (°)")
-                for hour in range(len(temperature)):
-                    st.write(f"{hour}:00 | {temperature[hour]}°C | {humidity[hour]}% | {precipitation[hour]} mm | {cloud_cover[hour]}% | {cloud_cover_low[hour]}% | {cloud_cover_mid[hour]}% | {cloud_cover_high[hour]}% | {visibility[hour]} km | {wind_speed[hour]} m/s | {wind_direction[hour]}°")
+
+                # Maak een mooie opgemaakte tabel voor de weerdata
+                data = {
+                    "Hour": [f"{hour}:00" for hour in range(len(temperature))],
+                    "Temperature (°C)": temperature,
+                    "Humidity (%)": humidity,
+                    "Precipitation (mm)": precipitation,
+                    "Cloud Cover (%)": cloud_cover,
+                    "Low Cloud Cover (%)": cloud_cover_low,
+                    "Mid Cloud Cover (%)": cloud_cover_mid,
+                    "High Cloud Cover (%)": cloud_cover_high,
+                    "Visibility (km)": visibility,
+                    "Wind Speed (m/s)": wind_speed,
+                    "Wind Direction (°)": wind_direction,
+                }
+
+                # Zet de data om naar een pandas DataFrame voor betere opmaak
+                import pandas as pd
+                df = pd.DataFrame(data)
+
+                # Toon de tabel met een mooie stijl
+                st.dataframe(df.style.format({
+                    "Temperature (°C)": "{:.1f}",
+                    "Humidity (%)": "{:.1f}",
+                    "Precipitation (mm)": "{:.2f}",
+                    "Cloud Cover (%)": "{:.1f}",
+                    "Low Cloud Cover (%)": "{:.1f}",
+                    "Mid Cloud Cover (%)": "{:.1f}",
+                    "High Cloud Cover (%)": "{:.1f}",
+                    "Visibility (km)": "{:.2f}",
+                    "Wind Speed (m/s)": "{:.2f}",
+                    "Wind Direction (°)": "{:.1f}",
+                }), height=400)  # Verhoog de hoogte van de tabel voor betere leesbaarheid
         else:
             st.error("Weerdata konden niet worden opgehaald.")
