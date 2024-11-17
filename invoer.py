@@ -81,7 +81,7 @@ def show_input_form():
 
     # Voeg enkel de titel toe boven de expander
     st.markdown(
-    '<h2 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">Migration Historic Weather Data<br>and 3 day Forecast</h2>',
+    '<h3 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">Migration Historic Weather Data<br>and 3 day Forecast</h3>',
     unsafe_allow_html=True
     )
     # Expander die altijd uitgeklapt is
