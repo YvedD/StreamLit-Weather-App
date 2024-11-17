@@ -23,17 +23,29 @@ def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
         return None
 
 # Functie om windrichting te converteren van graden naar windrichtingen
-def get_wind_direction(degrees):
-    directions = [
+def get_wind_direction(degrees, language="Nederlands"):
+    # Engelse termen voor windrichtingen
+    directions_english = [
+        ("N", 0), ("NNE", 22.5), ("NE", 45), ("ENE", 67.5),
+        ("E", 90), ("ESE", 112.5), ("SE", 135), ("SSE", 157.5),
+        ("S", 180), ("SSW", 202.5), ("SW", 225), ("WSW", 247.5),
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5)
+    ]
+    
+    # Nederlandse termen voor windrichtingen
+    directions_dutch = [
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
         ("O", 90), ("ZO", 112.5), ("Z", 135), ("ZZO", 157.5),
         ("ZSW", 180), ("SW", 202.5), ("WZW", 225), ("W", 247.5),
         ("WNW", 270), ("NW", 292.5), ("NNW", 315)
     ]
+    
+    directions = directions_dutch if language == "Nederlands" else directions_english
+    
     for direction, angle in directions:
         if degrees < angle:
             return direction
-    return "N"  # Default if no match
+    return directions[0][0]  # Default if no match, return the first direction
 
 # Functie om windsnelheid om te zetten naar de Beaufort-schaal
 def wind_speed_to_beaufort(speed):
@@ -63,6 +75,9 @@ def wind_speed_to_beaufort(speed):
 
 # Functie om de API-gegevens te tonen in een expander in de Streamlit UI
 def show_data_expander():
+    # Haal de taalkeuze op uit de session_state
+    language = st.session_state.get("language", "Nederlands")  # Standaard Nederlands
+
     # Haal benodigde sessiegegevens op
     lat = st.session_state.get("latitude")
     lon = st.session_state.get("longitude")
@@ -103,8 +118,8 @@ def show_data_expander():
         for i, time in enumerate(times):
             hour = datetime.fromisoformat(time).strftime("%H:%M")
             if start_hour <= hour <= end_hour:
-                # Zet windrichting om naar NW-formaat
-                wind_direction = get_wind_direction(wind_directions[i])
+                # Zet windrichting om naar de juiste vertaling op basis van de taalkeuze
+                wind_direction = get_wind_direction(wind_directions[i], language)
                 # Zet windsnelheid om naar Beaufort schaal
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
