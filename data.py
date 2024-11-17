@@ -99,7 +99,7 @@ def show_data_expander():
     longitude = st.session_state.get("longitude")
     sunrise = st.session_state.get("sunrise")
     sunset = st.session_state.get("sunset")
-    language = st.session_state.get("language", "English")  # De taalkeuze, standaard Engels
+    language = st.session_state.get("language", "Nederlands")  # De taalkeuze, standaard Nederlands
 
     # Haal de weergegevens op van Open-Meteo
     if latitude and longitude and selected_date:
