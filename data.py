@@ -1,6 +1,7 @@
+# data.py
 import streamlit as st
 
-# Functie voor de nieuwe expander (Under Construction)
+# Functie voor de nieuwe expander (nog in ontwikkeling)
 def show_data_expander():
-    with st.expander("Under Construction", expanded=False):  # Deze expander is niet uitgeklapt
-        st.write("Under Construction")  # Plaats hier de tekst die je wilt tonen
+    with st.expander("Under Construction", expanded=False):
+        st.write("Under Construction")
