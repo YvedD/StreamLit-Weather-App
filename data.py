@@ -73,6 +73,11 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
+# Functie om de zichtbaarheid om te rekenen naar kilometers en af te ronden op 0.5 km
+def convert_visibility(visibility_meters):
+    visibility_km = visibility_meters / 1000  # Converteer naar kilometers
+    return round(visibility_km * 2) / 2  # Afgerond op 0.5 km
+
 # Functie om de API-gegevens te tonen in een expander in de Streamlit UI
 def show_data_expander():
     # Haal de taalkeuze op uit de session_state
@@ -123,11 +128,13 @@ def show_data_expander():
                 wind_direction = get_wind_direction(wind_directions[i], language)
                 # Zet windsnelheid om naar Beaufort schaal
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
+                # Zet zichtbaarheid om naar kilometers en afgerond op 0.5 km
+                visibility_km = convert_visibility(visibility[i])
                 
                 # Weergegevens formatten en weergeven
                 weather_info = (
                     f"{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
                     f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
-                    f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility}"
+                    f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility_km} km"
                 )
                 st.code(weather_info)
