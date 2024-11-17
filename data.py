@@ -76,23 +76,6 @@ def show_data_expander():
     sunrise = st.session_state.get("sunrise")
     sunset = st.session_state.get("sunset")
 
-    # Titel boven de expander
-    st.markdown(
-        '<h3 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">'
-        'Weather Data for Migration</h3>',
-        unsafe_allow_html=True
-    )
-
-    # Expander voor zonsopkomst en zonsondergang
-    with st.expander("Sunrise & Sunset Data", expanded=True):
-        if latitude and longitude and sunrise and sunset:
-            # Toon locatiegegevens en zonsopkomst/zonsondergang tijden
-            st.write(f"**Country**: {country}, **Location**: {location}")
-            st.write(f"**Date**: {selected_date}")
-            st.write(f"**Start Hour**: {start_hour}, **End Hour**: {end_hour}")
-            st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
-        else:
-            st.error("Er ontbreken gegevens. Zorg ervoor dat locatie en zonsopkomst/zonsondergang zijn geladen.")
 
     # Haal de weergegevens op van Open-Meteo
     if latitude and longitude and selected_date:
