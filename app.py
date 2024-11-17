@@ -1,18 +1,17 @@
 # app.py
 import streamlit as st
-from invoer import show_input_form   # Importeer de functie voor gebruikersinvoer
-from data import show_data_expander  # Importeer de functie voor data-weergave (momenteel nog in ontwikkeling)
-from maps import show_map_expander   # Importeer de kaartfunctie om een kaart te renderen
+from invoer import show_input_form  # Invoerformulier en functies
+from data import show_data_expander  # Data-uitbreiding (voor data weergave)
+from maps import show_map_expander  # Kaart-uitbreiding voor kaartweergave
 
 # Titel van het project
 st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
 
-# Toon de invoer en ontvang land, locatie en coördinaten
-country, location, latitude, longitude = show_input_form()
+# Toon het invoerformulier
+show_input_form()  # Formulier uit invoer.py
 
-# Toon de data-expander, momenteel "Under Construction"
-show_data_expander()
+# Toon de data-expander
+show_data_expander()  # Expander voor data-weergave uit data.py
 
-# Toon de kaart-expander als er coördinaten beschikbaar zijn
-if latitude is not None and longitude is not None:
-    show_map_expander(latitude, longitude, location)
+# Toon de kaart-expander
+show_map_expander()  # Expander voor kaartweergave uit maps.py
