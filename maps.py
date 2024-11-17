@@ -18,3 +18,4 @@ def show_map_expander(latitude, longitude, location_name="Unknown Location"):
 
         # Render de kaart in Streamlit
         st_folium(m, width=700, height=500)
+ 
