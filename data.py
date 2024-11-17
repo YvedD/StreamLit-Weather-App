@@ -29,15 +29,15 @@ def get_wind_direction(degrees, language="Nederlands"):
         ("N", 0), ("NNE", 22.5), ("NE", 45), ("ENE", 67.5),
         ("E", 90), ("ESE", 112.5), ("SE", 135), ("SSE", 157.5),
         ("S", 180), ("SSW", 202.5), ("SW", 225), ("WSW", 247.5),
-        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5)
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5), ("N", 360)
     ]
     
     # Nederlandse termen voor windrichtingen
     directions_dutch = [
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
-        ("O", 90), ("ZO", 112.5), ("Z", 135), ("ZZO", 157.5),
-        ("ZSW", 180), ("SW", 202.5), ("WZW", 225), ("W", 247.5),
-        ("WNW", 270), ("NW", 292.5), ("NNW", 315)
+        ("O", 90), ("OZO", 112.5), ("ZO", 135), ("ZZO", 157.5),
+        ("Z", 180), ("ZZW", 202.5), ("ZW", 225), ("WZW", 247.5),
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5), ("N", 360)
     ]
     
     directions = directions_dutch if language == "Nederlands" else directions_english
@@ -98,8 +98,8 @@ def show_data_expander():
     # Zonsopgang en zonsondergang instellen
     sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-    start_hour = sunrise if start_hour == "08:00" else start_hour
-    end_hour = sunset if end_hour == "16:00" else end_hour
+    start_hour = sunrise if start_hour == "00:00" else start_hour
+    end_hour = sunset if end_hour == "00:00" else end_hour
 
     # Toon weergegevens in een expander
     with st.expander("Weergegevens voor deze locatie en tijdspanne"):
@@ -113,6 +113,7 @@ def show_data_expander():
         cloudcover_high = hourly_data["cloud_cover_high"]
         wind_speeds = hourly_data["wind_speed_80m"]
         wind_directions = hourly_data["wind_direction_80m"]
+        visibility = hourly_data["visibility"]
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -125,8 +126,8 @@ def show_data_expander():
                 
                 # Weergegevens formatten en weergeven
                 weather_info = (
-                    f"{hour}: Temp: {temperatures[i]:.1f}°C - Neerslag: {precipitation[i]:.1f} mm - "
-                    f"Bewolk. Tot: {cloudcover[i]}% (L: {cloudcover_low[i]}%, M: {cloudcover_mid[i]}%, H: {cloudcover_high[i]}%) - "
-                    f"Wind: {wind_direction} {beaufort} Bf"
+                    f"{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
+                    f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
+                    f"Wnd:{wind_direction} {beaufort}Bf"|Vis:{visibility}
                 )
                 st.code(weather_info)
