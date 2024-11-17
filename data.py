@@ -1,9 +1,8 @@
-import streamlit as st
 import requests
+import streamlit as st
 from datetime import datetime
-import pytz  # Zorg ervoor dat 'pytz' is geïnstalleerd om tijdzoneondersteuning te bieden
 
-# Functie om historische weerdata op te halen
+# Functie om historische weergegevens op te halen via Open-Meteo API
 def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
     api_url = (
         f"https://historical-forecast-api.open-meteo.com/v1/forecast"
@@ -16,12 +15,14 @@ def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
     try:
         response = requests.get(api_url)
         response.raise_for_status()
-        return response.json()
+        data = response.json()
+        st.write("Opgehaalde weergegevens:", data)  # Voor inspectie van de gegevens
+        return data
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
         return None
 
-# Functie om de windrichting in kompasrichting om te zetten
+# Functie om windrichting te converteren van graden naar windrichtingen
 def get_wind_direction(degrees):
     directions = [
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
@@ -34,7 +35,7 @@ def get_wind_direction(degrees):
             return direction
     return "N"  # Default if no match
 
-# Functie om windsnelheid om te zetten naar Beaufort-schaal
+# Functie om windsnelheid om te zetten naar de Beaufort-schaal
 def wind_speed_to_beaufort(speed):
     if speed < 1:
         return 0
@@ -60,8 +61,8 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
-# Functie om weergegevens te tonen in een expander
-def display_weather_data():
+# Functie om de API-gegevens te tonen in een expander in de Streamlit UI
+def show_data_expander():
     # Haal benodigde sessiegegevens op
     lat = st.session_state.get("latitude")
     lon = st.session_state.get("longitude")
@@ -107,6 +108,7 @@ def display_weather_data():
                 # Zet windsnelheid om naar Beaufort schaal
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
                 
+                # Weergegevens formatten en weergeven
                 weather_info = (
                     f"{hour}: Temp: {temperatures[i]:.1f}°C - Neerslag: {precipitation[i]:.1f} mm - "
                     f"Bewolk. Tot: {cloudcover[i]}% (L: {cloudcover_low[i]}%, M: {cloudcover_mid[i]}%, H: {cloudcover_high[i]}%) - "
