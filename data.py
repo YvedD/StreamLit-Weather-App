@@ -90,6 +90,9 @@ def show_data_expander():
                 temperature = hourly['temperature_2m'][i]
                 precipitation = hourly['precipitation'][i]
                 cloud_cover = hourly['cloud_cover'][i]
+                cloud_cover_low = hourly['cloud_cover_low'][i]
+                cloud_cover_mid = hourly['cloud_cover_mid'][i]
+                cloud_cover_high = hourly['cloud_cover_high'][i]
                 wind_speed = hourly['wind_speed_80m'][i]
                 wind_direction = hourly['wind_direction_80m'][i]
                 visibility_meters = hourly['visibility'][i]
@@ -97,12 +100,17 @@ def show_data_expander():
                 # Zet de zichtbaarheid om naar kilometers en rond af naar een geheel getal
                 visibility_km = round(visibility_meters / 1000)
                 
+                # Wind richting en snelheid naar compass en Beaufort
                 wind_direction_compass = wind_direction_to_compass(wind_direction)
                 wind_beaufort = wind_speed_to_beaufort(wind_speed)
 
+                # Weergeven van alle verzamelde gegevens per uur
                 st.write(f"**Temperature:** {temperature}°C")
                 st.write(f"**Precipitation:** {precipitation} mm")
                 st.write(f"**Cloud Cover:** {cloud_cover}%")
+                st.write(f"**Low Cloud Cover:** {cloud_cover_low}%")
+                st.write(f"**Mid Cloud Cover:** {cloud_cover_mid}%")
+                st.write(f"**High Cloud Cover:** {cloud_cover_high}%")
                 st.write(f"**Visibility:** {visibility_km} km")
                 st.write(f"**Wind Speed:** {wind_speed} km/h")
                 st.write(f"**Wind Direction:** {wind_direction_compass} ({wind_direction}°)")
