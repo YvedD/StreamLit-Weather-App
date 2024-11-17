@@ -1,10 +1,6 @@
 import streamlit as st
 
 def show_data_expander():
-    # Debugging: print alle session_state-gegevens om te controleren of ze aanwezig zijn
-    st.write("### Debugging session_state")
-    st.write(st.session_state)
-
     # Haal de gegevens uit session_state
     country = st.session_state.get('country', 'Unknown')  # Haal het land op, met 'Unknown' als default
     location = st.session_state.get('location', 'Unknown')  # Haal de locatie op
