@@ -16,7 +16,7 @@ def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
-        st.write("Opgehaalde weergegevens:", data)  # Voor inspectie van de gegevens
+        #st.write("Opgehaalde weergegevens:", data)  # Voor inspectie van de gegevens
         return data
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
