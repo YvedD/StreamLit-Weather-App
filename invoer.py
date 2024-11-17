@@ -105,6 +105,9 @@ def show_input_form():
         # Sla de taalkeuze op in de session_state
         st.session_state["language"] = lang_choice
 
+        # Als de taal is gewijzigd, herlaad de gegevens
+        st.experimental_rerun()
+
         # Kies de landenlijst en labels op basis van de taal
         if lang_choice == "English":
             countries = EUROPEAN_COUNTRIES_EN
@@ -164,4 +167,3 @@ def show_input_form():
             st.write(f"{location_label} not found.")
 
     return latitude, longitude, location
-
