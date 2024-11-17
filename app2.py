@@ -1,16 +1,21 @@
 import streamlit as st
 from invoer import show_input_form
-from data import show_data_expander  # Gebruik de hernoemde functie uit data.py
-from maps import show_map_expander  # Importeer de kaartfunctie uit maps.py
+from maps import show_map_expander
+from data import show_data_expander  # Importeer de data-expander
 
-# Titel van het project
-st.markdown('<div class="project-title">Migration Weather Data</div>', unsafe_allow_html=True)
+def main():
+    # Verkrijg invoer van de gebruiker
+    latitude, longitude, location = show_input_form()
 
-# Toon de invoer
-show_input_form()  # Roep de invoerfunctie aan uit invoer.py
+    # Toon de kaart op basis van de invoer
+    if latitude and longitude:
+        # Eerst de kaart-expander tonen zonder argumenten, want de waarden worden uit session_state gehaald
+        show_map_expander()  # Toon de kaart met de juiste locatie
+    else:
+        st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
 
-# Toon de data-expander
-show_data_expander()  # Roep de functie voor de data-expander aan uit data.py
+    # Altijd de data-expander tonen (zelfstandig van de locatie)
+    show_data_expander(latitude, longitude, location)  # Toon de data-expander voor de opgegeven locatie
 
-# Toon de kaart-expander
-show_map_expander()  # Roep de kaartfunctie aan uit maps.py
+if __name__ == "__main__":
+    main()
