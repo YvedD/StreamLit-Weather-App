@@ -1,118 +1,81 @@
 import streamlit as st
 import requests
 import math
+from datetime import datetime
 
 # Functie om de windrichting om te zetten naar de juiste kompasrichting
 def wind_direction_to_compass(degrees):
-    directions = [
-        "North", "North-North-East", "North-East", "East-North-East", "East", 
-        "East-South-East", "South-East", "South-South-East", "South", "South-South-West", 
-        "South-West", "West-South-West", "West", "West-North-West", "North-West", "North-North-West"
-    ]
-    index = int((degrees + 11.25) / 22.5)
-    return directions[index % 16]
+    directions = ["N", "NNE", "NE", "ENE", "E", "ESE", "SE", "SSE", "S", "SSW", "SW", "WSW", "W", "WNW", "NW", "NNW"]
+    index = round(degrees / 22.5) % 16
+    return directions[index]
 
-# Functie om de windsnelheid om te zetten naar de Beaufort schaal
-def wind_speed_to_beaufort(speed_kmh):
-    if speed_kmh < 1:
-        return 0
-    elif 1 <= speed_kmh < 6:
-        return 1
-    elif 6 <= speed_kmh < 12:
-        return 2
-    elif 12 <= speed_kmh < 19:
-        return 3
-    elif 19 <= speed_kmh < 29:
-        return 4
-    elif 29 <= speed_kmh < 39:
-        return 5
-    elif 39 <= speed_kmh < 50:
-        return 6
-    elif 50 <= speed_kmh < 61:
-        return 7
-    elif 61 <= speed_kmh < 75:
-        return 8
-    elif 75 <= speed_kmh < 89:
-        return 9
-    elif 89 <= speed_kmh < 103:
-        return 10
-    elif 103 <= speed_kmh < 118:
-        return 11
-    else:
-        return 12
+# Functie om windsnelheid in Beaufort-schaal om te zetten
+def wind_speed_to_beaufort(kmh):
+    # Beaufort-schaalgrenzen in km/h
+    beaufort_limits = [0, 1, 6, 12, 20, 29, 39, 50, 62, 75, 89, 103, 118]
+    for bft, limit in enumerate(beaufort_limits):
+        if kmh < limit:
+            return bft
+    return 12  # 12 Bf voor snelheden boven de hoogste grens
 
-# Functie om de Open-Meteo API aan te roepen en data op te halen
-def fetch_weather_data(latitude, longitude, start_date, end_date, timezone):
-    url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={start_date}&end_date={end_date}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m&timezone={timezone}"
+# Haal locatiegegevens op uit st.session_state()
+latitude = st.session_state.get("latitude", 51.2349)
+longitude = st.session_state.get("longitude", 2.9756)
+selected_date = st.session_state.get("selected_date", "2023-11-01")
 
-    try:
-        response = requests.get(url)
-        response.raise_for_status()
-        data = response.json()
-        return data
-    except requests.RequestException as e:
-        st.error(f"Error fetching weather data: {e}")
-        return None
+# API-aanroep naar Open-Meteo met de opgegeven parameters
+api_url = f"https://historical-forecast-api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&start_date={selected_date}&end_date={selected_date}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m&timezone=Europe%2FBerlin"
+response = requests.get(api_url)
+data = response.json()
 
-# Functie om de gegevens mooi weer te geven in de expander
-def show_data_expander():
-    country = st.session_state.get("country", "Unknown")
-    location = st.session_state.get("location", "Unknown")
-    selected_date = st.session_state.get("selected_date", "Unknown")
-    start_hour = st.session_state.get("start_hour", "Unknown")
-    end_hour = st.session_state.get("end_hour", "Unknown")
-    latitude = st.session_state.get("latitude", 0.0)
-    longitude = st.session_state.get("longitude", 0.0)
-    timezone = st.session_state.get("timezone", "Europe/Berlin")
-    sunrise = st.session_state.get("sunrise", "Unknown")
-    sunset = st.session_state.get("sunset", "Unknown")
+# Controleer of er data is geretourneerd en verwerk deze indien beschikbaar
+if "hourly" in data:
+    temperature_data = data["hourly"]["temperature_2m"]
+    precipitation_data = data["hourly"]["precipitation"]
+    cloud_cover_data = data["hourly"]["cloud_cover"]
+    cloud_cover_low_data = data["hourly"]["cloud_cover_low"]
+    cloud_cover_mid_data = data["hourly"]["cloud_cover_mid"]
+    cloud_cover_high_data = data["hourly"]["cloud_cover_high"]
+    visibility_data = data["hourly"]["visibility"]
+    wind_speed_data = data["hourly"]["wind_speed_80m"]
+    wind_direction_data = data["hourly"]["wind_direction_80m"]
+    time_data = data["hourly"]["time"]
 
-    with st.expander("Location Data", expanded=True):
-        st.write(f"**Location:** {location}")
-        st.write(f"**Country:** {country}")
-        st.write(f"**Date Selected:** {selected_date}")
-        st.write(f"**Latitude:** {latitude}")
-        st.write(f"**Longitude:** {longitude}")
-        st.write(f"**Sunrise:** {sunrise}")
-        st.write(f"**Sunset:** {sunset}")
-        formatted_coords = f"{abs(latitude):.2f}°{'N' if latitude >= 0 else 'S'} {abs(longitude):.2f}°{'E' if longitude >= 0 else 'W'}"
-        st.write(f"**Formatted Coordinates:** {formatted_coords}")
+    # Sla de geformatteerde gegevens op
+    formatted_output = []
 
-    weather_data = fetch_weather_data(latitude, longitude, selected_date, selected_date, timezone)
+    for i in range(len(time_data)):
+        # Tijd in het HH:MM formaat
+        time_str = datetime.fromisoformat(time_data[i]).strftime("%H:%M")
+        
+        # Temperaturen, neerslag en bewolkingsniveaus
+        temperature = round(temperature_data[i], 1)
+        precipitation = round(precipitation_data[i], 1)
+        cloud_cover = round(cloud_cover_data[i], 1)
+        cloud_cover_low = round(cloud_cover_low_data[i], 1)
+        cloud_cover_mid = round(cloud_cover_mid_data[i], 1)
+        cloud_cover_high = round(cloud_cover_high_data[i], 1)
 
-    if weather_data:
-        with st.expander("Weather Data", expanded=True):
-            hourly = weather_data['hourly']
-            st.write(f"### Weather Data for {selected_date}")
+        # Zichtbaarheid omzetten van meters naar kilometers en afronden
+        visibility = round(visibility_data[i] / 1000)
 
-            for i, time in enumerate(hourly['time']):
-                st.write(f"#### Time: {time}")
-                temperature = hourly['temperature_2m'][i]
-                precipitation = hourly['precipitation'][i]
-                cloud_cover = hourly['cloud_cover'][i]
-                cloud_cover_low = hourly['cloud_cover_low'][i]
-                cloud_cover_mid = hourly['cloud_cover_mid'][i]
-                cloud_cover_high = hourly['cloud_cover_high'][i]
-                wind_speed = hourly['wind_speed_80m'][i]
-                wind_direction = hourly['wind_direction_80m'][i]
-                visibility_meters = hourly['visibility'][i]
+        # Windrichting omzetten naar kompasrichting en windsnelheid naar Beaufort-schaal
+        wind_direction = wind_direction_to_compass(wind_direction_data[i])
+        wind_speed_kmh = round(wind_speed_data[i], 1)
+        wind_beaufort = wind_speed_to_beaufort(wind_speed_kmh)
 
-                # Zet de zichtbaarheid om naar kilometers en rond af naar een geheel getal
-                visibility_km = round(visibility_meters / 1000)
-                
-                # Wind richting en snelheid naar compass en Beaufort
-                wind_direction_compass = wind_direction_to_compass(wind_direction)
-                wind_beaufort = wind_speed_to_beaufort(wind_speed)
+        # Format output als één regel
+        output_line = (
+            f"{time_str} Tmp: {temperature}°C-Precip: {precipitation} mm-"
+            f"Cloud: {cloud_cover}% (L:{cloud_cover_low}%,M:{cloud_cover_mid}%,H:{cloud_cover_high}%)-"
+            f"Visib:{visibility}km-Wnd: {wind_direction}: {wind_beaufort}Bf"
+        )
 
-                # Weergeven van alle verzamelde gegevens per uur
-                st.write(f"**Temperature:** {temperature}°C")
-                st.write(f"**Precipitation:** {precipitation} mm")
-                st.write(f"**Cloud Cover:** {cloud_cover}%")
-                st.write(f"**Low Cloud Cover:** {cloud_cover_low}%")
-                st.write(f"**Mid Cloud Cover:** {cloud_cover_mid}%")
-                st.write(f"**High Cloud Cover:** {cloud_cover_high}%")
-                st.write(f"**Visibility:** {visibility_km} km")
-                st.write(f"**Wind Speed:** {wind_speed} km/h")
-                st.write(f"**Wind Direction:** {wind_direction_compass} ({wind_direction}°)")
-                st.write(f"**Wind Beaufort:** {wind_beaufort} Bf")
-                st.write("---")
+        # Voeg deze regel toe aan de lijst met geformatteerde uitvoer
+        formatted_output.append(output_line)
+
+    # Toon alle gegevens in een kopieerbaar blok
+    st.code("\n".join(formatted_output), language="text")
+
+else:
+    st.error("No data available for the selected date.")
