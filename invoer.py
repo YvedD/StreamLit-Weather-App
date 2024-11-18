@@ -1,3 +1,4 @@
+#invoer.py
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
@@ -23,7 +24,7 @@ EUROPEAN_COUNTRIES_NL = [
     "Spanje", "Zweden", "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad"
 ]
 
-# Functie om GPS-coördinaten op te halen via een geocoding service
+# Functie om GPS-coördinaten op te halen via geocoding service
 def get_gps_coordinates(location):
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
     try:
@@ -40,26 +41,34 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
         return None, None
 
-# Functie om zonsopkomst en zonsondergang te verkrijgen van de Open-Meteo API
+# Functie om zonsopkomst en zonsondergang te berekenen
 def get_sun_times(lat, lon, date):
-    api_url = (
-        f"https://archive-api.open-meteo.com/v1/archive?"
-        f"latitude={lat}&longitude={lon}&start_date={date}&end_date={date}"
-        "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
-    )
+    if lat is None or lon is None:
+        st.error("Ongeldige GPS-coördinaten.")
+        return None, None
+    
+    tz_finder = TimezoneFinder()
+    timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
+    
+    if timezone_str is None:
+        st.error("Kan de tijdzone voor deze locatie niet vinden.")
+        return None, None
+
+    api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
-        if 'daily' in data and 'sunrise' in data['daily'] and 'sunset' in data['daily']:
-            sunrise = data['daily']['sunrise'][0]
-            sunset = data['daily']['sunset'][0]
+        if 'results' in data:
+            sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
+            sunset_utc = datetime.fromisoformat(data['results']['sunset'])
 
-            # Haal de tijd in HH:MM formaat
-            sunrise_local = datetime.fromisoformat(sunrise).strftime('%H:%M')
-            sunset_local = datetime.fromisoformat(sunset).strftime('%H:%M')
+            # Converteer naar lokale tijdzone
+            local_tz = pytz.timezone(timezone_str)
+            sunrise_local = sunrise_utc.astimezone(local_tz)
+            sunset_local = sunset_utc.astimezone(local_tz)
 
-            return sunrise_local, sunset_local
+            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
         else:
             st.error("Zonsopkomst en zonsondergang niet gevonden.")
             return None, None
@@ -122,6 +131,8 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
+        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0)
+        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23)
 
         # Verkrijg GPS-coördinaten voor de locatie
         latitude, longitude = get_gps_coordinates(location)
@@ -129,15 +140,8 @@ def show_input_form():
         # Haal zonsopkomst en zonsondergang op
         if latitude and longitude:
             sunrise, sunset = get_sun_times(latitude, longitude, selected_date)
-            start_hour_default = sunrise if sunrise else "08:00"  # Standaardtijd als zonsopgang niet beschikbaar is
-            end_hour_default = sunset if sunset else "16:00"  # Standaardtijd als zonsondergang niet beschikbaar is
         else:
-            start_hour_default = "08:00"
-            end_hour_default = "16:00"
-
-        # Gebruiker kan nog steeds uren aanpassen indien gewenst
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0, key="start_hour", format_func=lambda x: start_hour_default if x == "08:00" else x)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23, key="end_hour", format_func=lambda x: end_hour_default if x == "16:00" else x)
+            sunrise = sunset = None
 
         # Sla alle benodigde gegevens op in de session_state
         st.session_state["country"] = country
@@ -160,4 +164,3 @@ def show_input_form():
             st.write(f"{location_label} not found.")
 
     return latitude, longitude, location
-
