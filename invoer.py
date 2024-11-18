@@ -167,6 +167,20 @@ def show_input_form():
         # Haal zonsopkomst en zonsondergang tijden op
         sunrise, sunset, civil_twilight_begin, civil_twilight_end, nautical_twilight_begin, nautical_twilight_end = get_sun_times(latitude, longitude, selected_date)
 
+        # Sla de gegevens op in st.session_state
+        st.session_state["latitude"] = latitude
+        st.session_state["longitude"] = longitude
+        st.session_state["location"] = location
+        st.session_state["selected_date"] = selected_date
+        st.session_state["start_hour"] = start_hour
+        st.session_state["end_hour"] = end_hour
+        st.session_state["sunrise"] = sunrise
+        st.session_state["sunset"] = sunset
+        st.session_state["civil_twilight_begin"] = civil_twilight_begin
+        st.session_state["civil_twilight_end"] = civil_twilight_end
+        st.session_state["nautical_twilight_begin"] = nautical_twilight_begin
+        st.session_state["nautical_twilight_end"] = nautical_twilight_end
+
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
             st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
