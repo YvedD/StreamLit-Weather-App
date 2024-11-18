@@ -67,7 +67,11 @@ def get_sun_times(lat, lon, date):
             sunrise_local = sunrise_utc.astimezone(local_tz)
             sunset_local = sunset_utc.astimezone(local_tz)
 
-            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
+            # Afronden naar het dichtste lagere uur voor sunrise en hogere uur voor sunset
+            start_hour = sunrise_local.replace(minute=0) if sunrise_local.minute == 0 else sunrise_local.replace(minute=0) - timedelta(hours=1)
+            end_hour = sunset_local.replace(minute=0) + timedelta(hours=1) if sunset_local.minute != 0 else sunset_local.replace(minute=0)
+
+            return start_hour.strftime('%H:%M'), end_hour.strftime('%H:%M')
         else:
             st.error("Zonsopkomst en zonsondergang niet gevonden.")
             return None, None
@@ -141,8 +145,11 @@ def show_input_form():
             sunrise = sunset = None
         
         # Stel standaard start- en einduren in op basis van zonsopkomst en zonsondergang
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0 if sunrise is None else int(sunrise.split(":")[0]))
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23 if sunset is None else int(sunset.split(":")[0]))
+        start_hour = sunrise if sunrise else "00:00"
+        end_hour = sunset if sunset else "23:00"
+
+        st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=int(start_hour.split(":")[0]))
+        st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=int(end_hour.split(":")[0]))
 
         # Sla alle benodigde gegevens op in de session_state
         st.session_state["country"] = country
@@ -155,6 +162,3 @@ def show_input_form():
         st.session_state["sunrise"] = sunrise
         st.session_state["sunset"] = sunset
         st.session_state["language"] = lang_choice
-
-        # Toon locatiegegevens en zonsopkomst/zondondergang tijden
-       
