@@ -205,7 +205,7 @@ def show_input_form():
         st.session_state["end_hour"] = end_hour_input.strftime("%H:%M")
 
         # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
-        st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+        st.write(f"**{country}**, **{location}**, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
         st.write(f"**{start_hour_label}**: {start_hour_input.strftime('%H:%M')}")
         st.write(f"**{end_hour_label}**: {end_hour_input.strftime('%H:%M')}")
 
