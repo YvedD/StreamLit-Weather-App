@@ -163,13 +163,49 @@ def show_input_form():
         st.session_state["language"] = lang_choice
 
         # Toon locatiegegevens en zonsopkomst/zondondergang tijden met de exacte niet-afgeronde waarden
-        if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
-        if sunrise and sunset:
+        #if latitude and longitude:
+        #    st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
+        #if sunrise and sunset:
             # Toont de exacte tijden van zonsopkomst en zonsondergang
-            st.write(f"**Sunrise**: {sunrise_local.strftime('%H:%M')}, **Sunset**: {sunset_local.strftime('%H:%M')}")
+        #    st.write(f"**Sunrise**: {sunrise_local.strftime('%H:%M')}, **Sunset**: {sunset_local.strftime('%H:%M')}")
+        #else:
+        #    st.write(f"{location_label} not found.")
+import requests
+from datetime import datetime
+
+def test_sun_times_api(lat, lon, date):
+    # API endpoint voor zonsopkomst en zonsondergang tijden
+    api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
+    try:
+        # Verstuur de GET-aanvraag naar de API
+        response = requests.get(api_url)
+        response.raise_for_status()  # Controleer op fouten in de aanvraag
+        
+        # Zet de JSON-data om naar een Python-dict
+        data = response.json()
+        
+        # Print de JSON-response in een goed leesbaar formaat
+        print("JSON-response van de Sunrise-Sunset API:")
+        print(data)
+        
+        # Optioneel: Specifieke gegevens voor zonsopkomst en zonsondergang weergeven
+        if 'results' in data:
+            print("Zonsopkomst (UTC):", data['results']['sunrise'])
+            print("Zonsondergang (UTC):", data['results']['sunset'])
         else:
-            st.write(f"{location_label} not found.")
+            print("Geen resultaten gevonden in de JSON-response.")
+    
+    except requests.RequestException as e:
+        print(f"Fout bij het ophalen van zonsopkomst en zonsondergang: {e}")
+
+# Testwaarden: locatie en datum (bijv. voor Brussel, België)
+lat = 50.8503
+lon = 4.3517
+date = datetime.now().date()
+
+# Voer de test uit
+test_sun_times_api(lat, lon, date)
+
 
     # Retourneer de waarden
     return latitude, longitude, location
