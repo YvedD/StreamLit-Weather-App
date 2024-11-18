@@ -139,6 +139,8 @@ def show_input_form():
             end_hour_label = "End Hour"
             sunrise_label = "Sunrise"
             sunset_label = "Sunset"
+            civil_twilight_label = "Civil Twilight"
+            nautical_twilight_label = "Nautical Twilight"
             default_country = default_country_en
         else:
             countries = EUROPEAN_COUNTRIES_NL
@@ -149,6 +151,8 @@ def show_input_form():
             end_hour_label = "Einduur"
             sunrise_label = "Zonsopkomst"
             sunset_label = "Zonsondergang"
+            civil_twilight_label = "Civiele Schemering"
+            nautical_twilight_label = "Nautische Schemering"
             default_country = default_country_nl
 
         # Formulier voor het invoeren van gegevens
@@ -201,15 +205,35 @@ def show_input_form():
         st.session_state["end_hour"] = end_hour_input.strftime("%H:%M")
 
         # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
-        st.write(f"**Start Hour (Beginuur)**: {start_hour_input.strftime('%H:%M')}")
-        st.write(f"**End Hour (Einduur)**: {end_hour_input.strftime('%H:%M')}")
+        st.write(f"**{start_hour_label}**: {start_hour_input.strftime('%H:%M')}")
+        st.write(f"**{end_hour_label}**: {end_hour_input.strftime('%H:%M')}")
 
-        # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
-        if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}")
-            st.write(f"**Latitude**: {latitude}, **Longitude**: {longitude}")
-            st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
-            st.write(f"**Civil Twilight Begin**: {civil_twilight_begin}, **Civil Twilight End**: {civil_twilight_end}")
-            st.write(f"**Nautical Twilight Begin**: {nautical_twilight_begin}, **Nautical Twilight End**: {nautical_twilight_end}")
+        # Toon overige tijden voor controle
+        st.write(f"**{sunrise_label}**: {sunrise}")
+        st.write(f"**{sunset_label}**: {sunset}")
+        st.write(f"**{civil_twilight_label} Begin**: {civil_twilight_begin}")
+        st.write(f"**{civil_twilight_label} End**: {civil_twilight_end}")
+        st.write(f"**{nautical_twilight_label} Begin**: {nautical_twilight_begin}")
+        st.write(f"**{nautical_twilight_label} End**: {nautical_twilight_end}")
 
         return latitude, longitude, location
+Wat is veranderd:
+Toevoeging van vertalingen:
+
+De termen "Civil Twilight" en "Nautical Twilight" zijn nu vertaald naar respectievelijk "Civiele Schemering" en "Nautische Schemering" voor de Nederlandse taalkeuze.
+Alle labels in de invoervelden zijn aangepast om te voldoen aan de taalkeuze van de gebruiker.
+Session State Updates:
+
+De begin- en einduur worden bijgewerkt in st.session_state en kunnen later worden opgehaald voor verdere verwerking.
+Documentatie:
+
+De tijden voor "Start Hour" en "End Hour" worden weergegeven voor controle. Dit kan later uit de code worden verwijderd als het niet langer nodig is.
+Als je de documentatie wilt verwijderen, kun je eenvoudig de regels met st.write() verwijderen.
+
+
+
+
+
+
+
+
