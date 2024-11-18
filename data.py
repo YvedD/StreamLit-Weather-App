@@ -93,8 +93,8 @@ def show_data_expander():
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
 
     # Pas start_hour en end_hour aan op basis van zonsopgang en zonsondergang
-    start_hour = max(sunrise, start_hour)  # Kies de latere tijd tussen zonsopgang en start_hour
-    end_hour = min(sunset, end_hour)  # Kies de vroegere tijd tussen zonsondergang en end_hour
+    start_hour = min(sunrise, start_hour)  # Kies de latere tijd tussen zonsopgang en start_hour
+    end_hour = max(sunset, end_hour)  # Kies de vroegere tijd tussen zonsondergang en end_hour
 
     # Toon weergegevens in een expander
     with st.expander("Weergegevens voor deze locatie en tijdspanne"):
