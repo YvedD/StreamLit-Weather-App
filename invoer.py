@@ -210,7 +210,7 @@ def show_input_form():
         st.write(f"**{end_hour_label}**: {end_hour_input.strftime('%H:%M')}")
 
         # Toon overige tijden voor controle
-        st.write(f"**{sunrise_label}**: {sunrise}")
+        st.write(f"**{sunrise_emoji}** **{sunrise_label}**: {sunrise}")
         st.write(f"**{sunset_label}**: {sunset}")
         st.write(f"**{civil_twilight_label} Begin**: {civil_twilight_begin}")
         st.write(f"**{civil_twilight_label} End**: {civil_twilight_end}")
