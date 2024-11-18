@@ -217,23 +217,3 @@ def show_input_form():
         st.write(f"**{nautical_twilight_label} End**: {nautical_twilight_end}")
 
         return latitude, longitude, location
-Wat is veranderd:
-Toevoeging van vertalingen:
-
-De termen "Civil Twilight" en "Nautical Twilight" zijn nu vertaald naar respectievelijk "Civiele Schemering" en "Nautische Schemering" voor de Nederlandse taalkeuze.
-Alle labels in de invoervelden zijn aangepast om te voldoen aan de taalkeuze van de gebruiker.
-Session State Updates:
-
-De begin- en einduur worden bijgewerkt in st.session_state en kunnen later worden opgehaald voor verdere verwerking.
-Documentatie:
-
-De tijden voor "Start Hour" en "End Hour" worden weergegeven voor controle. Dit kan later uit de code worden verwijderd als het niet langer nodig is.
-Als je de documentatie wilt verwijderen, kun je eenvoudig de regels met st.write() verwijderen.
-
-
-
-
-
-
-
-
