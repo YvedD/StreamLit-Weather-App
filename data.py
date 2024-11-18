@@ -1,9 +1,9 @@
 import requests
 import streamlit as st
-from datetime import datetime, timedelta  # Voeg timedelta toe voor het verwerken van datums
+from datetime import datetime
 
 # Functie om historische weergegevens op te halen via Open-Meteo API
-def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
+def fetch_historical_weather_data(lat, lon, date):
     api_url = (
         f"https://historical-forecast-api.open-meteo.com/v1/forecast"
         f"?latitude={lat}&longitude={lon}"
@@ -84,15 +84,17 @@ def show_data_expander():
         return
 
     # Weerdata ophalen
-    weather_data = fetch_historical_weather_data(lat, lon, date, start_hour, end_hour)
+    weather_data = fetch_historical_weather_data(lat, lon, date)
     if not weather_data:
         return
 
-    # Zonsopgang en zonsondergang instellen
+    # Haal zonsopgang en zonsondergang op, en formatteer naar HH:MM
     sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-    start_hour = sunrise if start_hour == "00:00" else start_hour
-    end_hour = sunset if end_hour == "00:00" else end_hour
+
+    # Pas start_hour en end_hour aan op basis van zonsopgang en zonsondergang
+    start_hour = max(sunrise, start_hour)  # Kies de latere tijd tussen zonsopgang en start_hour
+    end_hour = min(sunset, end_hour)  # Kies de vroegere tijd tussen zonsondergang en end_hour
 
     # Toon weergegevens in een expander
     with st.expander("Weergegevens voor deze locatie en tijdspanne"):
@@ -144,4 +146,3 @@ def show_data_expander():
         else:
             # Toon alle regels in één blok
             st.code("\n".join(weather_info_lines))
-
