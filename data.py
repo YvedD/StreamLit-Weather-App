@@ -9,7 +9,7 @@ def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
         f"?latitude={lat}&longitude={lon}"
         f"&start_date={date.strftime('%Y-%m-%d')}&end_date={date.strftime('%Y-%m-%d')}"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
-        "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m"
+        "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_10m"
         "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
     )
     try:
