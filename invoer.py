@@ -42,7 +42,6 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten voor locatie '{location}': {e}")
         return None, None
 # Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
-# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
 def get_sun_times(lat, lon, date):
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
@@ -116,11 +115,11 @@ def show_input_form():
     )
 
     # Expander die altijd uitgeklapt is
-    with st.expander("Select Language/Kies uw taal", expanded=True):
+    with st.expander("Input Data", expanded=True):
 
         # Taalkeuze door middel van een two-state switch binnen de expander
         lang_choice = st.radio(
-            "",
+            "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
             index=0 if st.session_state.get("language", "English") == "English" else 1,
             key="language_selector",  
@@ -175,9 +174,11 @@ def show_input_form():
             civil_twilight_begin_time = datetime.strptime(civil_twilight_begin, '%H:%M')
             civil_twilight_end_time = datetime.strptime(civil_twilight_end, '%H:%M')
 
-            # Rond de tijden af naar het dichtstbijzijnde uur
+            # Rond de begin tijd af naar beneden (naar beneden afronden naar het dichtstbijzijnde uur)
             start_hour = civil_twilight_begin_time.replace(minute=0, second=0, microsecond=0)
-            end_hour = civil_twilight_end_time.replace(minute=0, second=0, microsecond=0)
+            
+            # Rond de eind tijd af naar boven (naar boven afronden naar het dichtstbijzijnde uur)
+            end_hour = civil_twilight_end_time.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
 
             # Update de session_state voor begin- en einduur
             st.session_state["start_hour"] = start_hour.strftime("%H:%M")
@@ -197,14 +198,9 @@ def show_input_form():
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
-                st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
-                # Toon ook de civiele en nautische schemeringstijden
-                st.write(f"**Civil Twilight Begin**: {civil_twilight_begin}, **Civil Twilight End**: {civil_twilight_end}")
-                st.write(f"**Nautical Twilight Begin**: {nautical_twilight_begin}, **Nautical Twilight End**: {nautical_twilight_end}")
-        else:
-            st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
+            st.write(f"**Country**: {country}, **Location**: {location}, **Latitude**: {latitude}, **Longitude**: {longitude}")
+            st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
+            st.write(f"**Civil Twilight Begin**: {civil_twilight_begin}, **Civil Twilight End**: {civil_twilight_end}")
+            st.write(f"**Nautical Twilight Begin**: {nautical_twilight_begin}, **Nautical Twilight End**: {nautical_twilight_end}")
 
-        # Geef de latitude, longitude en locatie terug voor gebruik in de kaartmodule
         return latitude, longitude, location
