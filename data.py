@@ -75,8 +75,8 @@ def show_data_expander():
     lat = st.session_state.get("latitude")
     lon = st.session_state.get("longitude")
     date = st.session_state.get("selected_date")
-    start_hour = st.session_state.get("start_hour", "08:00")
-    end_hour = st.session_state.get("end_hour", "16:00")
+    start_hour = st.session_state.get("start_hour")
+    end_hour = st.session_state.get("end_hour")
 
     # Controleer of vereiste gegevens beschikbaar zijn
     if not (lat and lon and date):
@@ -111,8 +111,8 @@ def show_data_expander():
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
         visibility = hourly_data["visibility"]
-        wind_speeds = hourly_data["wind_speed_80m"]
-        wind_directions = hourly_data["wind_direction_80m"]
+        wind_speeds = hourly_data["wind_speed_10m"]
+        wind_directions = hourly_data["wind_direction_10m"]
         
         # Lijst voor het verzamelen van de weergegevensregels
         weather_info_lines = []
