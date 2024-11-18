@@ -67,12 +67,14 @@ def get_sun_times(lat, lon, date):
             sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
             sunset_utc = datetime.fromisoformat(data['results']['sunset'])
 
-            # Converteer naar de lokale tijdzone
+            # Laad de lokale tijdzone
             local_tz = pytz.timezone(timezone_str)
-            sunrise_local = sunrise_utc.astimezone(local_tz)
-            sunset_local = sunset_utc.astimezone(local_tz)
+            
+            # Gebruik de lokale tijdzone om de UTC tijden correct te converteren, rekening houdend met DST
+            sunrise_local = sunrise_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+            sunset_local = sunset_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
 
-            # Geef de exacte tijden terug zonder afronding
+            # Geef de exacte tijden terug zonder afronding, rekening houdend met DST
             return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
         else:
             st.error("Zonsopkomst en zonsondergang niet gevonden.")
@@ -80,6 +82,7 @@ def get_sun_times(lat, lon, date):
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
         return None, None
+
 # Functie voor invoerformulier
 def show_input_form():
     # Standaardwaarden
