@@ -46,6 +46,7 @@ def get_sun_times(lat, lon, date):
         st.error("Ongeldige GPS-coördinaten.")
         return None, None
     
+    # Bepaal de tijdzone van de opgegeven locatie
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
     
@@ -53,32 +54,32 @@ def get_sun_times(lat, lon, date):
         st.error("Kan de tijdzone voor deze locatie niet vinden.")
         return None, None
 
+    # Sunrise-sunset API-aanroep voor de opgegeven datum en locatie
     api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
+        
+        # Controleer of er resultaten zijn
         if 'results' in data:
+            # Converteer zonsopkomst en zonsondergang naar datetime-objecten in UTC
             sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
             sunset_utc = datetime.fromisoformat(data['results']['sunset'])
 
-            # Converteer naar lokale tijdzone
+            # Converteer naar de lokale tijdzone
             local_tz = pytz.timezone(timezone_str)
             sunrise_local = sunrise_utc.astimezone(local_tz)
             sunset_local = sunset_utc.astimezone(local_tz)
 
-            # Afronden naar het dichtste lagere uur voor sunrise en hogere uur voor sunset
-            start_hour = sunrise_local.replace(minute=0) if sunrise_local.minute == 0 else sunrise_local.replace(minute=0) - timedelta(hours=1)
-            end_hour = sunset_local.replace(minute=0) + timedelta(hours=1) if sunset_local.minute != 0 else sunset_local.replace(minute=0)
-
-            return start_hour.strftime('%H:%M'), end_hour.strftime('%H:%M')
+            # Geef de exacte tijden terug zonder afronding
+            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
         else:
             st.error("Zonsopkomst en zonsondergang niet gevonden.")
             return None, None
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
         return None, None
-
 # Functie voor invoerformulier
 def show_input_form():
     # Standaardwaarden
