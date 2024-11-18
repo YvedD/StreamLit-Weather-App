@@ -95,35 +95,39 @@ def get_sun_times(lat, lon, date):
         return None, None, None, None
 
 # Functie voor invoerformulier
+import streamlit as st
+from datetime import datetime, timedelta
+
+# Functie om invoergegevens te tonen en op te slaan in session_state
 def show_input_form():
-    # Standaardwaarden
-    default_country_en = "Belgium"  
-    default_country_nl = "België"  
+    # Standaardwaarden voor land, locatie, datum
+    default_country_en = "Belgium"
+    default_country_nl = "België"
     default_location = "Bredene"
     selected_date = datetime.now().date() - timedelta(days=1)
 
-    # Titel boven de expander
+    # Titel boven de invoer
     st.markdown(
         '<h3 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">'
         'Migration Historic Weather Data<br>and 3 day Forecast</h3>',
         unsafe_allow_html=True
     )
 
-    # Expander voor de invoer
+    # Expander voor invoergegevens
     with st.expander("Input Data", expanded=True):
-        # Taalkeuze door middel van een radio knop
+        # Taalkeuze met radioknop
         lang_choice = st.radio(
             "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
-            index=1 if st.session_state.get("language", "English") == "English" else 1,
+            index=0 if st.session_state.get("language", "English") == "English" else 1,
             key="language_selector",
             horizontal=True
         )
 
-        # Sla de taalkeuze op in de session_state
+        # Sla de taalkeuze op in session_state
         st.session_state["language"] = lang_choice
 
-        # Kies de landenlijst en labels op basis van de taal
+        # Pas labels en landenlijst aan op basis van de taalkeuze
         if lang_choice == "English":
             countries = EUROPEAN_COUNTRIES_EN
             country_label = "Select Country"
@@ -141,38 +145,45 @@ def show_input_form():
             end_hour_label = "Einduur"
             default_country = default_country_nl
 
-        # Formulier voor invoer
-        country = st.selectbox(country_label, countries, index=countries.index(default_country))  
+        # Formulier voor invoergegevens
+        country = st.selectbox(country_label, countries, index=countries.index(default_country))
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        
-        # Verkrijg GPS-coördinaten voor de locatie
-        latitude, longitude = get_gps_coordinates(location)
 
-        # Haal zonsopkomst, zonsondergang en nautische schemering op
-        if latitude and longitude:
-            sunrise, sunset, nautical_dawn, nautical_dusk = get_sun_times(latitude, longitude, selected_date)
-        else:
-            sunrise = sunset = nautical_dawn = nautical_dusk = None
-        
-        # Sla alle benodigde gegevens op in de session_state
+        # Start- en eindtijd selectieboxen
+        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
+        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
+
+        # Sla alle invoergegevens op in session_state
         st.session_state["country"] = country
         st.session_state["location"] = location
         st.session_state["selected_date"] = selected_date
-        st.session_state["latitude"] = latitude
-        st.session_state["longitude"] = longitude
-        st.session_state["sunrise"] = sunrise
-        st.session_state["sunset"] = sunset
-        st.session_state["nautical_dawn"] = nautical_dawn
-        st.session_state["nautical_dusk"] = nautical_dusk
+        st.session_state["start_hour"] = start_hour
+        st.session_state["end_hour"] = end_hour
 
-        # Toon locatiegegevens en tijden
-        if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
+        # Verkrijg GPS-coördinaten en tijdzone informatie
+        latitude, longitude = get_gps_coordinates(location)
+        if latitude is not None and longitude is not None:
+            st.session_state["latitude"] = latitude
+            st.session_state["longitude"] = longitude
+
+            # Haal zonsopkomst en schemeringstijden op
+            sunrise, sunset, nautical_dawn, nautical_dusk = get_sun_times(latitude, longitude, selected_date)
+            if sunrise and sunset and nautical_dawn and nautical_dusk:
+                # Sla zonsopkomst- en schemeringstijden op in session_state
+                st.session_state["sunrise"] = sunrise
+                st.session_state["sunset"] = sunset
+                st.session_state["nautical_dawn"] = nautical_dawn
+                st.session_state["nautical_dusk"] = nautical_dusk
+
+                # Toon locatie- en schemeringstijden
+                st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N, {longitude:.2f}°E")
                 st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
                 st.write(f"**Nautical Dawn**: {nautical_dawn}, **Nautical Dusk**: {nautical_dusk}")
+            else:
+                st.warning("Could not retrieve sunrise and sunset times.")
+        else:
+            st.error("Could not retrieve GPS coordinates for the location provided.")
 
-    # Retourneer de waarden
+    # Retourneer de waarden voor mogelijke extra verwerking
     return latitude, longitude, location
-    
