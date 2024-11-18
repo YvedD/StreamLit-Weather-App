@@ -57,25 +57,46 @@ def get_sun_times(lat, lon, date):
         
         if 'results' in data:
             results = data['results']
-            times_utc = {key: datetime.fromisoformat(value) for key, value in results.items() if value}
+            
+            # Converteer tijden naar datetime-objecten
+            sunrise_utc = datetime.fromisoformat(results['sunrise'])
+            sunset_utc = datetime.fromisoformat(results['sunset'])
+            civil_twilight_begin_utc = datetime.fromisoformat(results['civil_twilight_begin'])
+            civil_twilight_end_utc = datetime.fromisoformat(results['civil_twilight_end'])
+            nautical_twilight_begin_utc = datetime.fromisoformat(results['nautical_twilight_begin'])
+            nautical_twilight_end_utc = datetime.fromisoformat(results['nautical_twilight_end'])
+            
+            # Zet de tijden om naar lokale tijdzone
             local_tz = pytz.timezone(timezone_str)
-
-            sun_times = {}
-            for event, time in times_utc.items():
-                local_time = time.astimezone(local_tz)
-                is_dst = local_time.dst() != timedelta(0)
-                sun_times[event] = local_time.strftime('%H:%M') + (" (DST)" if is_dst else "")
-                
-            return (sun_times.get('sunrise'), sun_times.get('sunset'), 
-                    sun_times.get('civil_twilight_begin'), sun_times.get('civil_twilight_end'),
-                    sun_times.get('nautical_twilight_begin'), sun_times.get('nautical_twilight_end'))
+            
+            # Localize de tijden en pas zonetijd toe
+            sunrise_local = sunrise_utc.astimezone(local_tz)
+            sunset_local = sunset_utc.astimezone(local_tz)
+            civil_twilight_begin_local = civil_twilight_begin_utc.astimezone(local_tz)
+            civil_twilight_end_local = civil_twilight_end_utc.astimezone(local_tz)
+            nautical_twilight_begin_local = nautical_twilight_begin_utc.astimezone(local_tz)
+            nautical_twilight_end_local = nautical_twilight_end_utc.astimezone(local_tz)
+            
+            # Formatteer de tijden in het juiste formaat
+            sun_times = {
+                "sunrise": sunrise_local.strftime('%H:%M'),
+                "sunset": sunset_local.strftime('%H:%M'),
+                "civil_twilight_begin": civil_twilight_begin_local.strftime('%H:%M'),
+                "civil_twilight_end": civil_twilight_end_local.strftime('%H:%M'),
+                "nautical_twilight_begin": nautical_twilight_begin_local.strftime('%H:%M'),
+                "nautical_twilight_end": nautical_twilight_end_local.strftime('%H:%M')
+            }
+            
+            return (sun_times['sunrise'], sun_times['sunset'], 
+                    sun_times['civil_twilight_begin'], sun_times['civil_twilight_end'],
+                    sun_times['nautical_twilight_begin'], sun_times['nautical_twilight_end'])
         else:
             st.error("Sunrise and sunset times not found.")
             return None, None, None, None, None, None
+            
     except requests.RequestException as e:
         st.error(f"Error fetching sunrise/sunset times: {e}")
         return None, None, None, None, None, None
-
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
     default_country_en = "Belgium"  
