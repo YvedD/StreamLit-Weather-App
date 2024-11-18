@@ -165,10 +165,10 @@ def show_input_form():
         # Toon locatiegegevens en zonsopkomst/zondondergang tijden
         if latitude and longitude:
             st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
-                st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
+        if sunrise and sunset:
+            st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
         else:
-            st.write(f"{location_label} not found.")
+        st.write(f"{location_label} not found.")
 
     # Retourneer de waarden
     return latitude, longitude, location
