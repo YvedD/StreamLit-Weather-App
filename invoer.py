@@ -182,6 +182,10 @@ def show_input_form():
             st.session_state["start_hour"] = start_hour.strftime("%H:%M")
             st.session_state["end_hour"] = end_hour.strftime("%H:%M")
 
+        # Voeg invoervelden toe voor beginuur en einduur, met de mogelijkheid om handmatig aan te passen
+        start_hour = st.time_input(start_hour_label, value=start_hour)
+        end_hour = st.time_input(end_hour_label, value=end_hour)
+
         # Sla de gegevens op in st.session_state
         st.session_state["latitude"] = latitude
         st.session_state["longitude"] = longitude
@@ -193,6 +197,8 @@ def show_input_form():
         st.session_state["civil_twilight_end"] = civil_twilight_end
         st.session_state["nautical_twilight_begin"] = nautical_twilight_begin
         st.session_state["nautical_twilight_end"] = nautical_twilight_end
+        st.session_state["start_hour"] = start_hour.strftime("%H:%M")
+        st.session_state["end_hour"] = end_hour.strftime("%H:%M")
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
