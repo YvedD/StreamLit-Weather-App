@@ -216,5 +216,17 @@ def show_input_form():
         st.write(f"**{civil_twilight_label} End**: {civil_twilight_end}")
         st.write(f"**{nautical_twilight_label} Begin**: {nautical_twilight_begin}")
         st.write(f"**{nautical_twilight_label} End**: {nautical_twilight_end}")
-
+        text = f"""
+            <p style="line-height: 1.2;">
+                <b>{country}</b>, <b>{location}</b>, <b>GPS</b>: {latitude:.2f}°N {longitude:.2f}°E<br>
+                <b>{start_hour_label}</b>: {start_hour_input.strftime('%H:%M')}, <b>{end_hour_label}</b>: {end_hour_input.strftime('%H:%M')}<br><br>
+                <b>{sunrise_label}</b>: {sunrise}<br>
+                <b>{sunset_label}</b>: {sunset}<br>
+                <b>{civil_twilight_label} Begin</b>: {civil_twilight_begin}<br>
+                <b>{civil_twilight_label} End</b>: {civil_twilight_end}<br>
+                <b>{nautical_twilight_label} Begin</b>: {nautical_twilight_begin}<br>
+                <b>{nautical_twilight_label} End</b>: {nautical_twilight_end}
+            </p>
+        # Gebruik st.markdown() met de HTML-stijl
+        st.markdown(text, unsafe_allow_html=True)
         return latitude, longitude, location
