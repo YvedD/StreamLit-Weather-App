@@ -155,8 +155,6 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
 
         # Verkrijg de GPS-coördinaten voor de nieuwe locatie
         latitude, longitude = get_gps_coordinates(location)
@@ -168,7 +166,7 @@ def show_input_form():
         # Haal zonsopkomst en zonsondergang tijden op
         sunrise, sunset, civil_twilight_begin, civil_twilight_end, nautical_twilight_begin, nautical_twilight_end = get_sun_times(latitude, longitude, selected_date)
 
-        # Automatisch begin- en einduur instellen op het dichtstbijzijnde uur van de civiele schemering
+        # Automatisch begin- en einduur instellen op basis van de civiele schemering
         if civil_twilight_begin and civil_twilight_end:
             # Zet de tijden om naar datetime objecten
             civil_twilight_begin_time = datetime.strptime(civil_twilight_begin, '%H:%M')
