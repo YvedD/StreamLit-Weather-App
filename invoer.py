@@ -1,12 +1,30 @@
 #invoer.py - dit is de basiscode om invoer door de gebruikers toe te laten en verschillende belangrijke variabelen op te slaan via st.session_state()
-
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
 from timezonefinder import TimezoneFinder
 import pytz
 
-# Functie om GPS-coördinaten op te halen
+# Lijst van Europese landen in Engels en Nederlands
+EUROPEAN_COUNTRIES_EN = [
+    "Belgium", "Albania", "Andorra", "Armenia", "Austria", "Azerbaijan", "Bulgaria", "Bosnia and Herzegovina", 
+    "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "Georgia", "Germany", 
+    "Greece", "Hungary", "Iceland", "Ireland", "Italy", "Kazakhstan", "Kosovo", "Latvia", "Liechtenstein", 
+    "Lithuania", "Luxembourg", "Malta", "Moldova", "Monaco", "Montenegro", "Netherlands", "North Macedonia", 
+    "Norway", "Poland", "Portugal", "Romania", "Russia", "San Marino", "Serbia", "Slovakia", "Slovenia", 
+    "Spain", "Sweden", "Switzerland", "Turkey", "Ukraine", "United Kingdom", "Vatican City"
+]
+
+EUROPEAN_COUNTRIES_NL = [
+    "België", "Albanië", "Andorra", "Armenië", "Oostenrijk", "Azerbeidzjan", "Bulgarije", "Bosnië en Herzegovina", 
+    "Kroatië", "Cyprus", "Tsjechië", "Denemarken", "Estland", "Finland", "Georgië", "Duitsland", 
+    "Griekenland", "Hongarije", "IJsland", "Ierland", "Italië", "Kazachstan", "Kosovo", "Letland", "Liechtenstein", 
+    "Litouwen", "Luxemburg", "Malta", "Moldavië", "Monaco", "Montenegro", "Nederland", "Noord-Macedonië", 
+    "Noorwegen", "Polen", "Portugal", "Roemenië", "Rusland", "San Marino", "Servië", "Slovenië", "Slovenië", 
+    "Spanje", "Zweden", "Zwitserland", "Turkije", "Oekraïne", "Verenigd Koninkrijk", "Vaticaanstad"
+]
+
+# Functie om GPS-coördinaten op te halen via geocoding service
 def get_gps_coordinates(location):
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
     try:
@@ -17,90 +35,60 @@ def get_gps_coordinates(location):
             lon = float(data[0]["lon"])
             return lat, lon
         else:
-            st.error("Locatie niet gevonden.")
+            st.error("Location not found.")
             return None, None
     except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van GPS-coördinaten: {e}")
+        st.error(f"Error fetching GPS coordinates: {e}")
         return None, None
 
-# Functie om zonsopkomst, zonsondergang en schemeringstijden op te halen
+# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
 def get_sun_times(lat, lon, date):
-    if lat is None or lon is None:
-        st.error("Ongeldige GPS-coördinaten.")
-        return None, None, None, None, None, None, None, None
-
-    # Bepaal de tijdzone voor de locatie
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
     
-    if timezone_str is None:
-        st.error("Kan de tijdzone voor deze locatie niet vinden.")
-        return None, None, None, None, None, None, None, None
+    if not timezone_str:
+        st.error("Timezone not found for the specified location.")
+        return None, None, None, None, None, None
 
-    # API-aanroep voor de zon- en schemeringstijden
     api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     try:
         response = requests.get(api_url)
-        response.raise_for_status()
         data = response.json()
-
-        # Controleer of resultaten bestaan
+        
         if 'results' in data:
-            # Converteer UTC-tijden voor zonsopkomst, zonsondergang en schemering naar datetime
-            sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
-            sunset_utc = datetime.fromisoformat(data['results']['sunset'])
-            nautical_dawn_utc = datetime.fromisoformat(data['results']['nautical_twilight_begin'])
-            nautical_dusk_utc = datetime.fromisoformat(data['results']['nautical_twilight_end'])
-            civil_dawn_utc = datetime.fromisoformat(data['results']['civil_twilight_begin'])
-            civil_dusk_utc = datetime.fromisoformat(data['results']['civil_twilight_end'])
-
-            # Laad de lokale tijdzone
+            results = data['results']
+            times_utc = {key: datetime.fromisoformat(value) for key, value in results.items() if value}
             local_tz = pytz.timezone(timezone_str)
 
-            # Converteer UTC-tijden naar lokale tijdzone, met DST-controle
-            sunrise_local = sunrise_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            sunset_local = sunset_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            nautical_dawn_local = nautical_dawn_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            nautical_dusk_local = nautical_dusk_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            civil_dawn_local = civil_dawn_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-            civil_dusk_local = civil_dusk_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
-
-            # Controleer of DST actief is
-            dst_active = sunrise_local.dst() != timedelta(0)
-            dst_status = "DST in effect" if dst_active else "No DST in effect for this location/date"
-
-            # Geef de tijden terug, rekening houdend met DST
-            return (
-                sunrise_local.strftime('%H:%M'),
-                sunset_local.strftime('%H:%M'),
-                nautical_dawn_local.strftime('%H:%M'),
-                nautical_dusk_local.strftime('%H:%M'),
-                civil_dawn_local.strftime('%H:%M'),
-                civil_dusk_local.strftime('%H:%M'),
-                dst_status
-            )
+            sun_times = {}
+            for event, time in times_utc.items():
+                local_time = time.astimezone(local_tz)
+                is_dst = local_time.dst() != timedelta(0)
+                sun_times[event] = local_time.strftime('%H:%M') + (" (DST)" if is_dst else "")
+                
+            return (sun_times.get('sunrise'), sun_times.get('sunset'), 
+                    sun_times.get('civil_twilight_begin'), sun_times.get('civil_twilight_end'),
+                    sun_times.get('nautical_twilight_begin'), sun_times.get('nautical_twilight_end'))
         else:
-            st.error("Zonsopkomst en zonsondergang niet gevonden.")
-            return None, None, None, None, None, None, "DST status onbekend"
+            st.error("Sunrise and sunset times not found.")
+            return None, None, None, None, None, None
     except requests.RequestException as e:
-        st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
-        return None, None, None, None, None, None, "DST status onbekend"
+        st.error(f"Error fetching sunrise/sunset times: {e}")
+        return None, None, None, None, None, None
 
-# Functie om het invoerformulier weer te geven en gegevens op te slaan
+# De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
-    default_country_en = "Belgium"
-    default_country_nl = "België"
+    default_country_en = "Belgium"  
+    default_country_nl = "België"  
     default_location = "Bredene"
     selected_date = datetime.now().date() - timedelta(days=1)
 
-    # Titel en invoerformulier
     st.markdown(
-        '<h3 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">'
-        'Migration Historic Weather Data<br>and 3 day Forecast</h3>',
+        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</h1>',
         unsafe_allow_html=True
     )
 
-    with st.expander("Input Data", expanded=True):
+    with st.expander("Input Data", expanded=True):  
         lang_choice = st.radio(
             "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
@@ -110,55 +98,49 @@ def show_input_form():
         )
 
         st.session_state["language"] = lang_choice
-        countries, country_label, location_label, date_label, start_hour_label, end_hour_label = (
-            (EUROPEAN_COUNTRIES_EN, "Select Country", "Location for weather", "Date", "Start Hour", "End Hour")
-            if lang_choice == "English" else
-            (EUROPEAN_COUNTRIES_NL, "Selecteer land", "Locatie voor weergegevens", "Datum", "Beginuur", "Einduur")
-        )
-        default_country = default_country_en if lang_choice == "English" else default_country_nl
 
-        country = st.selectbox(country_label, countries, index=countries.index(default_country))
-        location = st.text_input(location_label, value=default_location)
-        selected_date = st.date_input(date_label, value=selected_date)
+        if lang_choice == "English":
+            countries = EUROPEAN_COUNTRIES_EN
+            labels = {
+                "country": "Select Country", "location": "Location for weather", 
+                "date": "Date", "start_hour": "Start Hour", "end_hour": "End Hour",
+                "sunrise": "Sunrise", "sunset": "Sunset", 
+                "civil_twilight_begin": "Civil Twilight Begins", 
+                "civil_twilight_end": "Civil Twilight Ends",
+                "nautical_twilight_begin": "Nautical Twilight Begins", 
+                "nautical_twilight_end": "Nautical Twilight Ends"
+            }
+            default_country = default_country_en
+        else:
+            countries = EUROPEAN_COUNTRIES_NL
+            labels = {
+                "country": "Selecteer land", "location": "Locatie voor weergegevens", 
+                "date": "Datum", "start_hour": "Beginuur", "end_hour": "Einduur",
+                "sunrise": "Zonsopkomst", "sunset": "Zonsondergang", 
+                "civil_twilight_begin": "Begin burgerlijke schemering", 
+                "civil_twilight_end": "Einde burgerlijke schemering",
+                "nautical_twilight_begin": "Begin nautische schemering", 
+                "nautical_twilight_end": "Einde nautische schemering"
+            }
+            default_country = default_country_nl
 
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
+        st.header(f"{labels['location']} ")
 
-        st.session_state.update({
-            "country": country,
-            "location": location,
-            "selected_date": selected_date,
-            "start_hour": start_hour,
-            "end_hour": end_hour
-        })
+        country = st.selectbox(labels['country'], countries, index=countries.index(default_country))
+        location = st.text_input(labels['location'], value=default_location)
+        selected_date = st.date_input(labels['date'], value=selected_date)
+        start_hour = st.selectbox(labels['start_hour'], [f"{hour:02d}:00" for hour in range(24)], index=8)
+        end_hour = st.selectbox(labels['end_hour'], [f"{hour:02d}:00" for hour in range(24)], index=16)
 
         latitude, longitude = get_gps_coordinates(location)
-        if latitude is not None and longitude is not None:
-            st.session_state["latitude"], st.session_state["longitude"] = latitude, longitude
-
-            sunrise, sunset, nautical_dawn, nautical_dusk, civil_dawn, civil_dusk, dst_status = get_sun_times(
-                latitude, longitude, selected_date
-            )
-
-            if sunrise and sunset and nautical_dawn and nautical_dusk and civil_dawn and civil_dusk:
-                st.session_state.update({
-                    "sunrise": sunrise,
-                    "sunset": sunset,
-                    "nautical_dawn": nautical_dawn,
-                    "nautical_dusk": nautical_dusk,
-                    "civil_dawn": civil_dawn,
-                    "civil_dusk": civil_dusk,
-                    "dst_status": dst_status
-                })
-
-                st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N, {longitude:.2f}°E")
-                st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
-                st.write(f"**Nautical Dawn**: {nautical_dawn}, **Nautical Dusk**: {nautical_dusk}")
-                st.write(f"**Civil Dawn**: {civil_dawn}, **Civil Dusk**: {civil_dusk}")
-                st.write(f"**DST Status**: {dst_status}")
-            else:
-                st.warning("Could not retrieve complete sunrise and sunset information.")
+        
+        if latitude and longitude:
+            sunrise, sunset, civil_twilight_begin, civil_twilight_end, nautical_twilight_begin, nautical_twilight_end = get_sun_times(latitude, longitude, selected_date)
+            
+            st.write(f"**{labels['country']}**: {country}, **{labels['location']}**: {location}, **GPS**: {latitude:.2f}°N, {longitude:.2f}°E")
+            if sunrise and sunset:
+                st.write(f"**{labels['sunrise']}**: {sunrise}, **{labels['sunset']}**: {sunset}")
+                st.write(f"**{labels['civil_twilight_begin']}**: {civil_twilight_begin}, **{labels['civil_twilight_end']}**: {civil_twilight_end}")
+                st.write(f"**{labels['nautical_twilight_begin']}**: {nautical_twilight_begin}, **{labels['nautical_twilight_end']}**: {nautical_twilight_end}")
         else:
-            st.error("Could not retrieve GPS coordinates for the provided location.")
-
-    return latitude, longitude, location
+            st.write(f"{labels['location']} not found.")
