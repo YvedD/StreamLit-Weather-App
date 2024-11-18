@@ -42,6 +42,7 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten voor locatie '{location}': {e}")
         return None, None
 # Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
+# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
 def get_sun_times(lat, lon, date):
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
@@ -97,6 +98,7 @@ def get_sun_times(lat, lon, date):
     except requests.RequestException as e:
         st.error(f"Error fetching sunrise/sunset times: {e}")
         return None, None, None, None, None, None
+
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
     # Standaardwaarden voor locatie en datum
@@ -105,7 +107,7 @@ def show_input_form():
     default_location = "Bredene"
     latitude = 51.2389
     longitude = 2.9724
-    selected_date = datetime.now().date() - timedelta(days=1)
+    selected_date = datetime.now().date()
 
     # Voeg enkel de titel toe boven de expander
     st.markdown(
@@ -167,13 +169,25 @@ def show_input_form():
         # Haal zonsopkomst en zonsondergang tijden op
         sunrise, sunset, civil_twilight_begin, civil_twilight_end, nautical_twilight_begin, nautical_twilight_end = get_sun_times(latitude, longitude, selected_date)
 
+        # Automatisch begin- en einduur instellen op het dichtstbijzijnde uur van de civiele schemering
+        if civil_twilight_begin and civil_twilight_end:
+            # Zet de tijden om naar datetime objecten
+            civil_twilight_begin_time = datetime.strptime(civil_twilight_begin, '%H:%M')
+            civil_twilight_end_time = datetime.strptime(civil_twilight_end, '%H:%M')
+
+            # Rond de tijden af naar het dichtstbijzijnde uur
+            start_hour = civil_twilight_begin_time.replace(minute=0, second=0, microsecond=0)
+            end_hour = civil_twilight_end_time.replace(minute=0, second=0, microsecond=0)
+
+            # Update de session_state voor begin- en einduur
+            st.session_state["start_hour"] = start_hour.strftime("%H:%M")
+            st.session_state["end_hour"] = end_hour.strftime("%H:%M")
+
         # Sla de gegevens op in st.session_state
         st.session_state["latitude"] = latitude
         st.session_state["longitude"] = longitude
         st.session_state["location"] = location
         st.session_state["selected_date"] = selected_date
-        st.session_state["start_hour"] = start_hour
-        st.session_state["end_hour"] = end_hour
         st.session_state["sunrise"] = sunrise
         st.session_state["sunset"] = sunset
         st.session_state["civil_twilight_begin"] = civil_twilight_begin
