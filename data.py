@@ -117,8 +117,8 @@ def show_data_expander():
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
         visibility = hourly_data["visibility"]
-        wind_speeds = hourly_data["wind_speed_80m"]
-        wind_directions = hourly_data["wind_direction_80m"]
+        wind_speeds = hourly_data["wind_speed_10m"]
+        wind_directions = hourly_data["wind_direction_10m"]
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
