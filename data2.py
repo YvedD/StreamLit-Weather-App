@@ -9,14 +9,14 @@ def fetch_historical_weather_data(lat, lon, date, start_hour, end_hour):
         f"?latitude={lat}&longitude={lon}"
         f"&start_date={date.strftime('%Y-%m-%d')}&end_date={date.strftime('%Y-%m-%d')}"
         "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,"
-        "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_80m,wind_direction_80m"
+        "cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_direction_10m"
         "&daily=sunrise,sunset&timezone=Europe%2FBerlin"
     )
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
-        st.write("Opgehaalde weergegevens:", data)  # Voor inspectie van de gegevens
+        #st.write("Opgehaalde weergegevens:", data)  # Voor inspectie van de gegevens
         return data
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van weergegevens: {e}")
@@ -35,9 +35,9 @@ def get_wind_direction(degrees, language="Nederlands"):
     # Nederlandse termen voor windrichtingen
     directions_dutch = [
         ("N", 0), ("NNO", 22.5), ("NO", 45), ("ONO", 67.5),
-        ("O", 90), ("ZO", 112.5), ("Z", 135), ("ZZO", 157.5),
-        ("ZSW", 180), ("SW", 202.5), ("WZW", 225), ("W", 247.5),
-        ("WNW", 270), ("NW", 292.5), ("NNW", 315)
+        ("O", 90), ("OZO", 112.5), ("ZO", 135), ("ZZO", 157.5),
+        ("Z", 180), ("ZZW", 202.5), ("ZW", 225), ("WZW", 247.5),
+        ("W", 270), ("WNW", 292.5), ("NW", 315), ("NNW", 337.5)
     ]
     
     directions = directions_dutch if language == "Nederlands" else directions_english
@@ -73,6 +73,11 @@ def wind_speed_to_beaufort(speed):
         return 10
     return 11  # Orkaan
 
+# Functie om de zichtbaarheid om te rekenen naar kilometers en af te ronden op 0.5 km
+def convert_visibility(visibility_meters):
+    visibility_km = visibility_meters / 1000  # Converteer naar kilometers
+    return round(visibility_km * 2) / 2  # Afgerond op 0.5 km
+
 # Functie om de API-gegevens te tonen in een expander in de Streamlit UI
 def show_data_expander():
     # Haal de taalkeuze op uit de session_state
@@ -98,8 +103,8 @@ def show_data_expander():
     # Zonsopgang en zonsondergang instellen
     sunrise = datetime.fromisoformat(weather_data["daily"]["sunrise"][0]).strftime("%H:%M")
     sunset = datetime.fromisoformat(weather_data["daily"]["sunset"][0]).strftime("%H:%M")
-    start_hour = sunrise if start_hour == "08:00" else start_hour
-    end_hour = sunset if end_hour == "16:00" else end_hour
+    start_hour = sunrise if start_hour == "00:00" else start_hour
+    end_hour = sunset if end_hour == "00:00" else end_hour
 
     # Toon weergegevens in een expander
     with st.expander("Weergegevens voor deze locatie en tijdspanne"):
@@ -111,8 +116,9 @@ def show_data_expander():
         cloudcover_low = hourly_data["cloud_cover_low"]
         cloudcover_mid = hourly_data["cloud_cover_mid"]
         cloudcover_high = hourly_data["cloud_cover_high"]
-        wind_speeds = hourly_data["wind_speed_80m"]
-        wind_directions = hourly_data["wind_direction_80m"]
+        visibility = hourly_data["visibility"]
+        wind_speeds = hourly_data["wind_speed_10m"]
+        wind_directions = hourly_data["wind_direction_10m"]
 
         # Tonen van weergegevens per uur binnen geselecteerde periode
         for i, time in enumerate(times):
@@ -122,11 +128,13 @@ def show_data_expander():
                 wind_direction = get_wind_direction(wind_directions[i], language)
                 # Zet windsnelheid om naar Beaufort schaal
                 beaufort = wind_speed_to_beaufort(wind_speeds[i])
+                # Zet zichtbaarheid om naar kilometers en afgerond op 0.5 km
+                visibility_km = convert_visibility(visibility[i])
                 
                 # Weergegevens formatten en weergeven
                 weather_info = (
-                    f"{hour}: Temp: {temperatures[i]:.1f}°C - Neerslag: {precipitation[i]:.1f} mm - "
-                    f"Bewolk. Tot: {cloudcover[i]}% (L: {cloudcover_low[i]}%, M: {cloudcover_mid[i]}%, H: {cloudcover_high[i]}%) - "
-                    f"Wind: {wind_direction} {beaufort} Bf"
+                    f"{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
+                    f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
+                    f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility_km} km"
                 )
                 st.code(weather_info)
