@@ -1,4 +1,3 @@
-#invoer.py
 import streamlit as st
 from datetime import datetime, timedelta
 import requests
@@ -131,9 +130,7 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23)
-
+        
         # Verkrijg GPS-coördinaten voor de locatie
         latitude, longitude = get_gps_coordinates(location)
 
@@ -142,6 +139,10 @@ def show_input_form():
             sunrise, sunset = get_sun_times(latitude, longitude, selected_date)
         else:
             sunrise = sunset = None
+        
+        # Stel standaard start- en einduren in op basis van zonsopkomst en zonsondergang
+        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0 if sunrise is None else int(sunrise.split(":")[0]))
+        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23 if sunset is None else int(sunset.split(":")[0]))
 
         # Sla alle benodigde gegevens op in de session_state
         st.session_state["country"] = country
@@ -156,11 +157,4 @@ def show_input_form():
         st.session_state["language"] = lang_choice
 
         # Toon locatiegegevens en zonsopkomst/zondondergang tijden
-        if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
-                st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
-        else:
-            st.write(f"{location_label} not found.")
-
-    return latitude, longitude, location
+       
