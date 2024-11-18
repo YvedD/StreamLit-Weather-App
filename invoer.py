@@ -207,14 +207,9 @@ def show_input_form():
         # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
         st.write(f"**{country}**, **{location}**, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
         st.write(f"**{start_hour_label}**: {start_hour_input.strftime('%H:%M')}, **{end_hour_label}**: {end_hour_input.strftime('%H:%M')} ")
-        #st.write(f"**{end_hour_label}**: {end_hour_input.strftime('%H:%M')}")
-
         # Toon overige tijden voor controle
-        st.write(f"**{sunrise_label}**: {sunrise}")
-        st.write(f"**{sunset_label}**: {sunset}")
-        st.write(f"**{civil_twilight_label} Begin**: {civil_twilight_begin}")
-        st.write(f"**{civil_twilight_label} End**: {civil_twilight_end}")
-        st.write(f"**{nautical_twilight_label} Begin**: {nautical_twilight_begin}")
-        st.write(f"**{nautical_twilight_label} End**: {nautical_twilight_end}")
+        st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
+        st.write(f"**{civil_twilight_label} Begin**: {civil_twilight_begin}, **{civil_twilight_label} End**: {civil_twilight_end}")
+        st.write(f"**{nautical_twilight_label} Begin**: {nautical_twilight_begin}, **{nautical_twilight_label} End**: {nautical_twilight_end}")
 
         return latitude, longitude, location
