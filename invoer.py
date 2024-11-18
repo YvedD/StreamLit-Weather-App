@@ -206,7 +206,7 @@ def show_input_form():
 
         # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
         st.write(f"**{country}**, **{location}**, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
-        st.write(f"**{start_hour_label}**: {start_hour_input.strftime('%H:%M')}")
+        st.write(f"**{start_hour_label}**: {start_hour_input.strftime('%H:%M')}, **{end_hour_label}**: {end_hour_input.strftime('%H:%M')} ")
         st.write(f"**{end_hour_label}**: {end_hour_input.strftime('%H:%M')}")
 
         # Toon overige tijden voor controle
