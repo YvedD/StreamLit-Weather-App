@@ -146,13 +146,3 @@ def show_data_expander():
         else:
             # Toon alle regels in één blok
             st.code("\n".join(weather_info_lines))
-# Geneste expander voor sessiegegevens
-with st.expander("Sessiedata: Locatie en Tijd"):
-    st.write(f"**Locatie**: {location}")
-    st.write(f"**Latitude**: {lat}")
-    st.write(f"**Longitude**: {lon}")
-    st.write(f"**Geselecteerde Datum**: {date.strftime('%d-%m-%Y')}")
-    st.write(f"**Zonsopgang**: {sunrise}")
-    st.write(f"**Zonsondergang**: {sunset}")
-    st.write(f"**Startuur**: {start_hour}")
-    st.write(f"**Einduur**: {end_hour}")
