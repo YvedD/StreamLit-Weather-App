@@ -79,7 +79,6 @@ def get_sun_times(lat, lon, date):
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
         return None, None
 
-# Functie voor invoerformulier
 def show_input_form():
     # Standaardwaarden
     default_country_en = "Belgium"  
@@ -162,3 +161,6 @@ def show_input_form():
         st.session_state["sunrise"] = sunrise
         st.session_state["sunset"] = sunset
         st.session_state["language"] = lang_choice
+
+    # Retourneer de waarden
+    return latitude, longitude, location
