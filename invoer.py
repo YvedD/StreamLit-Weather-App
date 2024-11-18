@@ -160,3 +160,4 @@ def show_input_form():
             st.write(f"{location_label} not found.")
 
     return latitude, longitude, location
+
