@@ -45,36 +45,53 @@ def get_gps_coordinates(location):
 def get_sun_times(lat, lon, date):
     if lat is None or lon is None:
         st.error("Ongeldige GPS-coördinaten.")
-        return None, None
+        return None, None, None, None  # Extra return-waarden voor nautische schemering
     
+    # Bepaal de tijdzone van de opgegeven locatie
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
     
     if timezone_str is None:
         st.error("Kan de tijdzone voor deze locatie niet vinden.")
-        return None, None
+        return None, None, None, None
 
+    # Sunrise-sunset API-aanroep voor de opgegeven datum en locatie
     api_url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     try:
         response = requests.get(api_url)
         response.raise_for_status()
         data = response.json()
+        
+        # Controleer of er resultaten zijn
         if 'results' in data:
+            # Converteer UTC-tijden voor sunrise, sunset, nautische dawn en nautische dusk naar datetime-objecten
             sunrise_utc = datetime.fromisoformat(data['results']['sunrise'])
             sunset_utc = datetime.fromisoformat(data['results']['sunset'])
+            nautical_dawn_utc = datetime.fromisoformat(data['results']['nautical_twilight_begin'])
+            nautical_dusk_utc = datetime.fromisoformat(data['results']['nautical_twilight_end'])
 
-            # Converteer naar lokale tijdzone
+            # Laad de lokale tijdzone
             local_tz = pytz.timezone(timezone_str)
-            sunrise_local = sunrise_utc.astimezone(local_tz)
-            sunset_local = sunset_utc.astimezone(local_tz)
+            
+            # Converteer UTC-tijden naar lokale tijdzone, rekening houdend met DST
+            sunrise_local = sunrise_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+            sunset_local = sunset_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+            nautical_dawn_local = nautical_dawn_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
+            nautical_dusk_local = nautical_dusk_utc.replace(tzinfo=pytz.utc).astimezone(local_tz)
 
-            return sunrise_local.strftime('%H:%M'), sunset_local.strftime('%H:%M')
+            # Geef de exacte tijden terug zonder afronding, rekening houdend met DST
+            return (
+                sunrise_local.strftime('%H:%M'), 
+                sunset_local.strftime('%H:%M'), 
+                nautical_dawn_local.strftime('%H:%M'), 
+                nautical_dusk_local.strftime('%H:%M')
+            )
         else:
             st.error("Zonsopkomst en zonsondergang niet gevonden.")
-            return None, None
+            return None, None, None, None
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van zonsopkomst/zondondergang tijden: {e}")
-        return None, None
+        return None, None, None, None
 
 # Functie voor invoerformulier
 def show_input_form():
@@ -131,9 +148,7 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=0)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=23)
-
+        
         # Verkrijg GPS-coördinaten voor de locatie
         latitude, longitude = get_gps_coordinates(location)
 
@@ -142,6 +157,13 @@ def show_input_form():
             sunrise, sunset = get_sun_times(latitude, longitude, selected_date)
         else:
             sunrise = sunset = None
+        
+        # Stel standaard start- en einduren in op basis van zonsopkomst en zonsondergang
+        start_hour = sunrise if sunrise else "00:00"
+        end_hour = sunset if sunset else "23:00"
+
+        st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=int(start_hour.split(":")[0]))
+        st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=int(end_hour.split(":")[0]))
 
         # Sla alle benodigde gegevens op in de session_state
         st.session_state["country"] = country
@@ -158,9 +180,13 @@ def show_input_form():
         # Toon locatiegegevens en zonsopkomst/zondondergang tijden
         if latitude and longitude:
             st.write(f"**Country**: {country}, **Location**: {location}, **GPS**: {latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
-                st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
+    
+        if sunrise and sunset and nautical_dawn_local and nautical_dusk_local:
+            st.write(f"**Sunrise**: {sunrise_local.strftime('%H:%M')}, **Sunset**: {sunset_local.strftime('%H:%M')}")
+            st.write(f"**Nautical Dawn**: {nautical_dawn_local.strftime('%H:%M')}, **Nautical Dusk**: {nautical_dusk_local.strftime('%H:%M')}")
+
         else:
             st.write(f"{location_label} not found.")
 
+    # Retourneer de waarden
     return latitude, longitude, location
