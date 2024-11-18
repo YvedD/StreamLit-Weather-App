@@ -16,24 +16,6 @@ def main():
 
     # Altijd de data-expander tonen (zelfstandig van de locatie)
     show_data_expander()  # Toon de data-expander voor de opgegeven locatie
-    # Geneste expander voor sessiegegevens
-    # Haal benodigde sessiegegevens op
-    lat = st.session_state.get("latitude")
-    lon = st.session_state.get("longitude")
-    location = st.session_state.get("location")
-    date = st.session_state.get("selected_date")
-    start_hour = st.session_state.get("start_hour", "08:00")
-    end_hour = st.session_state.get("end_hour", "16:00")
-
-    with st.expander("Sessiedata: Locatie en Tijd"):
-        st.write(f"**Locatie**: {location}")
-        st.write(f"**Latitude**: {lat}")
-        st.write(f"**Longitude**: {lon}")
-        st.write(f"**Geselecteerde Datum**: {date.strftime('%d-%m-%Y')}")
-        st.write(f"**Zonsopgang**: {sunrise}")
-        st.write(f"**Zonsondergang**: {sunset}")
-        st.write(f"**Startuur**: {start_hour}")
-        st.write(f"**Einduur**: {end_hour}")
 
 if __name__ == "__main__":
     main()
