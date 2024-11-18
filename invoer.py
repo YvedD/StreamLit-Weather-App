@@ -175,3 +175,4 @@ def show_input_form():
 
     # Retourneer de waarden
     return latitude, longitude, location
+    
