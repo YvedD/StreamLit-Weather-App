@@ -183,8 +183,8 @@ def show_input_form():
             st.session_state["end_hour"] = end_hour.strftime("%H:%M")
 
         # Voeg invoervelden toe voor beginuur en einduur, met de mogelijkheid om handmatig aan te passen
-        start_hour = st.time_input(start_hour_label, value=start_hour)
-        end_hour = st.time_input(end_hour_label, value=end_hour)
+        start_hour_input = st.time_input(start_hour_label, value=start_hour)
+        end_hour_input = st.time_input(end_hour_label, value=end_hour)
 
         # Sla de gegevens op in st.session_state
         st.session_state["latitude"] = latitude
@@ -197,13 +197,18 @@ def show_input_form():
         st.session_state["civil_twilight_end"] = civil_twilight_end
         st.session_state["nautical_twilight_begin"] = nautical_twilight_begin
         st.session_state["nautical_twilight_end"] = nautical_twilight_end
-        st.session_state["start_hour"] = start_hour.strftime("%H:%M")
-        st.session_state["end_hour"] = end_hour.strftime("%H:%M")
+        st.session_state["start_hour"] = start_hour_input.strftime("%H:%M")
+        st.session_state["end_hour"] = end_hour_input.strftime("%H:%M")
+
+        # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
+        st.write(f"**Start Hour (Beginuur)**: {start_hour_input.strftime('%H:%M')}")
+        st.write(f"**End Hour (Einduur)**: {end_hour_input.strftime('%H:%M')}")
 
         # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
         if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **Latitude**: {latitude}, **Longitude**: {longitude}")
-            st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
+            st.write(f"**Country**: {country}, **Location**: {location}")
+            st.write(f"**Latitude**: {latitude}, **Longitude**: {longitude}")
+            st.write(f"**Sunrise**: {sunrise}, **Sunset**: {sunset}")
             st.write(f"**Civil Twilight Begin**: {civil_twilight_begin}, **Civil Twilight End**: {civil_twilight_end}")
             st.write(f"**Nautical Twilight Begin**: {nautical_twilight_begin}, **Nautical Twilight End**: {nautical_twilight_end}")
 
