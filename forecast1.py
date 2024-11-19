@@ -6,6 +6,7 @@ import os
 
 # Haal de API-sleutel op uit de omgevingsvariabelen
 api_key = os.getenv("API_KEY_OPENWEATHERMAPS")
+st.write("API Key: ", api_key)
 
 # Controleer of de API-sleutel is opgehaald
 if api_key:
