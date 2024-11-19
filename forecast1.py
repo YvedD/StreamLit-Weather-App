@@ -2,7 +2,6 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 from datetime import datetime, timedelta
-from folium import IFrame
 
 def show_forecast1_expander():
     # Bepaal de datum van "vandaag + 1 dag"
@@ -89,26 +88,23 @@ def show_forecast1_expander():
             name="Temperatuurkaart",
             overlay=True,
             control=True,
-            opacity=0.9  # Verhoogde opaciteit voor helderdere kleuren
+            opacity=2.0  # Verhoogde opaciteit voor helderdere kleuren
         ).add_to(m)
-
-        # Voeg een legende toe voor de temperatuurkaart
-        legend_html = """
-        <div style="position: fixed; 
-                    bottom: 50px; left: 50px; width: 160px; height: 100px;
-                    background-color: white; border:2px solid grey; z-index:9999;
-                    font-size:14px; padding: 10px;">
-            <strong>Temperatuur (°C)</strong><br>
-            <i style="background: #0000ff; width: 20px; height: 20px; display: inline-block;"></i> -10°C<br>
-            <i style="background: #00ffff; width: 20px; height: 20px; display: inline-block;"></i> 0°C<br>
-            <i style="background: #00ff00; width: 20px; height: 20px; display: inline-block;"></i> 10°C<br>
-            <i style="background: #ffff00; width: 20px; height: 20px; display: inline-block;"></i> 20°C<br>
-            <i style="background: #ff0000; width: 20px; height: 20px; display: inline-block;"></i> 30°C<br>
-        </div>
-        """
-        
-        # Voeg de legende toe aan de kaart
-        m.get_root().html.add_child(folium.Element(legend_html))
 
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
+
+        # Legende onder de kaart toevoegen via st.markdown
+        legend_html = """
+        <div style="width: 100%; height: auto; padding: 10px; background-color: white; border: 1px solid #ccc; border-radius: 5px;">
+            <strong>Temperature Legend (°C)</strong><br>
+            <div><i style="background: #0000ff; width: 20px; height: 20px; display: inline-block;"></i> -10°C</div>
+            <div><i style="background: #00ffff; width: 20px; height: 20px; display: inline-block;"></i> 0°C</div>
+            <div><i style="background: #00ff00; width: 20px; height: 20px; display: inline-block;"></i> 10°C</div>
+            <div><i style="background: #ffff00; width: 20px; height: 20px; display: inline-block;"></i> 20°C</div>
+            <div><i style="background: #ff0000; width: 20px; height: 20px; display: inline-block;"></i> 30°C</div>
+        </div>
+        """
+        
+        # Voeg de legende onder de kaart toe in Streamlit
+        st.markdown(legend_html, unsafe_allow_html=True)
