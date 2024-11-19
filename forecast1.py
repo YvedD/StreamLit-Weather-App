@@ -88,23 +88,19 @@ def show_forecast1_expander():
             name="Temperatuurkaart",
             overlay=True,
             control=True,
-            opacity=2.0  # Verhoogde opaciteit voor helderdere kleuren
+            opacity=0.9  # Verhoogde opaciteit voor helderdere kleuren
         ).add_to(m)
 
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-        # Legende onder de kaart toevoegen via st.markdown
+        # Legende als lange gradient balk onder de kaart
         legend_html = """
-        <div style="width: 100%; height: auto; padding: 10px; background-color: white; border: 1px solid #ccc; border-radius: 5px;">
-            <strong>Temperature Legend (°C)</strong><br>
-            <div><i style="background: #0000ff; width: 20px; height: 20px; display: inline-block;"></i> -10°C</div>
-            <div><i style="background: #00ffff; width: 20px; height: 20px; display: inline-block;"></i> 0°C</div>
-            <div><i style="background: #00ff00; width: 20px; height: 20px; display: inline-block;"></i> 10°C</div>
-            <div><i style="background: #ffff00; width: 20px; height: 20px; display: inline-block;"></i> 20°C</div>
-            <div><i style="background: #ff0000; width: 20px; height: 20px; display: inline-block;"></i> 30°C</div>
+        <div style="width: 100%; height: 25px; background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000); border-radius: 10px; margin-top: 10px;">
+            <span style="position: absolute; left: 0; top: 0; font-size: 12px; color: #ffffff;">-25°C</span>
+            <span style="position: absolute; right: 0; top: 0; font-size: 12px; color: #ffffff;">+40°C</span>
         </div>
         """
         
-        # Voeg de legende onder de kaart toe in Streamlit
+        # Voeg de legende toe onder de kaart in Streamlit
         st.markdown(legend_html, unsafe_allow_html=True)
