@@ -99,7 +99,6 @@ def show_forecast1_expander():
             <div style="display: flex; justify-content: space-between; width: 100%; font-size: 14px; color: #000000; margin-bottom: 5px;">
                 <span>-40°C</span>
                 <span>0°C</span>
-                <span>+5°C</span>
                 <span>+40°C</span>
             </div>
             <div style="display: flex; width: 100%;">
