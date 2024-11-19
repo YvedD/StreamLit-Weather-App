@@ -94,36 +94,37 @@ def show_forecast1_expander():
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-        # Legende als twee aparte gradient balken voor koud en warm
-        legend_html = """
-        <div style="display: flex; justify-content: space-between; width: 100%; margin-top: 20px;">
-        
-            <!-- Eerste balk voor koude temperaturen van -40°C tot 0°C -->
-            <div style="width: 48%; height: 10px; background: linear-gradient(to right, 
-                rgb(212, 185, 215),     /* -40°C Paarsachtig */
-                rgb(194, 226, 222)      /* 0°C Lichtblauw */
-            ); border-radius: 10px; position: relative;">
-                <span style="position: absolute; left: 0; top: 18px; font-size: 12px; color: #000000;">-40°C</span>
-                <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">-30°C</span>
-                <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">-20°C</span>
-                <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">-10°C</span>
-                <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">0°C</span>
-            </div>
-        
-            <!-- Tweede balk voor warme temperaturen van 5°C tot 40°C -->
-            <div style="width: 48%; height: 10px; background: linear-gradient(to right, 
-                rgb(207, 244, 188),     /* 5°C Groenig */
-                rgb(245, 209, 176)      /* 40°C Hittegeel */
-            ); border-radius: 10px; position: relative;">
-                <span style="position: absolute; left: 0; top: 18px; font-size: 12px; color: #000000;">+5°C</span>
-                <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">+10°C</span>
-                <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">+20°C</span>
-                <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">+30°C</span>
-                <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">+40°C</span>
-            </div>
-        
-        </div>
-        """
-        
-        # Voeg de legende toe onder de kaart in Streamlit
-        st.markdown(legend_html, unsafe_allow_html=True)
+# Legende als twee aparte gradient balken voor koud en warm
+legend_html = """
+<div style="display: flex; justify-content: space-between; width: 100%; margin-top: 20px;">
+
+    #<!-- Eerste balk voor koude temperaturen van -40°C tot 0°C -->
+    <div style="width: 48%; height: 10px; background: linear-gradient(to right, 
+        rgb(212, 185, 215),     #/* -40°C Paarsachtig */
+        rgb(194, 226, 222)      #/* 0°C Lichtblauw */
+    ); border-radius: 10px; position: relative;">
+        <span style="position: absolute; left: 0; top: 18px; font-size: 12px; color: #000000;">-40°C</span>
+        <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">-30°C</span>
+        <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">-20°C</span>
+        <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">-10°C</span>
+        <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">0°C</span>
+    </div>
+
+    #<!-- Tweede balk voor warme temperaturen van 5°C tot 40°C -->
+    <div style="width: 48%; height: 10px; background: linear-gradient(to right, 
+        rgb(207, 244, 188),     #/* 5°C Groenig */
+        rgb(245, 209, 176)      #/* 40°C Hittegeel */
+    ); border-radius: 10px; position: relative;">
+        <span style="position: absolute; left: 0; top: 18px; font-size: 12px; color: #000000;">+5°C</span>
+        <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">+10°C</span>
+        <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">+20°C</span>
+        <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">+30°C</span>
+        <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">+40°C</span>
+    </div>
+
+</div>
+"""
+
+# Voeg de legende toe onder de kaart in Streamlit
+st.markdown(legend_html, unsafe_allow_html=True)
+
