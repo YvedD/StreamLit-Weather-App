@@ -9,7 +9,7 @@ api_key = os.getenv("API_KEY_OPENWEATHERMAPS")
 
 # Controleer of de API-sleutel is opgehaald
 if api_key:
-    st.write("API Key is geladen.")  # Dit is optioneel om te testen
+    st.write("API Key is geladen : {api_key}")  # Dit is optioneel om te testen
 else:
     st.write("API Key is niet gevonden!")  # Dit helpt bij troubleshooting
     
