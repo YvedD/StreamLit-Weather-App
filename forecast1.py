@@ -94,11 +94,11 @@ def show_forecast1_expander():
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-        # Legende als lange gradient balk onder de kaart
+        # Legende als lange gradient balk onder de kaart met leesbare tekst
         legend_html = """
         <div style="width: 100%; height: 25px; background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000); border-radius: 10px; margin-top: 10px;">
-            <span style="position: absolute; left: 0; top: 0; font-size: 12px; color: #ffffff;">-25°C</span>
-            <span style="position: absolute; right: 0; top: 0; font-size: 12px; color: #ffffff;">+40°C</span>
+            <span style="position: absolute; left: 0; top: 0; font-size: 12px; color: #000000;">-25°C</span>
+            <span style="position: absolute; right: 0; top: 0; font-size: 12px; color: #000000;">+40°C</span>
         </div>
         """
         
