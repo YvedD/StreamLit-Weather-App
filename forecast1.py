@@ -94,20 +94,20 @@ def show_forecast1_expander():
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-# Legende als lange gradient balk met aangepaste kleuren en temperatuurverdeling
-legend_html = """
-<div style="width: 100%; height: 10px; background: linear-gradient(to right, rgb(212, 185, 215), rgb(194, 226, 222), rgb(245, 209, 176)); border-radius: 10px; margin-top: 10px; position: relative;">
-    <span style="position: absolute; left: 0; top: -20px; font-size: 12px; color: #000000;">-40°C</span>
-    <span style="position: absolute; left: 12%; top: -20px; font-size: 12px; color: #000000;">-30°C</span>
-    <span style="position: absolute; left: 24%; top: -20px; font-size: 12px; color: #000000;">-20°C</span>
-    <span style="position: absolute; left: 36%; top: -20px; font-size: 12px; color: #000000;">-10°C</span>
-    <span style="position: absolute; left: 48%; top: -20px; font-size: 12px; color: #000000;">0°C</span>
-    <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
-    <span style="position: absolute; left: 72%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
-    <span style="position: absolute; left: 84%; top: -20px; font-size: 12px; color: #000000;">+30°C</span>
-    <span style="position: absolute; right: 0; top: -20px; font-size: 12px; color: #000000;">+40°C</span>
-</div>
-"""
-
-# Voeg de legende toe onder de kaart in Streamlit
-st.markdown(legend_html, unsafe_allow_html=True)
+        # Legende als lange gradient balk met aangepaste kleuren en temperatuurverdeling
+        legend_html = """
+        <div style="width: 100%; height: 10px; background: linear-gradient(to right, rgb(212, 185, 215), rgb(194, 226, 222), rgb(245, 209, 176)); border-radius: 10px; margin-top: 10px; position: relative;">
+            <span style="position: absolute; left: 0; top: -20px; font-size: 12px; color: #000000;">-40°C</span>
+            <span style="position: absolute; left: 12%; top: -20px; font-size: 12px; color: #000000;">-30°C</span>
+            <span style="position: absolute; left: 24%; top: -20px; font-size: 12px; color: #000000;">-20°C</span>
+            <span style="position: absolute; left: 36%; top: -20px; font-size: 12px; color: #000000;">-10°C</span>
+            <span style="position: absolute; left: 48%; top: -20px; font-size: 12px; color: #000000;">0°C</span>
+            <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
+            <span style="position: absolute; left: 72%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
+            <span style="position: absolute; left: 84%; top: -20px; font-size: 12px; color: #000000;">+30°C</span>
+            <span style="position: absolute; right: 0; top: -20px; font-size: 12px; color: #000000;">+40°C</span>
+        </div>
+        """
+        
+        # Voeg de legende toe onder de kaart in Streamlit
+        st.markdown(legend_html, unsafe_allow_html=True)
