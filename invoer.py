@@ -110,7 +110,7 @@ def show_input_form():
 
     # Voeg enkel de titel toe boven de expander
     st.markdown(
-        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</h1>',
+        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Bird Migration Weather Data / Vogeltrek Weersgegevens</h1>',
         unsafe_allow_html=True
     )
 
