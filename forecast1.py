@@ -96,7 +96,7 @@ def show_forecast1_expander():
 
         legend_html = """
         <div style="width: 100%; margin-top: 20px;">
-            <div style="display: flex; justify-content: space-between; width: 100%; font-size: 14px; color: #000000; margin-bottom: 5px;">
+            <div style="display: flex; justify-content: space-between; width: 50%; font-size: 14px; color: #000000; margin-bottom: 5px;">
                 <span>-40°C</span>
                 <span>-30°C</span>
                 <span>-20°C</span>
