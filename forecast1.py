@@ -84,7 +84,7 @@ def show_forecast1_expander():
 
         # Voeg een lichte basiskaart toe voor beter contrast
         folium.TileLayer(
-            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png?lang=en',
             attr='© OpenStreetMap contributors',
             name='Lichte basiskaart',
             control=False
