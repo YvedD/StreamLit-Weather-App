@@ -10,7 +10,7 @@ def show_map_expander():
     location = st.session_state.get("location", "Unknown")
 
     # Toon een kaart in een expander
-    with st.expander("Map", expanded=True):
+    with st.expander("**Map/Kaart**", expanded=True):
         # Creëer de folium kaart
         m = folium.Map(location=[latitude, longitude], zoom_start=12)
 
