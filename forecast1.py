@@ -2,6 +2,7 @@ import streamlit as st
 import folium
 import numpy as np
 import matplotlib.pyplot as plt
+import matplotlib.colors  # Zorg ervoor dat deze module is geïmporteerd
 from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 
@@ -41,7 +42,7 @@ def show_forecast1_expander():
                     bounds=[[lat - 0.04, lon - 0.04], [lat + 0.04, lon + 0.04]],
                     color=None,
                     fill=True,
-                    fill_color=matplotlib.colors.to_hex(color),
+                    fill_color=matplotlib.colors.to_hex(color),  # Corrigeer deze regel
                     fill_opacity=0.7
                 ).add_to(m)
 
