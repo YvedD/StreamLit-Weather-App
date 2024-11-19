@@ -134,5 +134,3 @@ def show_forecast1_expander():
         """
         st.markdown(legend_html, unsafe_allow_html=True)
         st.markdown("<br><br>", unsafe_allow_html=True)  # Voegt witruimte toe
-
-
