@@ -16,6 +16,8 @@ def main():
 
     # Altijd de data-expander tonen (zelfstandig van de locatie)
     show_data_expander()  # Toon de data-expander voor de opgegeven locatie
-
+    #toon een weerkaart (test)!
+    show_forecast1_expander()
+    
 if __name__ == "__main__":
     main()
