@@ -63,7 +63,7 @@ def show_forecast1_expander():
             "Verenigd Koninkrijk": [55.3781, -3.4360],
             "Vaticaanstad": [41.9029, 12.4534]
         },
-        "English": {
+        "Engels": {
             "Belgium": [50.8503, 4.3517],
             "Albania": [41.1533, 20.1683],
             "Andorra": [42.5078, 1.5211],
