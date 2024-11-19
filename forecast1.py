@@ -98,11 +98,11 @@ def show_forecast1_expander():
             name="Temperatuurkaart",
             overlay=True,
             control=True,
-            opacity=3.0  # Verhoogde opaciteit voor helderdere kleuren
+            opacity=0.5  # Verhoogde opaciteit voor helderdere kleuren
         ).add_to(m)
 
         # Weergeef de kaart binnen Streamlit met st_folium
-        st_folium(m, width=700, height=500)
+        st_folium(m, width=700, height=700)
 
         legend_html = """
         <div style="width: 100%; margin-top: 10px;">
