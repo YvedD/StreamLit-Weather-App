@@ -105,7 +105,7 @@ def show_forecast1_expander():
         st_folium(m, width=700, height=500)
 
         legend_html = """
-        <div style="width: 100%; margin-top: 20px;">
+        <div style="width: 100%; margin-top: 10px;">
             <div style="display: flex; justify-content: space-between; width: 100%; font-size: 14px; color: #000000; margin-bottom: 5px;">
                 <span>-40°C</span>
                 <span>-30°C</span>
@@ -117,7 +117,7 @@ def show_forecast1_expander():
                 <span>+30°C</span>
             </div>
             <div style="display: flex; width: 100%;">
-                <div style="width: 100%; height: 10px; background: linear-gradient(to right, 
+                <div style="width: 100%; height: 15px; background: linear-gradient(to right, 
                     rgba(130, 22, 146, 1),
                     rgba(130, 87, 219, 1),
                     rgba(32, 140, 236, 1),
@@ -133,3 +133,6 @@ def show_forecast1_expander():
         </div>
         """
         st.markdown(legend_html, unsafe_allow_html=True)
+        st.markdown("<br><br>", unsafe_allow_html=True)  # Voegt witruimte toe
+
+
