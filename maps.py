@@ -12,7 +12,7 @@ def show_map_expander():
     # Toon een kaart in een expander
     with st.expander("**Map/Kaart**", expanded=True):
         # Creëer de folium kaart
-        m = folium.Map(location=[latitude, longitude], zoom_start=12)
+        m = folium.Map(location=[latitude, longitude], zoom_start=10)
 
         # Voeg een marker toe voor de locatie
         folium.Marker([latitude, longitude], popup=location).add_to(m)
