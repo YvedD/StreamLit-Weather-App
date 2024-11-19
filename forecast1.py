@@ -93,7 +93,7 @@ def show_forecast1_expander():
         ).add_to(m)
 
         # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
-        tile_url = f"https://tile.openweathermap.org/map/temp_new/{{z}}/{{x}}/{{y}}.png?appid={api_key}"
+        tile_url = f"https://tile.openweathermap.org/map/temp_new/{{z}}/{{x}}/{{y}}.png?appid=api_key"
         folium.TileLayer(
             tiles=tile_url,
             attr='Map data © OpenWeatherMap',
