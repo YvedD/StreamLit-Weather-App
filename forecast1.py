@@ -94,17 +94,17 @@ def show_forecast1_expander():
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-        # Legende als lange gradient balk met de tekst boven de kaart
+        # Legende als lange gradient balk met aangepaste kleuren en temperatuurverdeling
         legend_html = """
-        <div style="width: 100%; height: 10px; background: linear-gradient(to right, #0000ff, #00ffff, #00ff00, #ffff00, #ff0000); border-radius: 10px; margin-top: 10px; position: relative;">
-            <span style="position: absolute; left: 0; top: -20px; font-size: 12px; color: #000000;">-25°C</span>
-            <span style="position: absolute; left: 20%; top: -20px; font-size: 12px; color: #000000;">-5°C</span>
-            <span style="position: absolute; left: 40%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
-            <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
-            <span style="position: absolute; left: 80%; top: -20px; font-size: 12px; color: #000000;">+30°C</span>
+        <div style="width: 100%; height: 10px; background: linear-gradient(to right, rgb(212, 185, 215), rgb(245, 209, 176)); border-radius: 10px; margin-top: 10px; position: relative;">
+            <span style="position: absolute; left: 0; top: -20px; font-size: 12px; color: #000000;">-40°C</span>
+            <span style="position: absolute; left: 20%; top: -20px; font-size: 12px; color: #000000;">-30°C</span>
+            <span style="position: absolute; left: 40%; top: -20px; font-size: 12px; color: #000000;">-20°C</span>
+            <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
+            <span style="position: absolute; left: 80%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
             <span style="position: absolute; right: 0; top: -20px; font-size: 12px; color: #000000;">+40°C</span>
         </div>
         """
-        
+
         # Voeg de legende toe onder de kaart in Streamlit
         st.markdown(legend_html, unsafe_allow_html=True)
