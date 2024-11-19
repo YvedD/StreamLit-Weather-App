@@ -29,11 +29,11 @@ def show_forecast1_expander():
         # Maak de Folium-kaart aan
         m = folium.Map(location=coords, zoom_start=6)
 
-        # Voeg een lichte basiskaart toe voor beter contrast
+        # Donkere basiskaart
         folium.TileLayer(
-            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-            attr='© OpenStreetMap contributors',
-            name='Lichte basiskaart',
+            tiles='https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+            attr='© CartoDB',
+            name='Donkere basiskaart',
             control=False
         ).add_to(m)
 
