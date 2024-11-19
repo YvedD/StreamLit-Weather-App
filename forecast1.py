@@ -29,7 +29,15 @@ def show_forecast1_expander():
         # Maak de Folium-kaart aan
         m = folium.Map(location=coords, zoom_start=6)
 
-        # Voeg de OpenWeatherMap temperatuurlaag toe
+        # Voeg een lichte basiskaart toe voor beter contrast
+        folium.TileLayer(
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attr='© OpenStreetMap contributors',
+            name='Lichte basiskaart',
+            control=False
+        ).add_to(m)
+
+        # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
         tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=54fb4ec132c9baed8b35a4bac2b9f9e1"
         folium.TileLayer(
             tiles=tile_url,
@@ -37,9 +45,8 @@ def show_forecast1_expander():
             name="Temperatuurkaart",
             overlay=True,
             control=True,
-            opacity=0.5
+            opacity=0.9  # Verhoogde opaciteit voor helderdere kleuren
         ).add_to(m)
 
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
-
