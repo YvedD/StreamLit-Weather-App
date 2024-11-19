@@ -102,10 +102,10 @@ def show_forecast1_expander():
                 <span>-20°C</span>
                 <span>-10°C</span>
                 <span>0°C</span>
-                <span>10°C</span>
-                <span>-20°C</span>
-                <span>-30°C</span>
-                <span>40°C</span>
+                <span>+10°C</span>
+                <span>+20°C</span>
+                <span>+30°C</span>
+                <span>+40°C</span>
             </div>
             <div style="display: flex; width: 100%;">
                 <div style="width: 50%; height: 10px; background: linear-gradient(to right, 
