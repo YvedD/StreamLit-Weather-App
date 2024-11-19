@@ -23,7 +23,11 @@ jobs:
         pip install -r requirements.txt
 
     - name: Set environment variable for API key
-      run: echo "API_KEY_OPENWEATHERMAPS=${{ secrets.API_KEY_OPENWEATHERMAPS }}" >> $GITHUB_ENV
+      env:
+        API_KEY_OPENWEATHERMAPS: ${{ secrets.API_KEY_OPENWEATHERMAPS }}
+      run: echo "API_KEY_OPENWEATHERMAPS=${API_KEY_OPENWEATHERMAPS}" >> $GITHUB_ENV
 
     - name: Run Streamlit app
+      env:
+        API_KEY_OPENWEATHERMAPS: ${{ secrets.API_KEY_OPENWEATHERMAPS }}
       run: streamlit run app.py
