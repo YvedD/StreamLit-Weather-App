@@ -9,7 +9,7 @@ def show_forecast1_expander():
     formatted_date = forecast_date.strftime("%Y/%m/%d")
 
     # Expander voor het kiezen van een land en het tonen van de temperatuurkaart
-    with st.expander(f"**Temperaturemap/Temperatuurkaart** {formatted_date}", expanded=True):
+    with st.expander(f"**Temperaturemap/Temperatuurkaart : {formatted_date}**", expanded=False):
 
         # Dropdownlijst voor het kiezen van een land
         country_options = {
