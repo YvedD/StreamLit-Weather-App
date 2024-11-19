@@ -8,6 +8,10 @@ def main():
     # Verkrijg invoer van de gebruiker
     latitude, longitude, location = show_input_form()
 
+    # Altijd de data-expander tonen (zelfstandig van de locatie)
+    show_data_expander()  # Toon de data-expander voor de opgegeven locatie
+
+
     # Toon de kaart op basis van de invoer
     if latitude and longitude:
         # Eerst de kaart-expander tonen zonder argumenten, want de waarden worden uit session_state gehaald
@@ -16,7 +20,7 @@ def main():
         st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
 
     # Altijd de data-expander tonen (zelfstandig van de locatie)
-    show_data_expander()  # Toon de data-expander voor de opgegeven locatie
+    #show_data_expander()  # Toon de data-expander voor de opgegeven locatie
 
     #toon een weerkaart (test)!
     show_forecast1_expander()
