@@ -97,7 +97,7 @@ def show_data_expander():
     end_hour = max(sunset, end_hour)  # Kies de vroegere tijd tussen zonsondergang en end_hour
 
     # Toon weergegevens in een expander
-    with st.expander("Weergegevens voor deze locatie en tijdspanne"):
+    with st.expander("**Weatherdata for this location/Weergegevens voor deze locatie**"):
         # Voeg een keuzemenu toe voor weergave-optie
         display_option = st.radio("Kies weergavemethode:", ("Per uur (afzonderlijk)", "Volledig blok (alles in één)"))
         
