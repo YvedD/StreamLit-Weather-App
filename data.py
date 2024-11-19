@@ -98,8 +98,8 @@ def show_data_expander():
 
     # Toon weergegevens in een expander
     with st.expander("**Weatherdata for this location/Weergegevens voor deze locatie**"):
-        st.write("Standaard weergegevens zijn van Civiele zonsopgang tot Civiele zonsondergang : **{date}**")
-        st.write("Default weatherdata is from Civil sunrise untill Civil sunset : **{date}**")
+        st.write("Standaard weergegevens zijn van Civiele zonsopgang tot Civiele zonsondergang : **{start_date}**")
+        st.write("Default weatherdata is from Civil sunrise untill Civil sunset : **{start_date}**")
         # Voeg een keuzemenu toe voor weergave-optie
         display_option = st.radio("Kies weergavemethode:", ("Per uur (afzonderlijk)", "Volledig blok (alles in één)"))
         
