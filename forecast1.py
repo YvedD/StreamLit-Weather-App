@@ -8,28 +8,26 @@ def show_forecast1_expander():
     forecast_date = datetime.now() + timedelta(days=1)
     formatted_date = forecast_date.strftime("%Y/%m/%d")
 
+    # Dropdownlijst voor het kiezen van een land
+    country_options = {
+        "België": [50.8503, 4.3517],
+        "Nederland": [52.3676, 4.9041],
+        "Duitsland": [51.1657, 10.4515],
+        "Frankrijk": [46.6034, 1.8883],
+        "Spanje": [40.4637, -3.7492],
+        "Italië": [41.8719, 12.5674],
+        "Verenigd Koninkrijk": [55.3781, -3.4360],
+        "Polen": [51.9194, 19.1451],
+        "Zweden": [60.1282, 18.6435],
+        "Denemarken": [56.2639, 9.5018]
+        # Voeg meer landen toe als dat nodig is
+    }
 
+    # Voeg een dropdownlijst toe zodat de gebruiker een land kan kiezen
+    country = st.selectbox("Kies een land:", list(country_options.keys()), index=0)
 
     # Expander voor de temperatuurkaart
     with st.expander(f"Temperatuurkaart voor {country} - {formatted_date}", expanded=True):
-
-        # Dropdownlijst voor het kiezen van een land
-        country_options = {
-            "België": [50.8503, 4.3517],
-            "Nederland": [52.3676, 4.9041],
-            "Duitsland": [51.1657, 10.4515],
-            "Frankrijk": [46.6034, 1.8883],
-            "Spanje": [40.4637, -3.7492],
-            "Italië": [41.8719, 12.5674],
-            "Verenigd Koninkrijk": [55.3781, -3.4360],
-            "Polen": [51.9194, 19.1451],
-            "Zweden": [60.1282, 18.6435],
-            "Denemarken": [56.2639, 9.5018]
-            # Voeg meer landen toe als dat nodig is
-        }
-        # Voeg een dropdownlijst toe zodat de gebruiker een land kan kiezen
-        country = st.selectbox("Kies een land:", list(country_options.keys()), index=0)
-
         # Kies de coördinaten voor het geselecteerde land
         coords = country_options.get(country, [50.8503, 4.3517])  # Standaard naar België als het land niet gevonden wordt
 
