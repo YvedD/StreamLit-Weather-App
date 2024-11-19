@@ -1,4 +1,4 @@
-name: Deploy Streamlit app
+name: Deploy Weather app
 
 on:
   push:
