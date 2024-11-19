@@ -8,7 +8,7 @@ def show_forecast1_expander():
     forecast_date = datetime.now() + timedelta(days=1)
     formatted_date = forecast_date.strftime("%Y/%m/%d")
 
-    # Dropdownlijst voor het kiezen van een land
+    # Dropdownlijst voor het kiezen van een land buiten de expander
     country_options = {
         "België": [50.8503, 4.3517],
         "Nederland": [52.3676, 4.9041],
@@ -23,7 +23,7 @@ def show_forecast1_expander():
         # Voeg meer landen toe als dat nodig is
     }
 
-    # Voeg een dropdownlijst toe zodat de gebruiker een land kan kiezen
+    # Voeg de dropdownlijst toe zodat de gebruiker een land kan kiezen
     country = st.selectbox("Kies een land:", list(country_options.keys()), index=0)
 
     # Expander voor de temperatuurkaart
