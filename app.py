@@ -2,6 +2,7 @@ import streamlit as st
 from invoer import show_input_form
 from maps import show_map_expander
 from data import show_data_expander  # Importeer de data-expander
+from forecast1 import show_forecast1_expander
 
 def main():
     # Verkrijg invoer van de gebruiker
@@ -16,6 +17,7 @@ def main():
 
     # Altijd de data-expander tonen (zelfstandig van de locatie)
     show_data_expander()  # Toon de data-expander voor de opgegeven locatie
+
     #toon een weerkaart (test)!
     show_forecast1_expander()
     
