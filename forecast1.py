@@ -2,9 +2,6 @@ import streamlit as st
 import folium
 from streamlit_folium import st_folium
 from datetime import datetime, timedelta
-import os
-
-api_key = os.getenv("API_KEY")  # Leest de API-sleutel vanuit de omgeving
 
 def show_forecast1_expander():
     # Bepaal de datum van "vandaag + 1 dag"
@@ -84,7 +81,7 @@ def show_forecast1_expander():
         ).add_to(m)
 
         # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
-        tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=api_key"
+        tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=54fb4ec132c9baed8b35a4bac2b9f9e1"
         folium.TileLayer(
             tiles=tile_url,
             attr='Map data © OpenWeatherMap',
