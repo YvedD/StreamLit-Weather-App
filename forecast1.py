@@ -102,7 +102,6 @@ def show_forecast1_expander():
                 <span>-20°C</span>
                 <span>-10°C</span>
                 <span>0°C</span>
-                <span>0°C</span>
                 <span>10°C</span>
                 <span>-20°C</span>
                 <span>-30°C</span>
