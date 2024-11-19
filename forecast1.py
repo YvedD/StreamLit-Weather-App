@@ -80,7 +80,7 @@ def show_forecast1_expander():
         coords = country_options.get(country, [50.8503, 4.3517])  # Standaard naar België als het land niet gevonden wordt
 
         # Maak de Folium-kaart aan
-        m = folium.Map(location=coords, zoom_start=6)
+        m = folium.Map(location=coords, zoom_start=8)
 
         # Voeg een lichte basiskaart toe voor beter contrast
         folium.TileLayer(
