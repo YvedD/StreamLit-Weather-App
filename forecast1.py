@@ -131,5 +131,4 @@ def show_forecast1_expander():
             </div>
         </div>
         """
-        
         st.markdown(legend_html, unsafe_allow_html=True)
