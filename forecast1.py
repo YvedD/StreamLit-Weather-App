@@ -104,8 +104,6 @@ def show_forecast1_expander():
                 <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">-10°C</span>
                 <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">0°C</span>
             </div>
-        
-            #<!-- Tweede balk voor warme temperaturen van 5°C tot 40°C -->
             <div style="width: 48%; height: 10px; background: linear-gradient(to right, rgb(207, 244, 188), rgb(245, 209, 176)); border-radius: 10px; position: relative;">
                 <span style="position: absolute; left: 0; top: 18px; font-size: 12px; color: #000000;">+5°C</span>
                 <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">+10°C</span>
@@ -113,7 +111,6 @@ def show_forecast1_expander():
                 <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">+30°C</span>
                 <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">+40°C</span>
             </div>
-        
         </div>
         """
         
