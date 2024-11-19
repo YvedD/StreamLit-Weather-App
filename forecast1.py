@@ -4,9 +4,14 @@ from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 import os
 
-# Haal de API-sleutel op uit de omgeving
-api_key = os.getenv("API_KEY")  # Leest de API-sleutel vanuit de omgeving
+# Haal de API-sleutel op uit de omgevingsvariabelen
+api_key = os.getenv("API_KEY_OPENWEATHERMAPS")
 
+# Controleer of de API-sleutel is opgehaald
+if api_key:
+    st.write("API Key is geladen.")  # Dit is optioneel om te testen
+else:
+    st.write("API Key is niet gevonden!")  # Dit helpt bij troubleshooting
 def show_forecast1_expander():
     # Bepaal de datum van "vandaag + 1 dag"
     forecast_date = datetime.now() + timedelta(days=1)
