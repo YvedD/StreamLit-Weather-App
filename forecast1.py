@@ -6,7 +6,6 @@ import os
 
 # Haal de API-sleutel op uit de omgevingsvariabelen
 api_key = os.getenv("API_KEY_OPENWEATHERMAPS")
-st.write("API Key: ", api_key)
 
 # Controleer of de API-sleutel is opgehaald
 if api_key:
@@ -19,8 +18,10 @@ def show_forecast1_expander():
     forecast_date = datetime.now() + timedelta(days=1)
     formatted_date = forecast_date.strftime("%Y/%m/%d")
 
+    st.write("API Key: ", api_key)
+    
     # Expander voor het kiezen van een land en het tonen van de temperatuurkaart
-    with st.expander(f"**Temp. Map/Kaart : {formatted_date}**", expanded=True):
+    with st.expander(f"**Temp. Map/Kaart --------> : {formatted_date}**", expanded=True):
 
         # Dropdownlijst voor het kiezen van een land
         country_options = {
