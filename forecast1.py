@@ -117,7 +117,7 @@ def show_forecast1_expander():
                 <span>+30°C</span>
             </div>
             <div style="display: flex; width: 100%;">
-                <div style="width: 50%; height: 10px; background: linear-gradient(to right, 
+                <div style="width: 100%; height: 10px; background: linear-gradient(to right, 
                     rgba(130, 22, 146, 1),
                     rgba(130, 87, 219, 1),
                     rgba(32, 140, 236, 1),
