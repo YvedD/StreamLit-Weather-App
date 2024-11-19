@@ -94,7 +94,7 @@ def show_forecast1_expander():
         # Weergeef de kaart binnen Streamlit met st_folium
         st_folium(m, width=700, height=500)
 
-        # Legende als lange gradient balk met aangepaste kleuren en temperatuurverdeling
+        # Legende als lange gradient balk met verbeterde temperatuurverdeling
         legend_html = """
         <div style="width: 100%; height: 10px; background: linear-gradient(to right, 
             rgb(212, 185, 215),     /* -40°C Paarsachtig */
@@ -107,10 +107,13 @@ def show_forecast1_expander():
             <span style="position: absolute; left: 20%; top: -20px; font-size: 12px; color: #000000;">-20°C</span>
             <span style="position: absolute; left: 30%; top: -20px; font-size: 12px; color: #000000;">-10°C</span>
             <span style="position: absolute; left: 40%; top: -20px; font-size: 12px; color: #000000;">0°C</span>
-            <span style="position: absolute; left: 50%; top: -20px; font-size: 12px; color: #000000;">+7°C</span>
-            <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
-            <span style="position: absolute; left: 70%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
-            <span style="position: absolute; left: 80%; top: -20px; font-size: 12px; color: #000000;">+30°C</span>
+            <span style="position: absolute; left: 45%; top: -20px; font-size: 12px; color: #000000;">+5°C</span>
+            <span style="position: absolute; left: 50%; top: -20px; font-size: 12px; color: #000000;">+10°C</span>
+            <span style="position: absolute; left: 55%; top: -20px; font-size: 12px; color: #000000;">+15°C</span>
+            <span style="position: absolute; left: 60%; top: -20px; font-size: 12px; color: #000000;">+20°C</span>
+            <span style="position: absolute; left: 65%; top: -20px; font-size: 12px; color: #000000;">+25°C</span>
+            <span style="position: absolute; left: 70%; top: -20px; font-size: 12px; color: #000000;">+30°C</span>
+            <span style="position: absolute; left: 75%; top: -20px; font-size: 12px; color: #000000;">+35°C</span>
             <span style="position: absolute; right: 0; top: -20px; font-size: 12px; color: #000000;">+40°C</span>
         </div>
         """
