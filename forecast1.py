@@ -4,6 +4,7 @@ from streamlit_folium import st_folium
 from datetime import datetime, timedelta
 import os
 
+# Haal de API-sleutel op uit de omgeving
 api_key = os.getenv("API_KEY")  # Leest de API-sleutel vanuit de omgeving
 
 def show_forecast1_expander():
@@ -14,7 +15,7 @@ def show_forecast1_expander():
     # Expander voor het kiezen van een land en het tonen van de temperatuurkaart
     with st.expander(f"**Temp. Map/Kaart : {formatted_date}**", expanded=True):
 
-        # Dropdownlijst voor het kiezen van een land
+        # Lijst van landen met zowel de Nederlandse naam als de Engelse naam
         country_options = {
             "België/Belgium": [50.8503, 4.3517],
             "Albanië/Albania": [41.1533, 20.1683],
@@ -66,10 +67,10 @@ def show_forecast1_expander():
             "Vaticaanstad/Vatican City": [41.9029, 12.4534]
         }
 
-        # Dropdownlijst voor het kiezen van een land
+        # Dropdownlijst voor het kiezen van een land met Engelse naam, maar de sleutel is de Nederlandse naam
         country = st.selectbox("**Select country/Kies een land:**", list(country_options.keys()), index=0)
 
-        # Kies de coördinaten voor het geselecteerde land
+        # Haal de coördinaten op voor het geselecteerde land
         coords = country_options.get(country, [50.8503, 4.3517])  # Standaard naar België als het land niet gevonden wordt
 
         # Maak de Folium-kaart aan
@@ -84,7 +85,7 @@ def show_forecast1_expander():
         ).add_to(m)
 
         # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
-        tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=api_key"
+        tile_url = f"https://tile.openweathermap.org/map/temp_new/{{z}}/{{x}}/{{y}}.png?appid={api_key}"
         folium.TileLayer(
             tiles=tile_url,
             attr='Map data © OpenWeatherMap',
