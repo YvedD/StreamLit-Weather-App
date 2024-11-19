@@ -121,7 +121,7 @@ def show_input_form():
         lang_choice = st.radio(
             "Select Language/Kies uw taal",
             options=["English", "Nederlands"],
-            index=0 if st.session_state.get("language", "English") == "English" else 1,
+            index=0 if st.session_state.get("language", "Nederlands") == "English" else 1,
             key="language_selector",  
             horizontal=True  
         )
