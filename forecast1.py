@@ -106,19 +106,11 @@ def show_forecast1_expander():
                     rgb(212, 185, 215),
                     rgb(194, 226, 222)
                 ); border-radius: 10px; position: relative;">
-                    <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">-30°C</span>
-                    <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">-20°C</span>
-                    <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">-10°C</span>
-                    <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">0°C</span>
                 </div>
                 <div style="width: 50%; height: 10px; background: linear-gradient(to right, 
                     rgb(207, 244, 188),
                     rgb(245, 209, 176)
                 ); border-radius: 10px; position: relative;">
-                    <span style="position: absolute; left: 20%; top: 18px; font-size: 12px; color: #000000;">+10°C</span>
-                    <span style="position: absolute; left: 40%; top: 18px; font-size: 12px; color: #000000;">+20°C</span>
-                    <span style="position: absolute; left: 60%; top: 18px; font-size: 12px; color: #000000;">+30°C</span>
-                    <span style="position: absolute; left: 80%; top: 18px; font-size: 12px; color: #000000;">+40°C</span>
                 </div>
             </div>
         </div>
