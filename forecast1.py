@@ -11,7 +11,7 @@ def show_forecast1_expander():
     # Expander voor het kiezen van een land en het tonen van de temperatuurkaart
     with st.expander(f"Temperatuurkaart voor {formatted_date}", expanded=True):
 
-        # Dropdownlijst voor het kiezen van een land binnen de expander
+        # Dropdownlijst voor het kiezen van een land
         country_options = {
             "België": [50.8503, 4.3517],
             "Nederland": [52.3676, 4.9041],
@@ -29,33 +29,30 @@ def show_forecast1_expander():
         # Dropdownlijst voor het kiezen van een land
         country = st.selectbox("Kies een land:", list(country_options.keys()), index=0)
 
-        # Expander voor de temperatuurkaart
-        with st.expander(f"Kaart van {country} - {formatted_date}", expanded=True):
+        # Kies de coördinaten voor het geselecteerde land
+        coords = country_options.get(country, [50.8503, 4.3517])  # Standaard naar België als het land niet gevonden wordt
 
-            # Kies de coördinaten voor het geselecteerde land
-            coords = country_options.get(country, [50.8503, 4.3517])  # Standaard naar België als het land niet gevonden wordt
+        # Maak de Folium-kaart aan
+        m = folium.Map(location=coords, zoom_start=6)
 
-            # Maak de Folium-kaart aan
-            m = folium.Map(location=coords, zoom_start=6)
+        # Voeg een lichte basiskaart toe voor beter contrast
+        folium.TileLayer(
+            tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+            attr='© OpenStreetMap contributors',
+            name='Lichte basiskaart',
+            control=False
+        ).add_to(m)
 
-            # Voeg een lichte basiskaart toe voor beter contrast
-            folium.TileLayer(
-                tiles='https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-                attr='© OpenStreetMap contributors',
-                name='Lichte basiskaart',
-                control=False
-            ).add_to(m)
+        # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
+        tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=54fb4ec132c9baed8b35a4bac2b9f9e1"
+        folium.TileLayer(
+            tiles=tile_url,
+            attr='Map data © OpenWeatherMap',
+            name="Temperatuurkaart",
+            overlay=True,
+            control=True,
+            opacity=0.9  # Verhoogde opaciteit voor helderdere kleuren
+        ).add_to(m)
 
-            # Voeg de OpenWeatherMap temperatuurlaag toe met verhoogde opaciteit
-            tile_url = "https://tile.openweathermap.org/map/temp_new/{z}/{x}/{y}.png?appid=54fb4ec132c9baed8b35a4bac2b9f9e1"
-            folium.TileLayer(
-                tiles=tile_url,
-                attr='Map data © OpenWeatherMap',
-                name="Temperatuurkaart",
-                overlay=True,
-                control=True,
-                opacity=0.9  # Verhoogde opaciteit voor helderdere kleuren
-            ).add_to(m)
-
-            # Weergeef de kaart binnen Streamlit met st_folium
-            st_folium(m, width=700, height=500)
+        # Weergeef de kaart binnen Streamlit met st_folium
+        st_folium(m, width=700, height=500)
