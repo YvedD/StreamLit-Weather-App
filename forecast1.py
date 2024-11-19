@@ -51,7 +51,7 @@ def show_forecast1_expander():
             name="Temperatuurkaart",
             overlay=True,
             control=True,
-            opacity=1.0  # Verhoogde opaciteit voor helderdere kleuren
+            opacity=1.5  # Verhoogde opaciteit voor helderdere kleuren
         ).add_to(m)
 
         # Weergeef de kaart binnen Streamlit met st_folium
