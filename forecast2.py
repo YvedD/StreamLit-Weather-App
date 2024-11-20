@@ -37,7 +37,7 @@ def show_forecast2_expander():
         "https://api.open-meteo.com/v1/forecast?"
         "latitude=51.2349&longitude=2.9756&hourly=temperature_2m,precipitation,"
         "cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,"
-        "wind_speed_10m,wind_speed_80m,wind_direction_10m,wind_direction_80m&"
+        "wind_speed_10m,wind_speed_80m,wind_direction_10m&"
         "daily=sunrise,sunset&timezone=Europe%2FBerlin&past_days=1&forecast_days=5"
     )
 
