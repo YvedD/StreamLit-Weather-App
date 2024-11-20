@@ -1,31 +1,7 @@
 import streamlit as st
-from PIL import Image
 import requests
-from io import BytesIO
 
-# Functie om het icoon te draaien op basis van de windrichting
-def rotate_wind_icon(degree):
-    """
-    Draait de afbeelding op basis van de windrichting in graden.
-    """
-    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"  # Je GitHub URL
-
-    try:
-        # Haal het icoon op vanuit de URL
-        response = requests.get(wind_icon_url)
-        if response.status_code == 200:
-            img = Image.open(BytesIO(response.content))
-            img = img.rotate(-degree, expand=True)  # Draai het icoon afhankelijk van de windrichting
-            img = img.resize((16, 16))  # Schaal het icoon naar 16x16 pixels
-            return img
-        else:
-            st.error("Kan het icoon niet ophalen.")
-            return None
-    except Exception as e:
-        st.error(f"Er is een probleem met het windicoon: {e}")
-        return None
-
-# Functie om windrichting (°) om te zetten naar kompasrichtingen
+# Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
     compass_points = [
         "N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"
@@ -33,7 +9,7 @@ def wind_direction_to_compass(degree):
     index = round(degree / 22.5) % 16
     return compass_points[index]
 
-# Functie om windsnelheid (km/u) om te zetten naar de Beaufort-schaal
+# Functie om windsnelheid om te zetten naar Beaufort
 def wind_speed_to_beaufort(speed_kmh):
     if speed_kmh is None:
         return "N/B"
@@ -46,7 +22,7 @@ def wind_speed_to_beaufort(speed_kmh):
         if speed_kmh <= threshold:
             return description
 
-# Functie om weergegevens te tonen
+# Functie om weergegevens weer te geven
 def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander.
@@ -113,15 +89,13 @@ def show_forecast2_expander():
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
 
-                    # Draai het windpijl-icoon op basis van de windrichting
-                    rotated_wind_icon = rotate_wind_icon(wind_dir_10)
+                    # Definieer de URL voor het windicoon op basis van de windrichting
+                    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"
+
+                    # Inline windpijl-icoon toevoegen met URL
+                    wind_icon_html = f'<img src="{wind_icon_url}" width="16" style="vertical-align:middle;"/>'
 
                     # Toon alle gegevens behalve wind_dir_80m in dezelfde regel
-                    if rotated_wind_icon:
-                        wind_icon_html = f'<img src="data:image/png;base64,{encode_image_to_base64(rotated_wind_icon)}" width="16" style="vertical-align:middle;"/>'
-                    else:
-                        wind_icon_html = ""
-
                     st.markdown(
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
@@ -132,14 +106,3 @@ def show_forecast2_expander():
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
-
-def encode_image_to_base64(image):
-    """Encodeer de afbeelding naar base64 voor inline gebruik in markdown."""
-    from io import BytesIO
-    import base64
-
-    buffered = BytesIO()
-    image.save(buffered, format="PNG")
-    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
-    return img_str
-
