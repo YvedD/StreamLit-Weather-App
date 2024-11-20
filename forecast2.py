@@ -38,7 +38,7 @@ def show_forecast2_expander():
         "latitude=51.2349&longitude=2.9756&hourly=temperature_2m,precipitation,"
         "cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,"
         "wind_speed_10m,wind_speed_80m,wind_direction_10m,wind_direction_80m&"
-        "daily=sunrise,sunset&timezone=Europe%2FBerlin&past_days=1"
+        "daily=sunrise,sunset&timezone=Europe%2FBerlin&past_days=1&forecast_days=5"
     )
 
     # Haal gegevens op van de API
@@ -52,14 +52,13 @@ def show_forecast2_expander():
             return None
 
     # UI-componenten
-    st.title("Weerinformatie - Open-Meteo API")
-    st.write("Klik op de expander hieronder om de gegevens te bekijken.")
-
+    st.title("**Forecast/Voorspelling** (-1d+5d) - Open-Meteo API")
     weather_data = fetch_weather_data(API_URL)
 
     if weather_data:
-        with st.expander("Toon weergegevens"):
-            st.subheader("Algemene Weerdata")
+        with st.expander("Forecas tdata / voorspelling weergegevens"):
+            st.write("🌡️Temperature | 🌧️Precipation | ☁️Cloudcover (total/low/mid/high) | 👁️Visibility | 💨Windspeed @ 10m | 💨Windspeed @80m | Winddirection")
+            st.write("🌡️Temperatuur | 🌧️Neerslag | ☁️Bewolking (totaal/laag/midden/hoog) | 👁️Zicht | 💨Windkracht @ 10m | 💨Windkracht @80m | Windrichting")
             
             # Toon dagelijkse gegevens
             daily = weather_data.get("daily", {})
@@ -80,9 +79,8 @@ def show_forecast2_expander():
             cloud_high = hourly.get("cloud_cover_high", [])
             visibility = hourly.get("visibility", [])
             wind_speed_10m = hourly.get("wind_speed_10m", [])
-            wind_direction_10m = hourly.get("wind_direction_10m", [])
             wind_speed_80m = hourly.get("wind_speed_80m", [])
-            wind_direction_80m = hourly.get("wind_direction_80m", [])
+            wind_direction_10m = hourly.get("wind_direction_10m", [])
 
             if times:
                 st.write("📊 Gedetailleerde uurlijkse voorspelling:")
@@ -110,15 +108,15 @@ def show_forecast2_expander():
                     wind_speed_bf_80 = wind_speed_to_beaufort(wind_speed_80)
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
-                    wind_dir_80 = wind_direction_80m[i] if i < len(wind_direction_80m) else "N/B"
+                    #wind_dir_80 = wind_direction_80m[i] if i < len(wind_direction_80m) else "N/B"
                     wind_dir_compass_80 = wind_direction_to_compass(wind_dir_80)
 
                     # Weergave van gegevens in een nette regel per uur
                     st.write(
-                        f"🕒 {time} | 🌡️ Temp: {temp}°C | 🌧️ Neerslag: {prec} mm | "
-                        f"☁️ Bewolking: {cloud}% (Laag: {cloud_l}%, Midden: {cloud_m}%, Hoog: {cloud_h}%) | "
-                        f"👁️ Zicht: {vis} m | 💨 Wind op 10m: {wind_speed_bf_10} (Beaufort), {wind_dir_compass_10} ({wind_dir_10}°) | "
-                        f"💨 Wind op 80m: {wind_speed_bf_80} (Beaufort), {wind_dir_compass_80} ({wind_dir_80}°)"
+                        f"🕒 {time} | 🌡️ {temp}°C | 🌧️ {prec} mm | "
+                        f"☁️ {cloud}% (☁️L {cloud_l}%,☁️M {cloud_m}%,☁️H {cloud_h}%) | "
+                        f"👁️ {vis} m | 💨@10m {wind_speed_bf_10}Bf-{wind_dir_compass_10} | "
+                        f"💨@80m {wind_speed_bf_80}Bf"
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
