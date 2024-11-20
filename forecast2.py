@@ -124,8 +124,8 @@ def show_forecast2_expander():
 
                 # Zet de data om in een pandas DataFrame voor mooie weergave
                 df = pd.DataFrame(data, columns=[
-                    f"🌡️ Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
-                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon", "Icoon afbeelding"
+                    f"🕒", f"🌡️", f"🌧️", f"☁️", f"👁️", 
+                    f"💨Wind@10m", f"💨Wind @80m", f"🧭", "Icoon", "Icoon afbeelding"
                 ])
 
                 # Toon de tabel
@@ -133,3 +133,4 @@ def show_forecast2_expander():
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+ 
