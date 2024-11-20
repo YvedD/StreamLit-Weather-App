@@ -25,15 +25,16 @@ def wind_direction_to_compass(degree):
     index = round(degree / 22.5) % 16
     return compass_points[index]
 
-# Functie om een SVG-pijl te maken voor windrichting
 def create_wind_icon(degree):
     if degree is None:
         return "N/B"
     arrow_svg = f"""
-    <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <svg width="40" height="40" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
         <g transform="rotate({degree}, 50, 50)">
-            <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
-            <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="4"/>
+            <!-- Pijlkop -->
+            <polygon points="50,15 60,35 50,25 40,35" fill="blue"/>
+            <!-- Pijllijn -->
+            <rect x="47" y="25" width="6" height="50" fill="blue"/>
         </g>
     </svg>
     """
