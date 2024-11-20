@@ -1,6 +1,5 @@
 import streamlit as st
 import requests
-import math
 
 # Functie om windsnelheid (km/u) om te zetten naar de Beaufort-schaal
 def wind_speed_to_beaufort(speed_kmh):
@@ -31,6 +30,7 @@ def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander.
     Gegevens worden netjes geformatteerd met conversies voor windsnelheid en richting.
+    Elke nieuwe dag begint met een kop 'Datum: '.
     """
     # URL van de Open-Meteo API
     API_URL = (
@@ -84,7 +84,16 @@ def show_forecast2_expander():
 
             if times:
                 st.write("📊 Gedetailleerde uurlijkse voorspelling:")
+                current_date = None
                 for i in range(len(times)):
+                    # Haal datum en tijd op uit de tijdstempel
+                    timestamp = times[i]
+                    date, time = timestamp.split("T")  # Split naar datum en tijd
+                    if date != current_date:
+                        # Toon nieuwe dagtitel als de datum verandert
+                        current_date = date
+                        st.write(f"### 📅 Datum: {current_date}")
+
                     # Controleer of alle gegevens beschikbaar zijn, anders geef 'N/B' aan
                     temp = temperature[i] if i < len(temperature) else "N/B"
                     prec = precipitation[i] if i < len(precipitation) else "N/B"
@@ -100,7 +109,7 @@ def show_forecast2_expander():
 
                     # Weergave van gegevens in een nette regel per uur
                     st.write(
-                        f"🕒 {times[i]} | 🌡️ Temp: {temp}°C | 🌧️ Neerslag: {prec} mm | "
+                        f"🕒 {time} | 🌡️ Temp: {temp}°C | 🌧️ Neerslag: {prec} mm | "
                         f"☁️ Bewolking: {cloud}% (Laag: {cloud_l}%, Midden: {cloud_m}%, Hoog: {cloud_h}%) | "
                         f"👁️ Zicht: {vis} m | 💨 Wind: {wind_speed_bf} (Beaufort), {wind_dir_compass} ({wind_dir}°)"
                     )
