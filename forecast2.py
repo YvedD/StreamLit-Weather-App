@@ -124,8 +124,8 @@ def show_forecast2_expander():
 
                 # Zet de data om in een pandas DataFrame voor mooie weergave
                 df = pd.DataFrame(data, columns=[
-                    "Tijd", "Temperatuur", "Neerslag", "Bewolking", "Zichtbaarheid", 
-                    "Windsnelheid @ 10m", "Windsnelheid @ 80m", "Windrichting", "Icoon", "Icoon afbeelding"
+                    f"🌡️ Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
+                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon", "Icoon afbeelding"
                 ])
 
                 # Toon de tabel
