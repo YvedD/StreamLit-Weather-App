@@ -63,7 +63,7 @@ def show_forecast2_expander():
             return None
 
     # UI-componenten
-    st.subtitle("**Forecast/Voorspelling** (-1d / +5d) - by Open-Meteo API")
+    st.title("**Forecast/Voorspelling** (-1d / +5d) - by Open-Meteo API")
     weather_data = fetch_weather_data(API_URL)
 
     if weather_data:
