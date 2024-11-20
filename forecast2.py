@@ -1,5 +1,7 @@
 import streamlit as st
+from PIL import Image
 import requests
+from io import BytesIO
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
@@ -21,6 +23,22 @@ def wind_speed_to_beaufort(speed_kmh):
     for threshold, description in beaufort_scale:
         if speed_kmh <= threshold:
             return description
+
+# Functie om de afbeelding te draaien op basis van de windrichting
+def rotate_wind_icon(degree):
+    # Laad het icoon vanuit een lokale bestandspad
+    wind_icon_path = "noord_transp.png"
+    
+    # Open de afbeelding met PIL
+    image = Image.open(wind_icon_path)
+    
+    # Draai de afbeelding volgens de windrichting
+    rotated_image = image.rotate(360 - degree, expand=True)  # Draai het icoon om de juiste richting te krijgen
+    
+    # Schaal de afbeelding naar 16x16 pixels
+    rotated_image = rotated_image.resize((16, 16))
+    
+    return rotated_image
 
 # Functie om weergegevens weer te geven
 def show_forecast2_expander():
@@ -89,20 +107,19 @@ def show_forecast2_expander():
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
 
-                    # Definieer de URL voor het windicoon op basis van de windrichting
-                    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"
-
-                    # Inline windpijl-icoon toevoegen met URL
-                    wind_icon_html = f'<img src="{wind_icon_url}" width="16" style="vertical-align:middle;"/>'
+                    # Draai de afbeelding op basis van de windrichting
+                    rotated_wind_icon = rotate_wind_icon(wind_dir_10)
 
                     # Toon alle gegevens behalve wind_dir_80m in dezelfde regel
-                    st.markdown(
+                    st.write(
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
-                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} "
-                        f"{wind_icon_html}"
+                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10}"
                     )
+
+                    # Toon het gedraaide icoon inline
+                    st.image(rotated_wind_icon)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
