@@ -2,6 +2,7 @@ import streamlit as st
 from PIL import Image
 import requests
 from io import BytesIO
+import pandas as pd
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
@@ -68,13 +69,12 @@ def show_forecast2_expander():
 
     if weather_data:
         with st.expander("Forecastdata / Voorspelling weergegevens"):
-            st.write("🌡️Temperature | 🌧️Precipation | ☁️Cloudcover (total/low/mid/high) | 👁️Visibility | 💨Windspeed @ 10m | 💨Windspeed @80m | Winddirection")
-            
             # Toon dagelijkse gegevens
             daily = weather_data.get("daily", {})
             sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
             sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
             st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
+
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
             times = hourly.get("time", [])
@@ -91,13 +91,15 @@ def show_forecast2_expander():
 
             if times:
                 current_date = None
+                data = []  # List voor de gegevens die we gaan toevoegen aan de tabel
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
                     date, time = timestamp.split("T")
                     if date != current_date:
                         current_date = date
-                        st.write(f"Date/Datum: **{current_date}**")
+                        # Voeg een nieuwe datum als titel in de tabel
+                        data.append([f"**{current_date}**", "", "", "", "", "", "", "", "", ""])
 
                     # Verkrijg de windrichting
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
@@ -106,16 +108,28 @@ def show_forecast2_expander():
                     # Draai de afbeelding op basis van de windrichting
                     rotated_wind_icon = rotate_wind_icon(wind_dir_10)
 
-                    # Toon alle gegevens behalve wind_dir_80m in dezelfde regel
-                    st.write(
-                        f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
-                        f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
-                        f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
-                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10}"
-                    )
+                    # Voeg gegevens toe aan de lijst voor de tabel
+                    data.append([
+                        time,  # Tijd
+                        f"{temperature[i]}°C",  # Temperatuur
+                        f"{precipitation[i]} mm",  # Neerslag
+                        f"{cloud_cover[i]}% (L {cloud_low[i]}%, M {cloud_mid[i]}%, H {cloud_high[i]}%)",  # Bewolking
+                        f"{visibility[i]} m",  # Zichtbaarheid
+                        wind_speed_to_beaufort(wind_speed_10m[i]),  # Windsnelheid @ 10m
+                        wind_speed_to_beaufort(wind_speed_80m[i]),  # Windsnelheid @ 80m
+                        wind_dir_compass_10,  # Windrichting
+                        "",  # Lege kolom voor het icoon
+                        rotated_wind_icon  # Het gedraaide icoon
+                    ])
 
-                    # Toon het gedraaide icoon inline
-                    st.image(rotated_wind_icon, width=20, use_column_width=False)
+                # Zet de data om in een pandas DataFrame voor mooie weergave
+                df = pd.DataFrame(data, columns=[
+                    "Tijd", "Temperatuur", "Neerslag", "Bewolking", "Zichtbaarheid", 
+                    "Windsnelheid @ 10m", "Windsnelheid @ 80m", "Windrichting", "Icoon", "Icoon afbeelding"
+                ])
+
+                # Toon de tabel
+                st.dataframe(df)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
