@@ -16,10 +16,10 @@ def wind_speed_to_beaufort(speed_kmh):
     if speed_kmh is None:
         return "N/B"
     beaufort_scale = [
-        (1, "0 (stil)"), (5, "1 (zwak)"), (11, "2 (zwak)"), (19, "3 (matig)"),
-        (28, "4 (matig)"), (38, "5 (vrij krachtig)"), (49, "6 (krachtig)"),
-        (61, "7 (hard)"), (74, "8 (stormachtig)"), (88, "9 (storm)"),
-        (102, "10 (zware storm)"), (117, "11 (zeer zware storm)"), (float("inf"), "12 (orkaan)")]
+        (1, "0"), (5, "1"), (11, "2"), (19, "3"),
+        (28, "4"), (38, "5"), (49, "6"),
+        (61, "7"), (74, "8"), (88, "9"),
+        (102, "10"), (117, "11"), (float("inf"), "12")]
     for threshold, description in beaufort_scale:
         if speed_kmh <= threshold:
             return description
@@ -36,7 +36,7 @@ def rotate_wind_icon(degree):
     rotated_image = image.rotate(360 - degree, expand=True)  # Draai het icoon om de juiste richting te krijgen
     
     # Schaal de afbeelding naar 16x16 pixels
-    rotated_image = rotated_image.resize((16, 16))
+    rotated_image = rotated_image.resize((20, 20))
     
     return rotated_image
 
@@ -63,21 +63,19 @@ def show_forecast2_expander():
             return None
 
     # UI-componenten
-    st.title("**Forecast/Voorspelling** (-1d+5d) - Open-Meteo API")
+    st.subtitle("**Forecast/Voorspelling** (-1d / +5d) - by Open-Meteo API")
     weather_data = fetch_weather_data(API_URL)
 
     if weather_data:
         with st.expander("Forecastdata / voorspelling weergegevens"):
-            st.write("🌡️Temperature | 🌧️Precipation | ☁️Cloudcover (total/low/mid/high) | 👁️Visibility | 💨Windspeed @ 10m | 💨Windspeed @80m | Winddirection")
+            st.write("🌡️Temperature | 🌧️Precipation | ☁️Cloudcover (total/low/mid/high) | 👁️Visibility | 💨Windspeed @10m | 💨Windspeed @80m | Winddirection")
             
             # Toon dagelijkse gegevens
             daily = weather_data.get("daily", {})
             sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
             sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
             
-            st.write(f"🌅 Zonsopgang: {sunrise}")
-            st.write(f"🌇 Zonsondergang: {sunset}")
-            
+            st.write(f"Sunrise/Zonsopgang: {sunrise} / Sunset/Zonsondergang: {sunset}")
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
             times = hourly.get("time", [])
@@ -93,7 +91,6 @@ def show_forecast2_expander():
             wind_direction_10m = hourly.get("wind_direction_10m", [])
 
             if times:
-                st.write("📊 Gedetailleerde uurlijkse voorspelling:")
                 current_date = None
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
@@ -101,7 +98,7 @@ def show_forecast2_expander():
                     date, time = timestamp.split("T")
                     if date != current_date:
                         current_date = date
-                        st.write(f"### 📅 Datum: {current_date}")
+                        st.write(f"**Datum:** {current_date}")
 
                     # Verkrijg de windrichting
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
@@ -116,7 +113,7 @@ def show_forecast2_expander():
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
                         f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10}"
-
+                        f"<img src='data:image/png;base64,{rotated_wind_icon.getvalue().encode('base64').decode()}' width='20' height='20' style='vertical-align:middle;'/>"
                     )
 
                     # Toon het gedraaide icoon inline
