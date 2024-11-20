@@ -53,7 +53,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    @st.cache_data
+    #@st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -115,7 +115,7 @@ def show_forecast2_expander():
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
-                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} st.image(rotated_wind_icon)"
+                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} st.image({rotated_wind_icon})"
                     )
 
                     # Toon het gedraaide icoon inline
