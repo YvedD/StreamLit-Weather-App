@@ -56,7 +56,7 @@ def show_forecast2_expander():
     weather_data = fetch_weather_data(API_URL)
 
     if weather_data:
-        with st.expander("Forecas tdata / voorspelling weergegevens"):
+        with st.expander("Forecastdata / voorspelling weergegevens"):
             st.write("🌡️Temperature | 🌧️Precipation | ☁️Cloudcover (total/low/mid/high) | 👁️Visibility | 💨Windspeed @ 10m | 💨Windspeed @80m | Winddirection")
             st.write("🌡️Temperatuur | 🌧️Neerslag | ☁️Bewolking (totaal/laag/midden/hoog) | 👁️Zicht | 💨Windkracht @ 10m | 💨Windkracht @80m | Windrichting")
             
@@ -108,7 +108,6 @@ def show_forecast2_expander():
                     wind_speed_bf_80 = wind_speed_to_beaufort(wind_speed_80)
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
-                    wind_dir_compass_80 = wind_direction_to_compass(wind_dir_80)
 
                     # Weergave van gegevens in een nette regel per uur
                     st.write(
@@ -119,4 +118,3 @@ def show_forecast2_expander():
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
-                
