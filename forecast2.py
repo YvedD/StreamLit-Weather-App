@@ -8,7 +8,7 @@ def rotate_wind_icon(degree):
     """
     Draait de afbeelding op basis van de windrichting in graden.
     """
-    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"
+    wind_icon_url = "https://github.com/gebruikersnaam/repository-naam/raw/main/wind_arrow_up.png"
     response = requests.get(wind_icon_url)
     
     if response.status_code == 200:
@@ -116,12 +116,12 @@ def show_forecast2_expander():
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
-                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10}"
+                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} "
                     )
                     
-                    # Toon het gedraaide icoon
+                    # Toon het gedraaide icoon inline met de tekst
                     if rotated_wind_icon:
-                        st.image(rotated_wind_icon, width=16)
+                        st.image(rotated_wind_icon, width=16, use_column_width=False)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
