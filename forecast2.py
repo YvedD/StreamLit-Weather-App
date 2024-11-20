@@ -120,3 +120,4 @@ def show_forecast2_expander():
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+                
