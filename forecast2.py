@@ -38,7 +38,7 @@ def show_forecast2_expander():
         "latitude=51.2349&longitude=2.9756&hourly=temperature_2m,precipitation,"
         "cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,"
         "wind_speed_10m,wind_speed_80m,wind_direction_10m,wind_direction_80m&"
-        "daily=sunrise,sunset&timezone=Europe%2FBerlin&past_days=1&forecast_days=5"
+        "daily=sunrise,sunset&timezone=Europe%2FBerlin&past_days=1"
     )
 
     # Haal gegevens op van de API
@@ -81,6 +81,8 @@ def show_forecast2_expander():
             visibility = hourly.get("visibility", [])
             wind_speed_10m = hourly.get("wind_speed_10m", [])
             wind_direction_10m = hourly.get("wind_direction_10m", [])
+            wind_speed_80m = hourly.get("wind_speed_80m", [])
+            wind_direction_80m = hourly.get("wind_direction_80m", [])
 
             if times:
                 st.write("📊 Gedetailleerde uurlijkse voorspelling:")
@@ -102,16 +104,21 @@ def show_forecast2_expander():
                     cloud_m = cloud_mid[i] if i < len(cloud_mid) else "N/B"
                     cloud_h = cloud_high[i] if i < len(cloud_high) else "N/B"
                     vis = visibility[i] if i < len(visibility) else "N/B"
-                    wind_speed = wind_speed_10m[i] if i < len(wind_speed_10m) else "N/B"
-                    wind_speed_bf = wind_speed_to_beaufort(wind_speed)
-                    wind_dir = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
-                    wind_dir_compass = wind_direction_to_compass(wind_dir)
+                    wind_speed_10 = wind_speed_10m[i] if i < len(wind_speed_10m) else "N/B"
+                    wind_speed_80 = wind_speed_80m[i] if i < len(wind_speed_80m) else "N/B"
+                    wind_speed_bf_10 = wind_speed_to_beaufort(wind_speed_10)
+                    wind_speed_bf_80 = wind_speed_to_beaufort(wind_speed_80)
+                    wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
+                    wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
+                    wind_dir_80 = wind_direction_80m[i] if i < len(wind_direction_80m) else "N/B"
+                    wind_dir_compass_80 = wind_direction_to_compass(wind_dir_80)
 
                     # Weergave van gegevens in een nette regel per uur
                     st.write(
                         f"🕒 {time} | 🌡️ Temp: {temp}°C | 🌧️ Neerslag: {prec} mm | "
                         f"☁️ Bewolking: {cloud}% (Laag: {cloud_l}%, Midden: {cloud_m}%, Hoog: {cloud_h}%) | "
-                        f"👁️ Zicht: {vis} m | 💨 Wind: {wind_speed_bf} (Beaufort), {wind_dir_compass} ({wind_dir}°)"
+                        f"👁️ Zicht: {vis} m | 💨 Wind op 10m: {wind_speed_bf_10} (Beaufort), {wind_dir_compass_10} ({wind_dir_10}°) | "
+                        f"💨 Wind op 80m: {wind_speed_bf_80} (Beaufort), {wind_dir_compass_80} ({wind_dir_80}°)"
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
