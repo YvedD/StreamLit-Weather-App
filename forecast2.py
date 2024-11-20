@@ -59,7 +59,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    @st.cache_data
+    #@st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
