@@ -25,12 +25,25 @@ def wind_direction_to_compass(degree):
     index = round(degree / 22.5) % 16
     return compass_points[index]
 
+# Functie om een SVG-pijl te maken voor windrichting
+def create_wind_icon(degree):
+    if degree is None:
+        return "N/B"
+    arrow_svg = f"""
+    <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g transform="rotate({degree}, 50, 50)">
+            <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
+            <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="4"/>
+        </g>
+    </svg>
+    """
+    return f'<div style="text-align:center;">{arrow_svg}</div>'
+
 # Functie om weergegevens te tonen
 def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander.
-    Gegevens worden netjes geformatteerd met conversies voor windsnelheid en richting.
-    Elke nieuwe dag begint met een kop 'Datum: '.
+    Inclusief dynamische windrichtingpijlen gebaseerd op graden.
     """
     # URL van de Open-Meteo API
     API_URL = (
@@ -106,15 +119,25 @@ def show_forecast2_expander():
                     wind_speed_80 = wind_speed_80m[i] if i < len(wind_speed_80m) else "N/B"
                     wind_speed_bf_10 = wind_speed_to_beaufort(wind_speed_10)
                     wind_speed_bf_80 = wind_speed_to_beaufort(wind_speed_80)
-                    wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
+                    wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
 
+                    # Dynamische windicoon
+                    wind_icon = create_wind_icon(wind_dir_10)
+
                     # Weergave van gegevens in een nette regel per uur
-                    st.write(
-                        f"🕒 {time} | 🌡️ {temp}°C | 🌧️ {prec} mm | "
-                        f"☁️ {cloud}% (☁️L {cloud_l}%,☁️M {cloud_m}%,☁️H {cloud_h}%) | "
-                        f"👁️ {vis} m | 💨@10m {wind_speed_bf_10}Bf-{wind_dir_compass_10} | "
-                        f"💨@80m {wind_speed_bf_80}Bf"
+                    st.markdown(
+                        f"""
+                        <div style="display: flex; align-items: center;">
+                            <div>🕒 {time} | 🌡️ {temp}°C | 🌧️ {prec} mm | 
+                            ☁️ {cloud}% (☁️L {cloud_l}%,☁️M {cloud_m}%,☁️H {cloud_h}%) | 
+                            👁️ {vis} m | 💨@10m {wind_speed_bf_10}Bf-{wind_dir_compass_10} {wind_icon}</div>
+                        </div>
+                        """,
+                        unsafe_allow_html=True,
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+
+# Run de functie
+show_forecast2_expander()
