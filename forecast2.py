@@ -108,7 +108,6 @@ def show_forecast2_expander():
                     wind_speed_bf_80 = wind_speed_to_beaufort(wind_speed_80)
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
-                    #wind_dir_80 = wind_direction_80m[i] if i < len(wind_direction_80m) else "N/B"
                     wind_dir_compass_80 = wind_direction_to_compass(wind_dir_80)
 
                     # Weergave van gegevens in een nette regel per uur
