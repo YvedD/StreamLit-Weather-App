@@ -115,11 +115,11 @@ def show_forecast2_expander():
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
-                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10}"
+                        f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} st.image(rotated_wind_icon)"
                     )
 
                     # Toon het gedraaide icoon inline
-                    st.image(rotated_wind_icon)
+                    #st.image(rotated_wind_icon)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
