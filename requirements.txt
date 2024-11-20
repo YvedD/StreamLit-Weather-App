@@ -14,4 +14,3 @@ retry-requests
 numpy
 pandas
 matplotlib.colors
-math
