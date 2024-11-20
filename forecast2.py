@@ -1,8 +1,8 @@
+import base64
 import streamlit as st
 from PIL import Image
 import requests
 from io import BytesIO
-import base64
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
