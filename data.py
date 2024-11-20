@@ -97,7 +97,7 @@ def show_data_expander():
     end_hour = max(sunset, end_hour)  # Kies de vroegere tijd tussen zonsondergang en end_hour
 
     # Toon weergegevens in een expander
-    with st.expander("**Weatherdata for this location/Weergegevens voor deze locatie**"):
+    with st.expander("**Weatherdata for this location/Weergegevens voor deze locatie**", expanded=False):
         st.write("Standaard weergegevens zijn van Civiele zonsopgang tot Civiele zonsondergang !")
         st.write("Default weatherdata is from Civil sunrise untill Civil sunset !")
         # Voeg een keuzemenu toe voor weergave-optie
