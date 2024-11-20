@@ -24,6 +24,8 @@ def main():
 
     #toon een weerkaart (test)!
     show_forecast1_expander()
-    
+    #toon de voorspellingen voor -1dag+7 dagen
+    show_forecast2_expander()
+
 if __name__ == "__main__":
     main()
