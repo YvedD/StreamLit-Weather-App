@@ -1,23 +1,28 @@
 import streamlit as st
-import requests
 from PIL import Image
+import requests
 from io import BytesIO
 
-# Functie om de afbeelding te draaien afhankelijk van de windrichting
+# Functie om het icoon te draaien op basis van de windrichting
 def rotate_wind_icon(degree):
     """
     Draait de afbeelding op basis van de windrichting in graden.
     """
-    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"
-    response = requests.get(wind_icon_url)
-    
-    if response.status_code == 200:
-        img = Image.open(BytesIO(response.content))
-        img = img.rotate(-degree, expand=True)  # Draai de afbeelding met de windrichting in graden
-        img = img.resize((16, 16))  # Schaal de afbeelding naar 16x16 pixels
-        return img
-    else:
-        st.error("Kon het windicoon niet ophalen.")
+    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"  # Je GitHub URL
+
+    try:
+        # Haal het icoon op vanuit de URL
+        response = requests.get(wind_icon_url)
+        if response.status_code == 200:
+            img = Image.open(BytesIO(response.content))
+            img = img.rotate(-degree, expand=True)  # Draai het icoon afhankelijk van de windrichting
+            img = img.resize((16, 16))  # Schaal het icoon naar 16x16 pixels
+            return img
+        else:
+            st.error("Kan het icoon niet ophalen.")
+            return None
+    except Exception as e:
+        st.error(f"Er is een probleem met het windicoon: {e}")
         return None
 
 # Functie om windrichting (°) om te zetten naar kompasrichtingen
