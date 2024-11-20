@@ -59,7 +59,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    #@st.cache_data
+    @st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -116,17 +116,29 @@ def show_forecast2_expander():
                     # Draai het windpijl-icoon op basis van de windrichting
                     rotated_wind_icon = rotate_wind_icon(wind_dir_10)
 
-                    # Toon alle gegevens behalve wind_dir_80m
-                    st.write(
+                    # Toon alle gegevens behalve wind_dir_80m in dezelfde regel
+                    if rotated_wind_icon:
+                        wind_icon_html = f'<img src="data:image/png;base64,{encode_image_to_base64(rotated_wind_icon)}" width="16" style="vertical-align:middle;"/>'
+                    else:
+                        wind_icon_html = ""
+
+                    st.markdown(
                         f"🕒 {time} | 🌡️ {temperature[i]}°C | 🌧️ {precipitation[i]} mm | "
                         f"☁️ {cloud_cover[i]}% (☁️L {cloud_low[i]}%,☁️M {cloud_mid[i]}%,☁️H {cloud_high[i]}%) | "
                         f"👁️ {visibility[i]} m | 💨@10m {wind_speed_to_beaufort(wind_speed_10m[i])} | "
                         f"💨@80m {wind_speed_to_beaufort(wind_speed_80m[i])} | Windrichting: {wind_dir_compass_10} "
+                        f"{wind_icon_html}"
                     )
-                    
-                    # Toon het gedraaide icoon inline met de tekst
-                    if rotated_wind_icon:
-                        st.image(rotated_wind_icon, width=16, use_column_width=False)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+
+def encode_image_to_base64(image):
+    """Encodeer de afbeelding naar base64 voor inline gebruik in markdown."""
+    from io import BytesIO
+    import base64
+
+    buffered = BytesIO()
+    image.save(buffered, format="PNG")
+    img_str = base64.b64encode(buffered.getvalue()).decode("utf-8")
+    return img_str
