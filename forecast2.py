@@ -27,7 +27,7 @@ def wind_speed_to_beaufort(speed_kmh):
 # Functie om de afbeelding te draaien op basis van de windrichting
 def rotate_wind_icon(degree):
     # Laad het icoon vanuit een lokale bestandspad
-    wind_icon_path = "noord_transp.png"
+    wind_icon_path = "wind1.png"
     
     # Open de afbeelding met PIL
     image = Image.open(wind_icon_path)
