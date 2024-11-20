@@ -8,7 +8,7 @@ def rotate_wind_icon(degree):
     """
     Draait de afbeelding op basis van de windrichting in graden.
     """
-    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/wind_arrow_up.png"
+    wind_icon_url = "https://github.com/YvedD/StreamLit-Weather-App/raw/main/noord_transp.png"
     response = requests.get(wind_icon_url)
     
     if response.status_code == 200:
