@@ -42,7 +42,7 @@ def create_wind_icon(degree):
         </g>
     </svg>
     """
-    return f'<div style="text-align:center;">{arrow_svg}</div>'
+    return arrow_svg
 
 # Functie om weergegevens weer te geven
 def show_forecast2_expander():
@@ -94,44 +94,43 @@ def show_forecast2_expander():
 
             if times:
                 current_date = None
-                data = []  # List voor de gegevens die we gaan toevoegen aan de tabel
+                st.write("<style>table {width: 100%;}</style>", unsafe_allow_html=True)  # CSS-styling
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
                     date, time = timestamp.split("T")
                     if date != current_date:
                         current_date = date
-                        # Voeg een nieuwe datum als titel in de tabel
-                        data.append([f"**{current_date}**", "", "", "", "", "", "", "", ""])
+                        st.markdown(f"### **Datum: {current_date}**")
 
                     # Verkrijg de windrichting in graden
-                    wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
+                    wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
 
                     # Maak de SVG-pijl voor de windrichting
                     wind_icon_svg = create_wind_icon(wind_dir_10)
 
-                    # Voeg gegevens toe aan de lijst voor de tabel
-                    data.append([
-                        time,  # Tijd
-                        f"{temperature[i]}°C",  # Temperatuur
-                        f"{precipitation[i]} mm",  # Neerslag
-                        f"{cloud_cover[i]}% (L {cloud_low[i]}%, M {cloud_mid[i]}%, H {cloud_high[i]}%)",  # Bewolking
-                        f"{visibility[i]} m",  # Zichtbaarheid
-                        wind_speed_to_beaufort(wind_speed_10m[i]),  # Windsnelheid @ 10m
-                        wind_speed_to_beaufort(wind_speed_80m[i]),  # Windsnelheid @ 80m
-                        wind_dir_compass_10,  # Windrichting
-                        wind_icon_svg  # SVG-pijl icoon
-                    ])
-
-                # Zet de data om in een pandas DataFrame voor mooie weergave
-                df = pd.DataFrame(data, columns=[
-                    f"🕒 Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
-                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon"
-                ])
-
-                # Toon de tabel
-                st.dataframe(df, use_container_width=True)
-
+                    # Toon gegevens als een tabelrij met HTML voor de SVG-pijl
+                    st.markdown(
+                        f"""
+                        <table>
+                        <tr>
+                            <td>🕒 {time}</td>
+                            <td>🌡️ {temperature[i]}°C</td>
+                            <td>🌧️ {precipitation[i]} mm</td>
+                            <td>☁️ {cloud_cover[i]}% (L {cloud_low[i]}%, M {cloud_mid[i]}%, H {cloud_high[i]}%)</td>
+                            <td>👁️ {visibility[i]} m</td>
+                            <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}</td>
+                            <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}</td>
+                            <td>🧭 {wind_dir_compass_10}</td>
+                            <td>{wind_icon_svg}</td>
+                        </tr>
+                        </table>
+                        """,
+                        unsafe_allow_html=True
+                    )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+
+# Voer de applicatie uit
+show_forecast2_expander()
