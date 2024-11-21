@@ -119,8 +119,12 @@ def show_forecast2_expander():
             )
 
             # Zonsopgang en zonsondergang omzetten naar datetime
-            sunrise_time = datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            sunset_time = datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+            sunrise_time = local_timezone.localize(
+                datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+            )
+            sunset_time = local_timezone.localize(
+                datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+            )
             filter_start_time = sunrise_time - timedelta(hours=1)
             filter_end_time = sunset_time + timedelta(hours=1)
 
