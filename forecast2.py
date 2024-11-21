@@ -187,7 +187,7 @@ def show_forecast2_expander():
                             <td>☁️M {cloud_mid[i]}%</td>
                             <td>☁️H {cloud_high[i]}%</td>
                             # zet de zichtbaarheid om van meters naar kilometers
-                            <td>👁️ {convert_visibility(visibility[i]}Km</td>
+                            <td>👁️ {convert_visibility(visibility[i])}Km</td>
                             <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
                             <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
                             <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
