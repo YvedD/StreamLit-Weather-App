@@ -166,7 +166,7 @@ def show_forecast2_expander():
                             <td>👁️ {visibility[i]} m</td>
                             <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
                             <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
-                            <td>{wind_icon_svg} <b>{wind_direction_10m"[i]}<\b></td>
+                            <td>{wind_icon_svg} <b>{wind_direction_10m[i]}<\b></td>
                         </tr>
                         </table>
                         """,
