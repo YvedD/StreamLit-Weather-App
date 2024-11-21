@@ -61,8 +61,7 @@ def get_local_timezone(latitude, longitude):
 def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander,
-    beperkt tot de tijd tussen zonsopgang en zonsondergang van vandaag,
-    voor gisteren, vandaag en de komende vijf dagen.
+    beperkt tot de tijd één uur vóór zonsopgang en één uur na zonsondergang.
     """
     latitude = st.session_state.get("latitude")
     longitude = st.session_state.get("longitude")
@@ -79,6 +78,9 @@ def show_forecast2_expander():
         return
 
     today = datetime.now(local_timezone)
+    past_day = today - timedelta(days=1)
+    forecast_days = 5
+
     API_URL = (
         "https://api.open-meteo.com/v1/forecast"
         f"?latitude={latitude}"
@@ -118,20 +120,21 @@ def show_forecast2_expander():
                 """, unsafe_allow_html=True
             )
 
-            # Gebruik de zonsopgang en zonsondergang van vandaag voor alle dagen
+            # Zonsopgang en zonsondergang omzetten naar datetime
             sunrise_time = local_timezone.localize(
                 datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
             )
             sunset_time = local_timezone.localize(
                 datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
             )
-            filter_start_offset = timedelta(hours=1)
-            filter_end_offset = timedelta(hours=1)
+            filter_start_time = sunrise_time - timedelta(hours=1)
+            filter_end_time = sunset_time + timedelta(hours=1)
 
-            # Bereken het volledige bereik van dagen (-1 tot +5 dagen)
-            start_date = today - timedelta(days=1)
-            end_date = today + timedelta(days=5)
+            # Toon dagelijkse gegevens
+            daily = weather_data.get("daily", {})
+            st.write(f"🌅 Zonsopgang: {sunrise} - 🌇 Zonsondergang: {sunset}")
 
+            # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
             times = hourly.get("time", [])
             temperature = hourly.get("temperature_2m", [])
@@ -148,7 +151,7 @@ def show_forecast2_expander():
             if times:
                 current_date = None
                 for i in range(len(times)):
-                    # Parse tijdstempel
+                    # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
                     try:
                         datetime_obj = parse(timestamp).astimezone(local_timezone)
@@ -156,32 +159,20 @@ def show_forecast2_expander():
                         st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
                         continue
 
-                    # Filter op basis van datum
-                    if not (start_date <= datetime_obj.date() <= end_date.date()):
+                    # Filter gegevens buiten het gewenste bereik
+                    if not (filter_start_time <= datetime_obj <= filter_end_time):
                         continue
 
-                    # Pas de zonsopgang en zonsondergang aan voor de huidige dag
-                    day_start_time = sunrise_time.replace(
-                        year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day
-                    ) - filter_start_offset
-                    day_end_time = sunset_time.replace(
-                        year=datetime_obj.year, month=datetime_obj.month, day=datetime_obj.day
-                    ) + filter_end_offset
-
-                    # Filter uren buiten zonsopgang en zonsondergang
-                    if not (day_start_time <= datetime_obj <= day_end_time):
-                        continue
-
-                    # Bereid data per dag voor
                     date, time = datetime_obj.strftime('%Y-%m-%d'), datetime_obj.strftime('%H:%M')
                     if date != current_date:
                         current_date = date
                         st.markdown(f"### **Datum: {current_date}**")
 
-                    # Toon gegevens
+                    # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_icon_svg = create_wind_icon(wind_dir_10)
 
+                    # Toon gegevens in een tabelrij
                     st.markdown(
                         f"""
                         <table>
