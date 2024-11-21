@@ -5,6 +5,13 @@ from data import show_data_expander  # Importeer de data-expander
 from forecast2 import show_forecast2_expander
 from forecast1 import show_forecast1_expander
 
+st.set_page_config(
+    layout="wide",
+    page_title="Mijn Weer App",
+    page_icon="🌦️",
+    initial_sidebar_state="expanded"
+)
+
 def main():
     # Verkrijg invoer van de gebruiker
     latitude, longitude, location = show_input_form()
