@@ -6,6 +6,7 @@ from timezonefinder import TimezoneFinder
 import pytz
 import requests
 from dateutil.parser import parse
+from data import convert_visibility
 
 
 # Functie om windrichting om te zetten naar kompasrichting
@@ -170,6 +171,8 @@ def show_forecast2_expander():
                     # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_icon_svg = create_wind_icon(wind_dir_10)
+                    # functie om de zichtbaarheid in kilometers om te zetten
+                    zichtbaarheid_km = convert_visibility(visibility[i])
 
                     # Toon gegevens in een tabelrij
                     st.markdown(
@@ -183,7 +186,8 @@ def show_forecast2_expander():
                             <td>☁️L {cloud_low[i]}%</td>
                             <td>☁️M {cloud_mid[i]}%</td>
                             <td>☁️H {cloud_high[i]}%</td>
-                            <td>👁️ {visibility[i]} m</td>
+                            # zet de zichtbaarheid om van meters naar kilometers
+                            <td>👁️ {zichtbaarheid_km[i]} m</td>
                             <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
                             <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
                             <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
