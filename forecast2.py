@@ -164,9 +164,9 @@ def show_forecast2_expander():
                             <td>☁️M {cloud_mid[i]}%</td>
                             <td>☁️H {cloud_high[i]}%</td>
                             <td>👁️ {visibility[i]} m</td>
-                            <td>💨10m {wind_speed_to_beaufort(wind_speed_10m[i])}</td>
-                            <td>💨80m {wind_speed_to_beaufort(wind_speed_80m[i])}</td>
-                            <td>{wind_icon_svg}</td>
+                            <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
+                            <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
+                            <td>{wind_icon_svg} <b>{wind_direction_10m"[i]}<\b></td>
                         </tr>
                         </table>
                         """,
