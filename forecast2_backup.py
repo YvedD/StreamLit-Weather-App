@@ -1,3 +1,4 @@
+
 # Forecast2.py module (onderdeel van "Migration Weather-app")
 
 import streamlit as st
@@ -6,6 +7,7 @@ from timezonefinder import TimezoneFinder
 import pytz
 import requests
 from dateutil.parser import parse
+from data import convert_visibility
 
 
 # Functie om windrichting om te zetten naar kompasrichting
@@ -45,7 +47,7 @@ def create_wind_icon(degree):
         <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <g transform="rotate({arrow_degree}, 50, 50)">
                 <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
-                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="4"/>
+                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="12"/>
             </g>
         </svg>
     </div>
@@ -83,8 +85,16 @@ def show_forecast2_expander():
         return
 
     today = datetime.now(local_timezone)
-    past_day = today - timedelta(days=1)
-    forecast_days = 5
+
+    # Bepaal de filtertijden van vandaag (gebruik deze voor ALLE dagen)
+    sunrise_time_today = local_timezone.localize(
+        datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    sunset_time_today = local_timezone.localize(
+        datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    filter_start_time = sunrise_time_today - timedelta(hours=1)
+    filter_end_time = sunset_time_today + timedelta(hours=1)
 
     API_URL = (
         "https://api.open-meteo.com/v1/forecast"
@@ -99,7 +109,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    #@st.cache_data
+    
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -124,16 +134,6 @@ def show_forecast2_expander():
                 </style>
                 """, unsafe_allow_html=True
             )
-
-            # Zonsopgang en zonsondergang van vandaag omzetten naar datetime
-            sunrise_time_today = local_timezone.localize(
-                datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            sunset_time_today = local_timezone.localize(
-                datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            filter_start_time_today = sunrise_time_today - timedelta(hours=1)
-            filter_end_time_today = sunset_time_today + timedelta(hours=1)
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
@@ -160,14 +160,8 @@ def show_forecast2_expander():
                         st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
                         continue
 
-                    # Per dag filteren op tijden
-                    if datetime_obj.date() == today.date():
-                        filter_start_time, filter_end_time = filter_start_time_today, filter_end_time_today
-                    else:
-                        # Voor andere dagen geen extra filtering op sunrise/sunset
-                        filter_start_time, filter_end_time = datetime_obj.replace(hour=0, minute=0), datetime_obj.replace(hour=23, minute=59)
-
-                    if not (filter_start_time <= datetime_obj <= filter_end_time):
+                    # Gebruik sunrise/sunset filtering van vandaag
+                    if not (filter_start_time.time() <= datetime_obj.time() <= filter_end_time.time()):
                         continue
 
                     date, time = datetime_obj.strftime('%Y-%m-%d'), datetime_obj.strftime('%H:%M')
@@ -178,6 +172,8 @@ def show_forecast2_expander():
                     # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_icon_svg = create_wind_icon(wind_dir_10)
+                    # functie om de zichtbaarheid in kilometers om te zetten
+                    #zichtbaarheid_km = convert_visibility(visibility[i])
 
                     # Toon gegevens in een tabelrij
                     st.markdown(
@@ -191,7 +187,7 @@ def show_forecast2_expander():
                             <td>☁️L {cloud_low[i]}%</td>
                             <td>☁️M {cloud_mid[i]}%</td>
                             <td>☁️H {cloud_high[i]}%</td>
-                            <td>👁️ {visibility[i]} m</td>
+                            <td>👁️ {convert_visibility(visibility[i])}Km</td>
                             <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
                             <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
                             <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
