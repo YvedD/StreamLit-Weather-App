@@ -5,6 +5,7 @@ import requests
 from dateutil.parser import parse
 from streamlit_echarts import st_echarts
 from data import convert_visibility  # Zorg ervoor dat je de juiste module hebt geïmporteerd voor zichtbaarheid
+from timezonefinder import TimezoneFinder
 
 # Functie om lokale tijdzone te bepalen
 def get_local_timezone(latitude, longitude):
