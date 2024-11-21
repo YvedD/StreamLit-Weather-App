@@ -1,69 +1,3 @@
-# Forecast2.py module (onderdeel van "Migration Weather-app")
-
-import streamlit as st
-from datetime import datetime, timedelta
-from timezonefinder import TimezoneFinder
-import pytz
-import requests
-from dateutil.parser import parse
-from data import convert_visibility
-from streamlit_echarts import st_echarts
-
-# Functie om windrichting om te zetten naar kompasrichting
-def wind_direction_to_compass(degree):
-    compass_points = [
-        "N", "NNO", "NO", "ONO", "O", "OZO", "ZO", "ZZO", "Z", "ZZW", "ZW", "WZW", "W", "WNW", "NW", "NNW"
-    ]
-    index = round(degree / 22.5) % 16
-    return compass_points[index]
-
-
-# Functie om windsnelheid om te zetten naar Beaufort
-def wind_speed_to_beaufort(speed_kmh):
-    if speed_kmh is None:
-        return "N/B"
-    beaufort_scale = [
-        (1, "0"), (5, "1"), (11, "2"), (19, "3"),
-        (28, "4"), (38, "5"), (49, "6"),
-        (61, "7"), (74, "8"), (88, "9"),
-        (102, "10"), (117, "11"), (float("inf"), "12")]
-    for threshold, description in beaufort_scale:
-        if speed_kmh <= threshold:
-            return description
-
-
-# Functie om de SVG-pijl te maken voor de windrichting
-def create_wind_icon(degree):
-    if degree is None:
-        return "N/B"
-
-    # Bereken de windrichting in graden voor de pijl (de pijl wijst de andere kant op, dus 180 graden verschuiven)
-    arrow_degree = (degree + 180) % 360
-
-    # SVG voor de pijl, gecentreerd in een box
-    arrow_svg = f"""
-    <div style="display: flex; justify-content: center; align-items: center; height: 100%;">
-        <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-            <g transform="rotate({arrow_degree}, 50, 50)">
-                <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
-                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="12"/>
-            </g>
-        </svg>
-    </div>
-    """
-    return arrow_svg
-
-
-# Functie om lokale tijdzone te bepalen
-def get_local_timezone(latitude, longitude):
-    tz_finder = TimezoneFinder()
-    timezone_str = tz_finder.timezone_at(lat=latitude, lng=longitude)
-    if not timezone_str:
-        st.error("Tijdzone niet gevonden voor de opgegeven locatie.")
-        return None
-    return pytz.timezone(timezone_str)
-
-
 import streamlit as st
 from datetime import datetime, timedelta
 from timezonefinder import TimezoneFinder
@@ -71,6 +5,7 @@ import pytz
 import requests
 from dateutil.parser import parse
 from data import convert_visibility  # Zorg ervoor dat je de juiste module hebt geïmporteerd voor zichtbaarheid
+from streamlit_echarts import st_echarts
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
@@ -213,6 +148,10 @@ def show_forecast2_expander():
             wind_speed_80m = hourly.get("wind_speed_80m", [])
             wind_direction_10m = hourly.get("wind_direction_10m", [])
 
+            times_filtered = []
+            temperatures_filtered = []
+            precipitation_filtered = []
+
             if times:
                 current_date = None
                 for i in range(len(times)):
@@ -252,11 +191,55 @@ def show_forecast2_expander():
                             <td>☁️L {cloud_low[i]}%</td>
                             <td>☁️M {cloud_mid[i]}%</td>
                             <td>☁️H {cloud_high[i]}%</td>
-                            <td>👁️ {visibility_km} km</td>
-                            <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
-                            <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
-                            <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
+                            <td>🌬️ {wind_speed_10m[i]} km/h - {wind_icon_svg}</td>
+                            <td>🌫️ {visibility_km} km</td>
                         </tr>
                         </table>
                         """, unsafe_allow_html=True
                     )
+
+                    # Voeg data toe voor de grafiek
+                    times_filtered.append(time)
+                    temperatures_filtered.append(temperature[i])
+                    precipitation_filtered.append(precipitation[i])
+
+            # Maak EChart voor Mixed Line and Bar
+            chart_options = {
+                "title": {
+                    "text": "Weersvoorspelling (Temperatuur en Neerslag)"
+                },
+                "tooltip": {
+                    "trigger": "axis"
+                },
+                "legend": {
+                    "data": ["Temperatuur", "Neerslag"]
+                },
+                "xAxis": {
+                    "type": "category",
+                    "data": times_filtered
+                },
+                "yAxis": [{
+                    "type": "value",
+                    "name": "Temperatuur (°C)"
+                }, {
+                    "type": "value",
+                    "name": "Neerslag (mm)",
+                    "axisLine": {"show": False}
+                }],
+                "series": [
+                    {
+                        "name": "Temperatuur",
+                        "type": "line",
+                        "data": temperatures_filtered
+                    },
+                    {
+                        "name": "Neerslag",
+                        "type": "bar",
+                        "data": precipitation_filtered,
+                        "yAxisIndex": 1
+                    }
+                ]
+            }
+
+            st_echarts(options=chart_options)
+
