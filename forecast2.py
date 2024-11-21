@@ -7,7 +7,7 @@ import pytz
 import requests
 from dateutil.parser import parse
 from data import convert_visibility
-
+from streamlit_echarts import st_echarts
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
@@ -197,3 +197,84 @@ def show_forecast2_expander():
                     )
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
+def show_forecast_chart(weather_data, local_timezone, sunrise_time, sunset_time):
+    """
+    Creëert een Mixed Line and Bar Chart voor temperatuur en neerslag, 
+    alleen voor uren binnen de sunrise/sunset-tijden van vandaag.
+    """
+    hourly = weather_data.get("hourly", {})
+    times = hourly.get("time", [])
+    temperature = hourly.get("temperature_2m", [])
+    precipitation = hourly.get("precipitation", [])
+
+    # Gegevens filteren op sunrise/sunset-tijden van vandaag
+    time_labels = []
+    temperatures = []
+    precipitations = []
+
+    for i, timestamp in enumerate(times):
+        try:
+            datetime_obj = parse(timestamp).astimezone(local_timezone)
+        except ValueError:
+            continue
+
+        # Alleen data binnen sunrise/sunset opnemen
+        if sunrise_time <= datetime_obj <= sunset_time:
+            time_labels.append(datetime_obj.strftime("%H:%M"))
+            temperatures.append(temperature[i] if i < len(temperature) else None)
+            precipitations.append(precipitation[i] if i < len(precipitation) else None)
+
+    # Opties voor Echart
+    chart_options = {
+        "tooltip": {
+            "trigger": "axis",
+            "axisPointer": {"type": "cross"}
+        },
+        "legend": {
+            "data": ["Temperatuur (°C)", "Neerslag (mm)"]
+        },
+        "xAxis": {
+            "type": "category",
+            "data": time_labels
+        },
+        "yAxis": [
+            {
+                "type": "value",
+                "name": "Temperatuur (°C)",
+                "position": "left",
+                "axisLine": {"lineStyle": {"color": "red"}},
+                "axisLabel": {"formatter": "{value} °C"}
+            },
+            {
+                "type": "value",
+                "name": "Neerslag (mm)",
+                "position": "right",
+                "axisLine": {"lineStyle": {"color": "blue"}},
+                "axisLabel": {"formatter": "{value} mm"}
+            },
+        ],
+        "series": [
+            {
+                "name": "Temperatuur (°C)",
+                "type": "line",
+                "yAxisIndex": 0,
+                "data": temperatures,
+                "itemStyle": {"color": "red"}
+            },
+            {
+                "name": "Neerslag (mm)",
+                "type": "bar",
+                "yAxisIndex": 1,
+                "data": precipitations,
+                "itemStyle": {"color": "blue"}
+            }
+        ]
+    }
+
+    # Render de grafiek
+    st.subheader("🌡️📊 Visuele Weergave van Uurlijkse Gegevens")
+    st_echarts(chart_options, height="400px")
+
+# Plaats dit aan het einde van de expander
+if weather_data:
+    show_forecast_chart(weather_data, local_timezone, sunrise_time, sunset_time)
