@@ -55,27 +55,25 @@ def get_local_timezone(latitude, longitude):
         return None
     return pytz.timezone(timezone_str)
 
-# Functie om weergegevens weer te geven
 def show_forecast2_expander():
     """
-    Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander.
+    Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander,
+    beperkt tot de tijd één uur vóór zonsopgang en één uur na zonsondergang.
     """
-    # Controleer of sessiestatus bestaat voor locatiegegevens
     latitude = st.session_state.get("latitude")
     longitude = st.session_state.get("longitude")
     location = st.session_state.get("location")
-    country = st.session_state.get("country")
-    
-    if not (latitude and longitude and location):
-        st.error("Locatiegegevens ontbreken. Stel eerst de locatie in.")
+    sunrise = st.session_state.get("sunrise")
+    sunset = st.session_state.get("sunset")
+
+    if not (latitude and longitude and location and sunrise and sunset):
+        st.error("Locatiegegevens of zonsopkomst/zonsondergang ontbreken. Stel eerst de locatie in.")
         return
 
-    # Zoek de lokale tijdzone
     local_timezone = get_local_timezone(latitude, longitude)
     if not local_timezone:
         return
 
-    # Bereken datums: vandaag, gisteren (-1 dag), en +5 dagen
     today = datetime.now(local_timezone)
     past_day = today - timedelta(days=1)
     forecast_days = 5
@@ -93,6 +91,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
+    @st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -101,26 +100,31 @@ def show_forecast2_expander():
             st.error("Kan de weergegevens niet ophalen. Controleer de API URL.")
             return None
 
-    # UI-componenten
-    st.write(f"**Weersvoorspelling voor {location}**, {country} (-1d/+5d)")
+    st.title(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
 
     weather_data = fetch_weather_data(API_URL)
 
     if weather_data:
         with st.expander("Forecastdata / Weersvoorspelling"):
-            # Voeg styling toe om rijen compacter te maken
-            st.markdown("""
-            <style>
-                table {width: 100%; border-collapse: collapse;}
-                td, th {padding: 5px; text-align: center; font-size: 0.85em; border: 1px solid #ddd;}
-                tr {height: 40px; line-height: 0.9;}
-            </style>
-            """, unsafe_allow_html=True)
+            # Styling voor een compactere tabel
+            st.markdown(
+                """
+                <style>
+                    table {width: 100%; border-collapse: collapse;}
+                    td, th {padding: 5px; text-align: center; font-size: 0.85em;}
+                    tr {height: 40px;}
+                </style>
+                """, unsafe_allow_html=True
+            )
+
+            # Zonsopgang en zonsondergang omzetten naar datetime
+            sunrise_time = datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+            sunset_time = datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+            filter_start_time = sunrise_time - timedelta(hours=1)
+            filter_end_time = sunset_time + timedelta(hours=1)
 
             # Toon dagelijkse gegevens
             daily = weather_data.get("daily", {})
-            sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
-            sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
             st.write(f"🌅 Zonsopgang: {sunrise} - 🌇 Zonsondergang: {sunset}")
 
             # Toon uurlijkse gegevens
@@ -142,10 +146,16 @@ def show_forecast2_expander():
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
-                    date, time = timestamp.split("T")
+                    datetime_obj = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S').astimezone(local_timezone)
+
+                    # Filter gegevens buiten het gewenste bereik
+                    if not (filter_start_time <= datetime_obj <= filter_end_time):
+                        continue
+
+                    date, time = datetime_obj.strftime('%Y-%m-%d'), datetime_obj.strftime('%H:%M')
                     if date != current_date:
                         current_date = date
-                        st.markdown(f"Datum: **{current_date}**")
+                        st.markdown(f"### **Datum: {current_date}**")
 
                     # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
@@ -173,4 +183,4 @@ def show_forecast2_expander():
                         unsafe_allow_html=True
                     )
             else:
-                st.write("Geen uur gegevens beschikbaar.")
+                st.write("Geen uurlijkse gegevens beschikbaar.")
