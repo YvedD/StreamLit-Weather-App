@@ -1,11 +1,14 @@
+
+# Forecast2.py module (onderdeel van "Migration Weather-app")
+
 import streamlit as st
 from datetime import datetime, timedelta
 from timezonefinder import TimezoneFinder
 import pytz
 import requests
 from dateutil.parser import parse
-from data import convert_visibility  # Zorg ervoor dat je de juiste module hebt geïmporteerd voor zichtbaarheid
-from streamlit_echarts import st_echarts
+from data import convert_visibility
+
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
@@ -14,6 +17,7 @@ def wind_direction_to_compass(degree):
     ]
     index = round(degree / 22.5) % 16
     return compass_points[index]
+
 
 # Functie om windsnelheid om te zetten naar Beaufort
 def wind_speed_to_beaufort(speed_kmh):
@@ -28,11 +32,12 @@ def wind_speed_to_beaufort(speed_kmh):
         if speed_kmh <= threshold:
             return description
 
+
 # Functie om de SVG-pijl te maken voor de windrichting
 def create_wind_icon(degree):
     if degree is None:
         return "N/B"
-    
+
     # Bereken de windrichting in graden voor de pijl (de pijl wijst de andere kant op, dus 180 graden verschuiven)
     arrow_degree = (degree + 180) % 360
 
@@ -42,12 +47,13 @@ def create_wind_icon(degree):
         <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <g transform="rotate({arrow_degree}, 50, 50)">
                 <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
-                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="4"/>
+                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="12"/>
             </g>
         </svg>
     </div>
     """
     return arrow_svg
+
 
 # Functie om lokale tijdzone te bepalen
 def get_local_timezone(latitude, longitude):
@@ -58,10 +64,11 @@ def get_local_timezone(latitude, longitude):
         return None
     return pytz.timezone(timezone_str)
 
+
 def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander,
-    beperkt tot de tijd één uur vóór zonsopgang en één uur na zonsondergang.
+    beperkt tot de tijden van zonsopgang en zonsondergang van vandaag.
     """
     latitude = st.session_state.get("latitude")
     longitude = st.session_state.get("longitude")
@@ -78,8 +85,16 @@ def show_forecast2_expander():
         return
 
     today = datetime.now(local_timezone)
-    past_day = today - timedelta(days=1)
-    forecast_days = 5
+
+    # Bepaal de filtertijden van vandaag (gebruik deze voor ALLE dagen)
+    sunrise_time_today = local_timezone.localize(
+        datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    sunset_time_today = local_timezone.localize(
+        datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    filter_start_time = sunrise_time_today - timedelta(hours=1)
+    filter_end_time = sunset_time_today + timedelta(hours=1)
 
     API_URL = (
         "https://api.open-meteo.com/v1/forecast"
@@ -94,7 +109,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    @st.cache_data
+    
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -120,20 +135,6 @@ def show_forecast2_expander():
                 """, unsafe_allow_html=True
             )
 
-            # Zonsopgang en zonsondergang omzetten naar datetime
-            sunrise_time = local_timezone.localize(
-                datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            sunset_time = local_timezone.localize(
-                datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            filter_start_time = sunrise_time - timedelta(hours=1)
-            filter_end_time = sunset_time + timedelta(hours=1)
-
-            # Toon dagelijkse gegevens
-            daily = weather_data.get("daily", {})
-            st.write(f"🌅 Zonsopgang: {sunrise} - 🌇 Zonsondergang: {sunset}")
-
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
             times = hourly.get("time", [])
@@ -148,10 +149,6 @@ def show_forecast2_expander():
             wind_speed_80m = hourly.get("wind_speed_80m", [])
             wind_direction_10m = hourly.get("wind_direction_10m", [])
 
-            times_filtered = []
-            temperatures_filtered = []
-            precipitation_filtered = []
-
             if times:
                 current_date = None
                 for i in range(len(times)):
@@ -163,8 +160,8 @@ def show_forecast2_expander():
                         st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
                         continue
 
-                    # Filter gegevens buiten het gewenste bereik
-                    if not (filter_start_time <= datetime_obj <= filter_end_time):
+                    # Gebruik sunrise/sunset filtering van vandaag
+                    if not (filter_start_time.time() <= datetime_obj.time() <= filter_end_time.time()):
                         continue
 
                     date, time = datetime_obj.strftime('%Y-%m-%d'), datetime_obj.strftime('%H:%M')
@@ -175,70 +172,29 @@ def show_forecast2_expander():
                     # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
                     wind_icon_svg = create_wind_icon(wind_dir_10)
-
-                    # Verkrijg zichtbaarheid in kilometers
-                    visibility_km = convert_visibility(visibility[i]) if visibility[i] is not None else "N/B"
+                    # functie om de zichtbaarheid in kilometers om te zetten
+                    #zichtbaarheid_km = convert_visibility(visibility[i])
 
                     # Toon gegevens in een tabelrij
                     st.markdown(
                         f"""
                         <table>
-                            <tr>
-                                <td>{time}</td>
-                                <td>{temperature[i]} °C</td>
-                                <td>{precipitation[i]} mm</td>
-                                <td>☁️L {cloud_low[i]}%</td>
-                                <td>☁️M {cloud_mid[i]}%</td>
-                                <td>☁️H {cloud_high[i]}%</td>
-                                <td>🌬️ {wind_speed_10m[i]} km/h - {wind_icon_svg}</td>
-                                <td>🌫️ {visibility_km} km</td>
-                            </tr>
+                        <tr>
+                            <td>🕒 {time}</td>
+                            <td>🌡️ {temperature[i]}°C</td>
+                            <td>🌧️ {precipitation[i]} mm</td>
+                            <td>☁️ {cloud_cover[i]}%</td>
+                            <td>☁️L {cloud_low[i]}%</td>
+                            <td>☁️M {cloud_mid[i]}%</td>
+                            <td>☁️H {cloud_high[i]}%</td>
+                            <td>👁️ {convert_visibility(visibility[i])}Km</td>
+                            <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
+                            <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
+                            <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
+                        </tr>
                         </table>
-                        """, unsafe_allow_html=True
+                        """,
+                        unsafe_allow_html=True
                     )
-
-                    # Voeg data toe voor de grafiek
-                    times_filtered.append(time)
-                    temperatures_filtered.append(temperature[i])
-                    precipitation_filtered.append(precipitation[i])
-
-            # Maak EChart voor Mixed Line and Bar
-            chart_options = {
-                "title": {
-                    "text": "Weersvoorspelling (Temperatuur en Neerslag)"
-                },
-                "tooltip": {
-                    "trigger": "axis"
-                },
-                "legend": {
-                    "data": ["Temperatuur", "Neerslag"]
-                },
-                "xAxis": {
-                    "type": "category",
-                    "data": times_filtered
-                },
-                "yAxis": [{
-                    "type": "value",
-                    "name": "Temperatuur (°C)"
-                }, {
-                    "type": "value",
-                    "name": "Neerslag (mm)",
-                    "axisLine": {"show": False}
-                }],
-                "series": [
-                    {
-                        "name": "Temperatuur",
-                        "type": "line",
-                        "data": temperatures_filtered
-                    },
-                    {
-                        "name": "Neerslag",
-                        "type": "bar",
-                        "data": precipitation_filtered,
-                        "yAxisIndex": 1
-                    }
-                ]
-            }
-
-            # Toon de EChart
-            st_echarts(options=chart_options)
+            else:
+                st.write("Geen uurlijkse gegevens beschikbaar.")
