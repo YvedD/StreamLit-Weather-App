@@ -79,17 +79,17 @@ def show_forecast2_expander():
     past_day = today - timedelta(days=1)
     forecast_days = 5
 
-API_URL = (
-    "https://api.open-meteo.com/v1/forecast"
-    f"?latitude={latitude}"
-    f"&longitude={longitude}"
-    "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
-    "visibility,wind_speed_10m,wind_speed_80m,wind_direction_10m"
-    "&daily=sunrise,sunset"
-    f"&timezone={local_timezone.zone}"
-    "&past_days=1"
-    "&forecast_days=5"
-)
+    API_URL = (
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={latitude}"
+        f"&longitude={longitude}"
+        "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
+        "visibility,wind_speed_10m,wind_speed_80m,wind_direction_10m"
+        "&daily=sunrise,sunset"
+        f"&timezone={local_timezone.zone}"
+        "&past_days=1"
+        "&forecast_days=5"
+    )
 
     # Haal gegevens op van de API
     #@st.cache_data
