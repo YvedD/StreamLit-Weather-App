@@ -7,13 +7,6 @@ from forecast1 import show_forecast1_expander
 
 
 def main():
-    st.set_page_config(
-        layout="wide",
-        page_title="Migration Weather data Tool",
-        initial_sidebar_state="collapsed",
-        page_icon="compass"
-    )
-    
     # Verkrijg invoer van de gebruiker
     latitude, longitude, location = show_input_form()
 
