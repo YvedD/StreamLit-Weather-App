@@ -146,7 +146,7 @@ def show_forecast2_expander():
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
-                    datetime_obj = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M:%S').astimezone(local_timezone)
+                    datetime_obj = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M').astimezone(local_timezone)
 
                     # Filter gegevens buiten het gewenste bereik
                     if not (filter_start_time <= datetime_obj <= filter_end_time):
