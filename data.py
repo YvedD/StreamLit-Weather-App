@@ -132,10 +132,14 @@ def show_data_expander():
                 
                 # Weergegevens formatten
                 weather_info = (
-                    f"🕒{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
-                    f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
-                    f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility_km} km"
+                    f"🕒:{hour}|🌡️:{temperatures[i]:.1f}°C|🌧️:{precipitation[i]:.1f} mm|"
+                    f"☁️:{cloudcover[i]}%(☁️L:{cloudcover_low[i]}%,☁️M:{cloudcover_mid[i]}%,☁️H:{cloudcover_high[i]}%)|"
+                    f"🧭:{wind_direction} 💨:{beaufort}Bf|👁️:{visibility_km} km"
                 )
+                    # f"🕒 Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
+                    # f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon tekst", "Icoon afbeelding"
+
+
                 
                 # Toevoegen aan de lijst van weergegevensregels
                 weather_info_lines.append(weather_info)
