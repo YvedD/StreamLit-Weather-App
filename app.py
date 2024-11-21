@@ -4,7 +4,7 @@ from maps import show_map_expander
 from data import show_data_expander  # Importeer de data-expander
 from forecast2 import show_forecast2_expander
 from forecast1 import show_forecast1_expander
-
+from show_weather_chart_expander() import show_weather_chart_expander
 
 def main():
     # Verkrijg invoer van de gebruiker
