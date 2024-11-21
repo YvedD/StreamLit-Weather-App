@@ -46,7 +46,7 @@ def create_wind_icon(degree):
         <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
             <g transform="rotate({arrow_degree}, 50, 50)">
                 <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
-                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="30"/>
+                <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="12"/>
             </g>
         </svg>
     </div>
