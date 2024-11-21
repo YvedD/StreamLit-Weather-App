@@ -29,6 +29,6 @@ def main():
     #toon de voorspellingen voor -1dag+7 dagen
     show_forecast2_expander()
     #toon de Echart
-    show_weather_chart_expander()
+    #show_weather_chart_expander()
 if __name__ == "__main__":
     main()
