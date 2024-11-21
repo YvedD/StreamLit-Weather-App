@@ -147,7 +147,11 @@ def show_forecast2_expander():
                 for i in range(len(times)):
                     # Haal datum en tijd op uit de tijdstempel
                     timestamp = times[i]
-                    datetime_obj = datetime.strptime(timestamp, '%Y-%m-%dT%H:%M').astimezone(local_timezone)
+                    try:
+                        datetime_obj = parse(timestamp).astimezone(local_timezone)
+                    except ValueError:
+                        st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
+                        continue
 
                     # Filter gegevens buiten het gewenste bereik
                     if not (filter_start_time <= datetime_obj <= filter_end_time):
