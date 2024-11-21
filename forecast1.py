@@ -12,7 +12,8 @@ if api_key:
     st.write("API Key is geladen !")  # Dit is optioneel om te testen
 else:
     st.write("API Key is niet gevonden!")  # Dit helpt bij troubleshooting
-    
+
+@st.cache_data
 def show_forecast1_expander():
     # Bepaal de datum van "vandaag + 1 dag"
     forecast_date = datetime.now() + timedelta(days=1)
