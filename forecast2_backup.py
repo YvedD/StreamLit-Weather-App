@@ -28,13 +28,13 @@ def wind_speed_to_beaufort(speed_kmh):
 # Functie om de afbeelding te draaien op basis van de windrichting
 def rotate_wind_icon(degree):
     # Laad het icoon vanuit een lokale bestandspad
-    wind_icon_path = "wind1.png"
+    wind_icon_path = "wind1.png"  # Zorg ervoor dat dit pad correct is!
     
     # Open de afbeelding met PIL
     image = Image.open(wind_icon_path)
     
-    # Draai de afbeelding volgens de windrichting
-    rotated_image = image.rotate(360 - degree, expand=True)  # Draai het icoon om de juiste richting te krijgen
+    # Draai en spiegel de afbeelding volgens de windrichting
+    rotated_image = image.rotate(360 - degree, expand=True)  # Corrigeer de draaiing
     
     # Schaal de afbeelding naar 16x16 pixels
     rotated_image = rotated_image.resize((16, 16))
@@ -73,7 +73,7 @@ def show_forecast2_expander():
             daily = weather_data.get("daily", {})
             sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
             sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
-            st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
+            #st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
@@ -118,14 +118,14 @@ def show_forecast2_expander():
                         wind_speed_to_beaufort(wind_speed_10m[i]),  # Windsnelheid @ 10m
                         wind_speed_to_beaufort(wind_speed_80m[i]),  # Windsnelheid @ 80m
                         wind_dir_compass_10,  # Windrichting
-                        "",  # Lege kolom voor het icoon
-                        rotated_wind_icon  # Het gedraaide icoon
+                        f"{wind_dir_compass_10} (pijl)",  # Voorbeeldtekst
+                        rotated_wind_icon  # Pijltjesicoon
                     ])
 
                 # Zet de data om in een pandas DataFrame voor mooie weergave
                 df = pd.DataFrame(data, columns=[
                     f"🕒 Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
-                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon", "Icoon afbeelding"
+                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon tekst", "Icoon afbeelding"
                 ])
 
                 # Toon de tabel
