@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from timezonefinder import TimezoneFinder
 import pytz
 import requests
+from dateutil.parser import parse
 
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
