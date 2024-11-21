@@ -11,7 +11,7 @@ def main():
         layout="wide",
         page_title="Migration Weather data Tool",
         initial_sidebar_state="collapsed",
-        page_icon="kompass"
+        page_icon="compass"
     )
     
     # Verkrijg invoer van de gebruiker
