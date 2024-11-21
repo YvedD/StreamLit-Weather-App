@@ -132,7 +132,7 @@ def show_data_expander():
                 
                 # Weergegevens formatten
                 weather_info = (
-                    f"{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
+                    f"🕒{hour}|Temp:{temperatures[i]:.1f}°C|Precip:{precipitation[i]:.1f} mm|"
                     f"Clouds:{cloudcover[i]}%(L:{cloudcover_low[i]}%,M:{cloudcover_mid[i]}%,H:{cloudcover_high[i]}%)|"
                     f"Wnd:{wind_direction} {beaufort}Bf|Vis:{visibility_km} km"
                 )
