@@ -13,7 +13,8 @@ def main():
         initial_sidebar_state="collapsed",
         page_icon="kompass"
     )
-
+    
+    @st.cache_data
     
     # Verkrijg invoer van de gebruiker
     latitude, longitude, location = show_input_form()
