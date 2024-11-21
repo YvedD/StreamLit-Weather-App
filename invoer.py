@@ -44,6 +44,7 @@ def get_gps_coordinates(location):
         st.error(f"Fout bij het ophalen van GPS-coördinaten voor locatie '{location}': {e}")
         return None, None
 # Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
+@st.cache_data
 def get_sun_times(lat, lon, date):
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
