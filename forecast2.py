@@ -83,8 +83,16 @@ def show_forecast2_expander():
         return
 
     today = datetime.now(local_timezone)
-    past_day = today - timedelta(days=1)
-    forecast_days = 5
+
+    # Bepaal de filtertijden van vandaag (gebruik deze voor ALLE dagen)
+    sunrise_time_today = local_timezone.localize(
+        datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    sunset_time_today = local_timezone.localize(
+        datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
+    )
+    filter_start_time = sunrise_time_today - timedelta(hours=1)
+    filter_end_time = sunset_time_today + timedelta(hours=1)
 
     API_URL = (
         "https://api.open-meteo.com/v1/forecast"
@@ -125,16 +133,6 @@ def show_forecast2_expander():
                 """, unsafe_allow_html=True
             )
 
-            # Zonsopgang en zonsondergang van vandaag omzetten naar datetime
-            sunrise_time_today = local_timezone.localize(
-                datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            sunset_time_today = local_timezone.localize(
-                datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
-            )
-            filter_start_time_today = sunrise_time_today - timedelta(hours=1)
-            filter_end_time_today = sunset_time_today + timedelta(hours=1)
-
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
             times = hourly.get("time", [])
@@ -160,14 +158,8 @@ def show_forecast2_expander():
                         st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
                         continue
 
-                    # Per dag filteren op tijden
-                    if datetime_obj.date() == today.date():
-                        filter_start_time, filter_end_time = filter_start_time_today, filter_end_time_today
-                    else:
-                        # Voor andere dagen geen extra filtering op sunrise/sunset
-                        filter_start_time, filter_end_time = datetime_obj.replace(hour=0, minute=0), datetime_obj.replace(hour=23, minute=59)
-
-                    if not (filter_start_time <= datetime_obj <= filter_end_time):
+                    # Gebruik sunrise/sunset filtering van vandaag
+                    if not (filter_start_time.time() <= datetime_obj.time() <= filter_end_time.time()):
                         continue
 
                     date, time = datetime_obj.strftime('%Y-%m-%d'), datetime_obj.strftime('%H:%M')
