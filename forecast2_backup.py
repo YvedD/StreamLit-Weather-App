@@ -1,4 +1,4 @@
-#Forecast2.py module (onderdeel van "Migration Weather-app")
+# Forecast2.py module (onderdeel van "Migration Weather-app")
 
 import streamlit as st
 from datetime import datetime, timedelta
@@ -16,6 +16,7 @@ def wind_direction_to_compass(degree):
     index = round(degree / 22.5) % 16
     return compass_points[index]
 
+
 # Functie om windsnelheid om te zetten naar Beaufort
 def wind_speed_to_beaufort(speed_kmh):
     if speed_kmh is None:
@@ -29,11 +30,12 @@ def wind_speed_to_beaufort(speed_kmh):
         if speed_kmh <= threshold:
             return description
 
+
 # Functie om de SVG-pijl te maken voor de windrichting
 def create_wind_icon(degree):
     if degree is None:
         return "N/B"
-    
+
     # Bereken de windrichting in graden voor de pijl (de pijl wijst de andere kant op, dus 180 graden verschuiven)
     arrow_degree = (degree + 180) % 360
 
@@ -50,6 +52,7 @@ def create_wind_icon(degree):
     """
     return arrow_svg
 
+
 # Functie om lokale tijdzone te bepalen
 def get_local_timezone(latitude, longitude):
     tz_finder = TimezoneFinder()
@@ -59,10 +62,11 @@ def get_local_timezone(latitude, longitude):
         return None
     return pytz.timezone(timezone_str)
 
+
 def show_forecast2_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont deze in een Streamlit-expander,
-    beperkt tot de tijd één uur vóór zonsopgang en één uur na zonsondergang.
+    beperkt tot de tijden van zonsopgang en zonsondergang van vandaag.
     """
     latitude = st.session_state.get("latitude")
     longitude = st.session_state.get("longitude")
@@ -95,7 +99,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    @st.cache_data
+    #@st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -121,19 +125,15 @@ def show_forecast2_expander():
                 """, unsafe_allow_html=True
             )
 
-            # Zonsopgang en zonsondergang omzetten naar datetime
-            sunrise_time = local_timezone.localize(
+            # Zonsopgang en zonsondergang van vandaag omzetten naar datetime
+            sunrise_time_today = local_timezone.localize(
                 datetime.strptime(sunrise, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
             )
-            sunset_time = local_timezone.localize(
+            sunset_time_today = local_timezone.localize(
                 datetime.strptime(sunset, '%H:%M').replace(year=today.year, month=today.month, day=today.day)
             )
-            filter_start_time = sunrise_time - timedelta(hours=1)
-            filter_end_time = sunset_time + timedelta(hours=1)
-
-            # Toon dagelijkse gegevens
-            daily = weather_data.get("daily", {})
-            st.write(f"🌅 Zonsopgang: {sunrise} - 🌇 Zonsondergang: {sunset}")
+            filter_start_time_today = sunrise_time_today - timedelta(hours=1)
+            filter_end_time_today = sunset_time_today + timedelta(hours=1)
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
@@ -160,7 +160,13 @@ def show_forecast2_expander():
                         st.error(f"Ongeldige tijdstempel ontvangen: {timestamp}")
                         continue
 
-                    # Filter gegevens buiten het gewenste bereik
+                    # Per dag filteren op tijden
+                    if datetime_obj.date() == today.date():
+                        filter_start_time, filter_end_time = filter_start_time_today, filter_end_time_today
+                    else:
+                        # Voor andere dagen geen extra filtering op sunrise/sunset
+                        filter_start_time, filter_end_time = datetime_obj.replace(hour=0, minute=0), datetime_obj.replace(hour=23, minute=59)
+
                     if not (filter_start_time <= datetime_obj <= filter_end_time):
                         continue
 
