@@ -191,6 +191,7 @@ def show_input_form():
         end_hour_input = st.time_input(end_hour_label, value=end_hour)
 
         # Sla de gegevens op in st.session_state
+        st.session_state["country"] = country
         st.session_state["latitude"] = latitude
         st.session_state["longitude"] = longitude
         st.session_state["location"] = location
