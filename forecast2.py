@@ -7,6 +7,7 @@ import pytz
 import requests
 from dateutil.parser import parse
 
+
 # Functie om windrichting om te zetten naar kompasrichting
 def wind_direction_to_compass(degree):
     compass_points = [
