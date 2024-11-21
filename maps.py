@@ -3,6 +3,7 @@ import folium
 from streamlit_folium import st_folium
 
 # Toon een kaart in een expander
+@st.cache_data
 def show_map_expander():
     # Haal de locatiegegevens uit de session_state
     latitude = st.session_state.get("latitude", 51.2389)  # Gebruik standaard als geen waarde is
