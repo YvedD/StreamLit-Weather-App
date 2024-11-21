@@ -64,7 +64,8 @@ def show_forecast2_expander():
     latitude = st.session_state.get("latitude")
     longitude = st.session_state.get("longitude")
     location = st.session_state.get("location")
-
+    country = st.session_state.get("country")
+    
     if not (latitude and longitude and location):
         st.error("Locatiegegevens ontbreken. Stel eerst de locatie in.")
         return
@@ -92,7 +93,6 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    #@st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -102,7 +102,7 @@ def show_forecast2_expander():
             return None
 
     # UI-componenten
-    st.write(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
+    st.write(f"**Weersvoorspelling voor {location}**, {country} (-1d/+5d)")
 
     weather_data = fetch_weather_data(API_URL)
 
@@ -145,7 +145,7 @@ def show_forecast2_expander():
                     date, time = timestamp.split("T")
                     if date != current_date:
                         current_date = date
-                        st.markdown(f"### **Datum: {current_date}**")
+                        st.markdown(f"Datum: **{current_date}**")
 
                     # Verkrijg windgegevens
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else None
@@ -173,4 +173,4 @@ def show_forecast2_expander():
                         unsafe_allow_html=True
                     )
             else:
-                st.write("Geen uurlijkse gegevens beschikbaar.")
+                st.write("Geen uur gegevens beschikbaar.")
