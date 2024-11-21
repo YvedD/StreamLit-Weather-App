@@ -25,8 +25,9 @@ EUROPEAN_COUNTRIES_NL = [
 ]
 
 # Functie om GPS-coördinaten op te halen via geocoding service
+
+@st.cache_data
 def get_gps_coordinates(location):
-    @st.cache_data
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
     try:
         response = requests.get(api_url)
