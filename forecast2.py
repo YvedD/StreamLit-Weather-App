@@ -73,7 +73,7 @@ def show_forecast2_expander():
             daily = weather_data.get("daily", {})
             sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
             sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
-            st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
+            #st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
