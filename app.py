@@ -10,8 +10,8 @@ def main():
     st.set_page_config(
         layout="wide",
         page_title="Migration Weather data Tool",
-        initial_sidebar_state="collapsed"
-        page_icon="kompass",
+        initial_sidebar_state="collapsed",
+        page_icon="kompass"
     )
 
     
