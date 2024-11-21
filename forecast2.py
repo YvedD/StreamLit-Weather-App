@@ -92,7 +92,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    #@st.cache_data
+    @st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -112,8 +112,8 @@ def show_forecast2_expander():
             st.markdown("""
             <style>
                 table {width: 100%; border-collapse: collapse;}
-                td, th {padding: 5px; text-align: center; font-size: 0.85em;}
-                tr {height: 40px;}
+                td, th {padding: 5px; text-align: center; font-size: 0.85em; border: 1px solid #ddd;}
+                tr {height: 40px; line-height: 0.9;}
             </style>
             """, unsafe_allow_html=True)
 
