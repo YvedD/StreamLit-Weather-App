@@ -15,7 +15,7 @@ def get_local_timezone(latitude, longitude):
         return None
     return pytz.timezone(timezone_str)
 
-def show_weather_data_with_echart_expander():
+def show_weather_chart_expander():
     """
     Haalt gegevens op van de Open-Meteo API en toont een EChart grafiek.
     """
