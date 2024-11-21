@@ -92,7 +92,7 @@ def show_forecast2_expander():
     )
 
     # Haal gegevens op van de API
-    @st.cache_data
+    #@st.cache_data
     def fetch_weather_data(url):
         response = requests.get(url)
         if response.status_code == 200:
@@ -102,7 +102,7 @@ def show_forecast2_expander():
             return None
 
     # UI-componenten
-    st.title(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
+    st.write(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
 
     weather_data = fetch_weather_data(API_URL)
 
