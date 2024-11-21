@@ -25,21 +25,24 @@ def wind_speed_to_beaufort(speed_kmh):
         if speed_kmh <= threshold:
             return description
 
-# Functie om de afbeelding te draaien op basis van de windrichting
-def rotate_wind_icon(degree):
-    # Laad het icoon vanuit een lokale bestandspad
-    wind_icon_path = "wind1.png"  # Zorg ervoor dat dit pad correct is!
+# Functie om de SVG-pijl te maken voor de windrichting
+def create_wind_icon(degree):
+    if degree is None:
+        return "N/B"
     
-    # Open de afbeelding met PIL
-    image = Image.open(wind_icon_path)
-    
-    # Draai en spiegel de afbeelding volgens de windrichting
-    rotated_image = image.rotate(360 - degree, expand=True)  # Corrigeer de draaiing
-    
-    # Schaal de afbeelding naar 16x16 pixels
-    rotated_image = rotated_image.resize((16, 16))
-    
-    return rotated_image
+    # Bereken de windrichting in graden voor de pijl (de pijl wijst de andere kant op, dus 180 graden verschuiven)
+    arrow_degree = (degree + 180) % 360
+
+    # SVG voor de pijl, deze wordt geroteerd naar de juiste richting
+    arrow_svg = f"""
+    <svg width="30" height="30" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g transform="rotate({arrow_degree}, 50, 50)">
+            <polygon points="50,5 60,35 50,25 40,35" fill="blue"/>
+            <line x1="50" y1="25" x2="50" y2="85" stroke="blue" stroke-width="4"/>
+        </g>
+    </svg>
+    """
+    return f'<div style="text-align:center;">{arrow_svg}</div>'
 
 # Functie om weergegevens weer te geven
 def show_forecast2_expander():
@@ -73,7 +76,7 @@ def show_forecast2_expander():
             daily = weather_data.get("daily", {})
             sunrise = daily.get("sunrise", ["Niet beschikbaar"])[0]
             sunset = daily.get("sunset", ["Niet beschikbaar"])[0]
-            #st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
+            st.write(f"Sunrise / Zonsopgang: {sunrise} - Sunset / Zonsondergang: {sunset}")
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
@@ -99,14 +102,14 @@ def show_forecast2_expander():
                     if date != current_date:
                         current_date = date
                         # Voeg een nieuwe datum als titel in de tabel
-                        data.append([f"**{current_date}**", "", "", "", "", "", "", "", "", ""])
+                        data.append([f"**{current_date}**", "", "", "", "", "", "", "", ""])
 
-                    # Verkrijg de windrichting
+                    # Verkrijg de windrichting in graden
                     wind_dir_10 = wind_direction_10m[i] if i < len(wind_direction_10m) else "N/B"
                     wind_dir_compass_10 = wind_direction_to_compass(wind_dir_10)
 
-                    # Draai de afbeelding op basis van de windrichting
-                    rotated_wind_icon = rotate_wind_icon(wind_dir_10)
+                    # Maak de SVG-pijl voor de windrichting
+                    wind_icon_svg = create_wind_icon(wind_dir_10)
 
                     # Voeg gegevens toe aan de lijst voor de tabel
                     data.append([
@@ -118,18 +121,17 @@ def show_forecast2_expander():
                         wind_speed_to_beaufort(wind_speed_10m[i]),  # Windsnelheid @ 10m
                         wind_speed_to_beaufort(wind_speed_80m[i]),  # Windsnelheid @ 80m
                         wind_dir_compass_10,  # Windrichting
-                        f"{wind_dir_compass_10} (pijl)",  # Voorbeeldtekst
-                        rotated_wind_icon  # Pijltjesicoon
+                        wind_icon_svg  # SVG-pijl icoon
                     ])
 
                 # Zet de data om in een pandas DataFrame voor mooie weergave
                 df = pd.DataFrame(data, columns=[
                     f"🕒 Tijd", f"🌡️ Temperatuur", f"🌧️ Neerslag", f"☁️ Bewolking", f"👁️ Zichtbaarheid", 
-                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon tekst", "Icoon afbeelding"
+                    f"💨 Windsnelheid @ 10m", f"💨 Windsnelheid @ 80m", f"🧭 Windrichting", "Icoon"
                 ])
 
                 # Toon de tabel
-                st.dataframe(df)
+                st.dataframe(df, use_container_width=True)
 
             else:
                 st.write("Geen uurlijkse gegevens beschikbaar.")
