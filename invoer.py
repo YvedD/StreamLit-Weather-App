@@ -120,14 +120,14 @@ def show_input_form():
     )
 
     # Expander die altijd uitgeklapt is
-    with st.expander("###Input Data/Voer gegevens in###", expanded=True):
+    with st.expander("**Input Data/Voer gegevens in**", expanded=True):
 
         # Taalkeuze door middel van een two-state switch binnen de expander
         lang_choice = st.radio(
             "", #Select Language/Kies uw taal",
             options=["English", "Nederlands"],
             index=1 if st.session_state.get("language", "English") == "English" else 1,
-            key="language_selector",  
+            #key="language_selector",  
             horizontal=True  
         )
 
