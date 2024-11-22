@@ -164,7 +164,7 @@ def show_input_form():
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-
+        
         # Verkrijg de GPS-coördinaten voor de nieuwe locatie
         latitude, longitude = get_gps_coordinates(location)
 
@@ -192,8 +192,8 @@ def show_input_form():
             st.session_state["end_hour"] = end_hour.strftime("%H:%M")
 
         # Voeg invoervelden toe voor beginuur en einduur, met de mogelijkheid om handmatig aan te passen
-        start_hour_input = st.time_input(start_hour_label, value=start_hour)
-        end_hour_input = st.time_input(end_hour_label, value=end_hour)
+        start_hour_input = st.time_input(start_hour_label, value=start_hour, step=3600)
+        end_hour_input = st.time_input(end_hour_label, value=end_hour, step=3600)
 
         # Sla de gegevens op in st.session_state
         st.session_state["country"] = country
