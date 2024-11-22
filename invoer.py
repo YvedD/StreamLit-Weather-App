@@ -29,9 +29,12 @@ EUROPEAN_COUNTRIES_NL = [
 @st.cache_data
 def get_gps_coordinates(location):
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
+    headers = {
+        'User-Agent': 'StreamLit-Weather-app/1.0 (ydsdsy@gmail.com)'  # Voeg je eigen app naam en contact e-mail toe
+    }
     try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Dit zorgt ervoor dat we een foutmelding krijgen bij een slechte API-aanroep
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()  # Zorgt ervoor dat fouten goed worden afgehandeld
         data = response.json()
         if data:
             lat = float(data[0]["lat"])
@@ -42,8 +45,7 @@ def get_gps_coordinates(location):
             return None, None
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van GPS-coördinaten voor locatie '{location}': {e}")
-        return None, None
-# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
+        return None, None# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
 @st.cache_data
 def get_sun_times(lat, lon, date):
     tz_finder = TimezoneFinder()
