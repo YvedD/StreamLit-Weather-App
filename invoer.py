@@ -192,8 +192,8 @@ def show_input_form():
             st.session_state["end_hour"] = end_hour.strftime("%H:%M")
 
         # Voeg invoervelden toe voor beginuur en einduur, met de mogelijkheid om handmatig aan te passen
-        start_hour_input = st.time_input(start_hour_label, value=start_hour, step=3600)
-        end_hour_input = st.time_input(end_hour_label, value=end_hour, step=3600)
+        start_hour_input = st.time_input(start_hour_label, value=start_hour, step=01:00)
+        end_hour_input = st.time_input(end_hour_label, value=end_hour, step=01:00)
 
         # Sla de gegevens op in st.session_state
         st.session_state["country"] = country
