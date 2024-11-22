@@ -124,7 +124,7 @@ def show_input_form():
 
         # Taalkeuze door middel van een two-state switch binnen de expander
         lang_choice = st.radio(
-            "", #Select Language/Kies uw taal",
+            #"", #Select Language/Kies uw taal",
             options=["English", "Nederlands"],
             index=1 if st.session_state.get("language", "English") == "English" else 1,
             key="language_selector",  
