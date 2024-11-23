@@ -118,7 +118,7 @@ def show_forecast2_expander():
             st.error("Kan de weergegevens niet ophalen. Controleer de API URL.")
             return None
 
-    st.markdown(f"**Weersvoorspelling voor {location}** ***[red(-1d/+5d)]***")
+    st.subheader("**Weersvoorspelling voor {location}** (-1d/+5d)")
 
     weather_data = fetch_weather_data(API_URL)
 
