@@ -53,15 +53,11 @@ def initialize_location_data():
     sunset_utc = datetime.fromisoformat(sun_times["sunset"])
     civil_sunrise_utc = datetime.fromisoformat(sun_times["civil_twilight_begin"])
     civil_sunset_utc = datetime.fromisoformat(sun_times["civil_twilight_end"])
-    nautical_sunrise_utc = datetime.fromisoformat(sun_times["nautical_twilight_begin"])
-    nautical_sunset_utc = datetime.fromisoformat(sun_times["nautical_twilight_end"])
 
     sunrise_local = convert_to_local_time(sunrise_utc, timezone, dst_offset)
     sunset_local = convert_to_local_time(sunset_utc, timezone, dst_offset)
     civil_sunrise_local = convert_to_local_time(civil_sunrise_utc, timezone, dst_offset)
     civil_sunset_local = convert_to_local_time(civil_sunset_utc, timezone, dst_offset)
-    nautical_sunrise_local = convert_to_local_time(nautical_sunrise_utc, timezone, dst_offset)
-    nautical_sunset_local = convert_to_local_time(nautical_sunset_utc, timezone, dst_offset)
 
     # Toon de gegevens in Streamlit
     st.write(f"Land: {default_country}")
@@ -73,21 +69,15 @@ def initialize_location_data():
     st.write(f"Zonsondergang: {sunset_local.strftime('%H:%M')}")
     st.write(f"Civiele zonsopgang: {civil_sunrise_local.strftime('%H:%M')}")
     st.write(f"Civiele zonsondergang: {civil_sunset_local.strftime('%H:%M')}")
-    st.write(f"Nautische zonsopgang: {nautical_sunrise_local.strftime('%H:%M')}")
-    st.write(f"Nautische zonsondergang: {nautical_sunset_local.strftime('%H:%M')}")
-
-# Placeholder voor jouw bestaande code voor temperatuurvoorspellingen
-def show_temperature_forecast():
-    # Je eigen code voor het ophalen en weergeven van de temperatuurvoorspellingen
-    st.write("Dit is de temperatuurvoorspelling tab. Voeg hier je code in.")
     
-# Placeholder voor jouw bestaande code voor meerdaagse weersvoorspellingen
-def show_multiday_forecast():
-    # Je eigen code voor het ophalen en weergeven van de meerdaagse weersvoorspellingen
-    st.write("Dit is de meerdaagse weersvoorspelling tab. Voeg hier je code in.")
+    # Return de civiele tijden voor de slider
+    return civil_sunrise_local, civil_sunset_local
 
 # Hoofdfunctie om de app te starten
 def main():
+    # Haal locatiegegevens op
+    civil_sunrise_local, civil_sunset_local = initialize_location_data()
+
     # Sidebar configuratie
     with st.sidebar:
         st.title("Locatie-instellingen")
@@ -101,8 +91,26 @@ def main():
         latitude = st.number_input("Latitude", value=51.2389)
         longitude = st.number_input("Longitude", value=2.9724)
 
-    # Initialiseer de gegevens en toon ze
-    initialize_location_data()
+        # Voeg de slider toe voor de start- en einduur
+        # Zet de slider op basis van de civiele zonsopgang en zonsondergang (geheel uur)
+        start_hour = civil_sunrise_local.hour
+        end_hour = civil_sunset_local.hour
+
+        # Stappen van 1 uur, en pas aan naar hele uren
+        start_hour = round(start_hour)  # Rond naar het dichtstbijzijnde uur
+        end_hour = round(end_hour)
+
+        st.write("Starthour / Endhour")
+        start_end_slider = st.slider(
+            "Selecteer het uur",
+            min_value=0, 
+            max_value=23,
+            value=(start_hour, end_hour),  # Slider begint op civiele zonsopgang en zonsondergang
+            step=1,
+            format="HH:mm"
+        )
+        st.write(f"Startuur: {start_end_slider[0]}:00")
+        st.write(f"Einduur: {start_end_slider[1]}:00")
 
     # Maak tabs aan voor de verschillende secties
     tab1, tab2, tab3 = st.tabs(["Weatherdata", "Temperature Forecast", "Multiday Forecast"])
@@ -110,18 +118,17 @@ def main():
     # Tab 1: Weatherdata
     with tab1:
         st.subheader("Weatherdata")
-        # Hier kunnen we de weerdata weergeven, die via een API of een andere bron opgehaald wordt
         st.write("Weatherdata tab - Toon actuele weersomstandigheden")
 
     # Tab 2: Temperature Forecast
     with tab2:
         st.subheader("Temperature Forecast")
-        show_temperature_forecast()  # Jouw werkende code voor temperatuurvoorspelling
+        st.write("Temperature Forecast tab - Toon temperatuurvoorspellingen")
 
     # Tab 3: Multiday Forecast
     with tab3:
         st.subheader("Multiday Forecast")
-        show_multiday_forecast()  # Jouw werkende code voor meerdaagse weersvoorspelling
+        st.write("Multiday Forecast tab - Toon meerdaagse weersvoorspellingen")
 
 if __name__ == "__main__":
     main()
