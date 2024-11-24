@@ -13,13 +13,17 @@ def get_country_from_ip():
 
 # Functie om geolocatie op te halen via JavaScript (HTML5 geolocatie)
 def get_location_js():
+    # We gebruiken JavaScript om de geolocatie van de gebruiker op te halen
     st.markdown("""
         <script type="text/javascript">
             if (navigator.geolocation) {
                 navigator.geolocation.getCurrentPosition(function(position) {
                     const latitude = position.coords.latitude;
                     const longitude = position.coords.longitude;
+                    // Verstuur de opgehaalde locatie naar Streamlit
                     window.parent.postMessage({latitude, longitude}, "*");
+                }, function(error) {
+                    console.log(error);
                 });
             } else {
                 alert("Geolocation is not supported by this browser.");
@@ -43,7 +47,7 @@ def main():
     # Tab 1: Toon de locatiegegevens
     st.title("Locatiegegevens")
     st.subheader("Locatie van de gebruiker")
-    st.write(f"Land: {st.session_state.get('country')}")
+    st.write(f"Land (op basis van IP): {st.session_state.get('country')}")
     st.write(f"Latitude: {st.session_state.get('latitude')}")
     st.write(f"Longitude: {st.session_state.get('longitude')}")
 
