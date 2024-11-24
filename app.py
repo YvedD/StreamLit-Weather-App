@@ -115,17 +115,20 @@ def show_sun_times():
 # App structuur
 def main():
     # Configuratie voor de pagina
-    st.set_page_config(
-        layout="wide",
-        page_title="Mijn Streamlit App",
-        page_icon="📊",
-        menu_items={
-            "Get Help": None,
-            "Report a Bug": None,
-            "About": None,
-        }
-    )
-    st.title("Sunrise, Sunset, and Twilight Times")
+    st.set_page_config(layout="wide")
+
+    # CSS om iconen en menu te verbergen
+    hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
+    st.title("Mijn Streamlit App")
+    st.write("De bovenste iconen zijn nu verborgen!")    st.title("Sunrise, Sunset, and Twilight Times")
 
     # Hoofdapp inhoud
     show_sun_times()
