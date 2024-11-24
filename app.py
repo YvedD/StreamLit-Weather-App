@@ -52,8 +52,8 @@ def create_time_slider(start_time, end_time):
     )
 
     # Toon de geselecteerde tijden boven de slider
-    st.write(f"**Geselecteerde Starttijd:** {appointment[0].strftime('%H:%M')}")
-    st.write(f"**Geselecteerde Eindtijd:** {appointment[1].strftime('%H:%M')}")
+    #st.write(f"**Geselecteerde Starttijd:** {appointment[0].strftime('%H:%M')}")
+    #st.write(f"**Geselecteerde Eindtijd:** {appointment[1].strftime('%H:%M')}")
     
     return appointment
 
