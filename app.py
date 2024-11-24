@@ -101,7 +101,7 @@ def main():
         end_hour = round(end_hour)
 
         # Toon de geselecteerde start- en einduren boven de slider
-        st.write(f"Starthour: {start_hour}:00")
+        st.write(f"Startuur: {start_hour}:00")
         st.write(f"Einduur: {end_hour}:00")
         
         # Voeg de slider toe
@@ -113,8 +113,14 @@ def main():
             step=1,
             format="HH:mm"
         )
-        st.write(f"Startuur: {start_end_slider[0]}:00")
-        st.write(f"Einduur: {start_end_slider[1]}:00")
+
+        # Weergave van de huidige waarden in de slider
+        start_value = start_end_slider[0]
+        end_value = start_end_slider[1]
+
+        # Toon de gekozen tijden net boven de slider
+        st.write(f"Startuur: {start_value}:00")
+        st.write(f"Einduur: {end_value}:00")
 
     # Maak tabs aan voor de verschillende secties
     tab1, tab2, tab3 = st.tabs(["Weatherdata", "Temperature Forecast", "Multiday Forecast"])
