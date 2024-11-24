@@ -32,19 +32,23 @@ def get_sun_times(lat, lon):
 
 # Functie om de slider in te stellen voor de start- en eindtijden
 def create_time_slider(start_hour, end_hour):
+    # Ronde start- en eindtijden af naar beneden en naar boven
+    start_hour_rounded = time(start_hour.hour, 0)  # Ronden naar beneden naar het begin van het uur
+    end_hour_rounded = time(end_hour.hour + 1, 0)  # Ronden naar boven naar het begin van het volgende uur
+
     # De slider retourneert een tuple van de start- en eindtijden
     appointment = st.slider(
         "Selecteer het tijdsinterval:",
         min_value=time(0, 0),  # Begin om 00:00
         max_value=time(23, 0),  # Eindig om 23:00
-        value=(start_hour, end_hour),  # De standaardwaarden worden ingesteld op civiele zonsopgang en zonsondergang
+        value=(start_hour_rounded, end_hour_rounded),  # De standaardwaarden worden ingesteld op civiele zonsopgang en zonsondergang
         step=timedelta(hours=1),  # Stappen van één uur
         format="HH:mm",  # Weergeven in het formaat uur:minuten
     )
 
     # Toon de geselecteerde tijden boven de slider
-    st.write(f"Startuur: {appointment[0].strftime('%H:%M')}")
-    st.write(f"Einduur: {appointment[1].strftime('%H:%M')}")
+    st.write(f"Starttijd: {appointment[0].strftime('%H:%M')}")
+    st.write(f"Eindtijd: {appointment[1].strftime('%H:%M')}")
     
     return appointment
 
