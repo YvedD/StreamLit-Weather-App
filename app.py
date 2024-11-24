@@ -68,6 +68,18 @@ def create_map(lat, lon):
 
 # Hoofdfunctie om de app te starten
 def main():
+    # Configuratie voor de pagina
+    st.set_page_config(layout="wide")
+    # CSS om iconen en menu te verbergen
+    hide_streamlit_style = """
+        <style>
+        #MainMenu {visibility: hidden;}
+        footer {visibility: hidden;}
+        header {visibility: hidden;}
+        </style>
+    """
+    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
+
     # Standaardinstellingen
     default_country = "België"
     default_location = "Bredene"
@@ -147,17 +159,6 @@ def main():
     with tab3:
         st.subheader("Multiday Forecast")
         st.write("Toon meerdaagse weersvoorspellingen.")
-    # Configuratie voor de pagina
-    st.set_page_config(layout="wide")
-    # CSS om iconen en menu te verbergen
-    hide_streamlit_style = """
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        </style>
-    """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
 if __name__ == "__main__":
     main()
