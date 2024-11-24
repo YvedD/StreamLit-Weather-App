@@ -5,8 +5,7 @@ import requests
 
 # Functie om de zonstijden op te halen
 def get_sun_times(lat, lon, date):
-    # Verbind met een betrouwbare API (gebruik bijvoorbeeld de "SunCalc" API of een andere zonstijdbepaling API)
-    # Dit is een voorbeeld link, zorg ervoor dat je een echte API kiest en een valid key hebt
+    # Verbind met een betrouwbare API (gebruik bijvoorbeeld de "Sunrise-Sunset" API)
     url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     response = requests.get(url)
     data = response.json()
@@ -42,28 +41,27 @@ def show_sun_times():
     nautical_sunrise_local = parse_time(nautical_sunrise)
     nautical_sunset_local = parse_time(nautical_sunset)
 
-    # Toon de tijden in de tekst
-    st.write(f"**Civiele Zonsopgang**: {civil_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Civiele Zonsondergang**: {civil_sunset_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsopgang**: {nautical_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsondergang**: {nautical_sunset_local.strftime('%H:%M')}")
-
-    # Toon een radiobutton om de tijdsinstellingen te kiezen
-    sun_type = st.radio("Choose Sun Times", ["Civiele", "Nautische"], index=0)
+    # Sidebar voor de selectie van de zonsopgang- en zonsondergangtijden
+    sun_type = st.sidebar.radio("Select Sun Times", ["Civiele", "Nautische", "Astronomische"], index=0)
 
     # Stel de begin- en eindtijden in de slider in op basis van de keuze
     if sun_type == "Civiele":
         slider_start = civil_sunrise_local.replace(minute=0, second=0, microsecond=0)
         slider_end = nautical_sunset_local.replace(minute=0, second=0, microsecond=0)
-    else:  # Nautische tijd
+    elif sun_type == "Nautische":
         slider_start = nautical_sunrise_local.replace(minute=0, second=0, microsecond=0)
+        slider_end = civil_sunset_local.replace(minute=0, second=0, microsecond=0)
+    else:  # Astronomische tijden
+        # Pas hier aan naar de juiste tijden voor astronomische zonsopgang en zonsondergang
+        slider_start = civil_sunrise_local.replace(minute=0, second=0, microsecond=0)
         slider_end = civil_sunset_local.replace(minute=0, second=0, microsecond=0)
 
     # Zet de slider om de tijd in uren te kiezen
     start_hour = slider_start.hour
     end_hour = slider_end.hour
 
-    time_slider = st.slider(
+    # Sidebar Slider
+    time_slider = st.sidebar.slider(
         "Select Time Period (hours)",
         min_value=0,
         max_value=23,
@@ -71,14 +69,24 @@ def show_sun_times():
         step=1
     )
 
-    # Toon de gekozen tijdsperiode
+    # Toon de gekozen tijdsperiode in het hoofdgedeelte van de app
     st.write(f"**Selected Time Period**: {time_slider[0]}:00 - {time_slider[1]}:00")
+
+    # Toon de zonstijden in de tab
+    st.write(f"**Selected Sun Type**: {sun_type}")
+    st.write(f"**Civiele Zonsopgang**: {civil_sunrise_local.strftime('%H:%M')}")
+    st.write(f"**Civiele Zonsondergang**: {civil_sunset_local.strftime('%H:%M')}")
+    st.write(f"**Nautische Zonsopgang**: {nautical_sunrise_local.strftime('%H:%M')}")
+    st.write(f"**Nautische Zonsondergang**: {nautical_sunset_local.strftime('%H:%M')}")
+
 
 # App structuur
 def main():
+    # Configuratie voor de pagina
     st.set_page_config(page_title="Sun Times App", layout="wide")
     st.title("Sunrise, Sunset, and Twilight Times")
 
+    # Hoofd app content
     show_sun_times()
 
 if __name__ == "__main__":
