@@ -101,7 +101,7 @@ def main():
         default_location = st.text_input("Locatie", value=default_location)
 
         # Folium-kaart in de sidebar
-        st.write("### Kaart van de locatie")
+        #st.write("### Kaart van de locatie")
         map_ = create_map(latitude, longitude)
         
         # Kaart aanpassen: 100% breedte om visueel de sidebar en kaart te combineren
