@@ -7,7 +7,7 @@ default_country = "België"
 default_location = "Bredene"
 latitude = 51.2389
 longitude = 2.9724
-selected_date = datetime.now() - timedelta(days=1)
+selected_date = datetime.now() #- timedelta(days=1)
 
 # Sessie initialiseren met standaardinstellingen
 def initialize_session_state():
