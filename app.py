@@ -5,6 +5,8 @@ from timezonefinder import TimezoneFinder
 from pytz import timezone
 import folium
 from streamlit_folium import st_folium
+from folium import Marker
+from folium.plugins import MarkerCluster
 
 # Functie om de zonsopgang en zonsondergang op te halen via de Sunrise-Sunset API
 def get_sun_times(lat, lon):
@@ -57,7 +59,11 @@ def create_time_slider(start_time, end_time):
 # Functie om een Folium-kaart te genereren
 def create_map(lat, lon):
     map_ = folium.Map(location=[lat, lon], zoom_start=9)
-    folium.Marker([lat, lon], tooltip="Geselecteerde Locatie").add_to(map_)
+    
+    # Aangepaste marker om te zorgen dat deze goed zichtbaar is
+    icon = folium.Icon(color='blue', icon='cloud', icon_color='white', prefix='fa')
+    folium.Marker([lat, lon], popup="Geselecteerde Locatie", icon=icon).add_to(map_)
+    
     return map_
 
 # Hoofdfunctie om de app te starten
@@ -85,6 +91,15 @@ def main():
         # Folium-kaart in de sidebar
         st.write("### Kaart van de locatie")
         map_ = create_map(latitude, longitude)
+        
+        # Kaart aanpassen: 100% breedte om visueel de sidebar en kaart te combineren
+        st.markdown(
+            """
+            <style>
+                .css-ffhzg2 {width: 100%;}
+            </style>
+            """, unsafe_allow_html=True)
+        
         st_folium(map_, width=600, height=300)  # Kaart breder maken (600px breed)
 
         # Keuze voor zonstijden
