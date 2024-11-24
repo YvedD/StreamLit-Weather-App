@@ -1,7 +1,7 @@
 import streamlit as st
 from datetime import datetime, timedelta
-import requests
 import pytz
+import requests
 
 # Standaardinstellingen
 default_country = "België"
@@ -76,29 +76,15 @@ def initialize_location_data():
     st.write(f"Nautische zonsopgang: {nautical_sunrise_local.strftime('%H:%M')}")
     st.write(f"Nautische zonsondergang: {nautical_sunset_local.strftime('%H:%M')}")
 
-# Functie om weerdata op te halen
-@st.cache_data
-def get_weather_data(latitude, longitude):
-    # Voorbeeld API-aanroep voor weerdata
-    api_url = f"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid=your_api_key&units=metric"
-    response = requests.get(api_url)
-    return response.json()
-
-# Functie om temperatuurvoorspellingen op te halen
-@st.cache_data
-def get_temperature_forecast(latitude, longitude):
-    # Voorbeeld API-aanroep voor temperatuurvoorspelling
-    api_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&appid=your_api_key&units=metric"
-    response = requests.get(api_url)
-    return response.json()
-
-# Functie om meerdaagse voorspellingen op te halen
-@st.cache_data
-def get_multiday_forecast(latitude, longitude):
-    # Voorbeeld API-aanroep voor meerdaagse voorspellingen
-    api_url = f"https://api.openweathermap.org/data/2.5/forecast/daily?lat={latitude}&lon={longitude}&cnt=7&appid=your_api_key&units=metric"
-    response = requests.get(api_url)
-    return response.json()
+# Placeholder voor jouw bestaande code voor temperatuurvoorspellingen
+def show_temperature_forecast():
+    # Je eigen code voor het ophalen en weergeven van de temperatuurvoorspellingen
+    st.write("Dit is de temperatuurvoorspelling tab. Voeg hier je code in.")
+    
+# Placeholder voor jouw bestaande code voor meerdaagse weersvoorspellingen
+def show_multiday_forecast():
+    # Je eigen code voor het ophalen en weergeven van de meerdaagse weersvoorspellingen
+    st.write("Dit is de meerdaagse weersvoorspelling tab. Voeg hier je code in.")
 
 # Hoofdfunctie om de app te starten
 def main():
@@ -111,20 +97,18 @@ def main():
     # Tab 1: Weatherdata
     with tab1:
         st.subheader("Weatherdata")
-        weather_data = get_weather_data(latitude, longitude)
-        st.write(weather_data)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
+        # Hier kunnen we de weerdata weergeven, die via een API of een andere bron opgehaald wordt
+        st.write("Weatherdata tab - Toon actuele weersomstandigheden")
 
     # Tab 2: Temperature Forecast
     with tab2:
         st.subheader("Temperature Forecast")
-        temperature_forecast = get_temperature_forecast(latitude, longitude)
-        st.write(temperature_forecast)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
+        show_temperature_forecast()  # Jouw werkende code voor temperatuurvoorspelling
 
     # Tab 3: Multiday Forecast
     with tab3:
         st.subheader("Multiday Forecast")
-        multiday_forecast = get_multiday_forecast(latitude, longitude)
-        st.write(multiday_forecast)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
+        show_multiday_forecast()  # Jouw werkende code voor meerdaagse weersvoorspelling
 
 if __name__ == "__main__":
     main()
