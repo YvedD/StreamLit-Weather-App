@@ -1,150 +1,85 @@
 import streamlit as st
-from datetime import datetime, timedelta, time
-import requests
-from timezonefinder import TimezoneFinder
-from pytz import timezone
+from datetime import datetime, timedelta
 import pytz
+import requests
 
-# Functie om de zonsopgang en zonsondergang op te halen via de Sunrise-Sunset API
-def get_sun_times(lat, lon):
-    # API-endpoint voor Sunrise-Sunset API
-    url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&formatted=0"
+# Functie om de zonstijden op te halen
+def get_sun_times(lat, lon, date):
+    # Verbind met een betrouwbare API (gebruik bijvoorbeeld de "SunCalc" API of een andere zonstijdbepaling API)
+    # Dit is een voorbeeld link, zorg ervoor dat je een echte API kiest en een valid key hebt
+    url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
     response = requests.get(url)
     data = response.json()
 
-    # Haal de zonsopgang en zonsondergang tijden in UTC op
-    sunrise_utc = data['results']['sunrise']
-    sunset_utc = data['results']['sunset']
-    
-    # Converteer UTC naar lokale tijd (inclusief rekening houden met de tijdzone en DST)
-    tz_finder = TimezoneFinder()
-    timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)  # Vind de tijdzone van de locatie
-    local_tz = timezone(timezone_str)  # Gebruik pytz om de tijdzone te verkrijgen
+    # Haal de benodigde zonsopgang en zonsondergang tijden op
+    civil_sunrise = data['results']['civil_twilight_begin']  # Civiele zonsopgang
+    civil_sunset = data['results']['civil_twilight_end']  # Civiele zonsondergang
+    nautical_sunrise = data['results']['nautical_twilight_begin']  # Nautische zonsopgang
+    nautical_sunset = data['results']['nautical_twilight_end']  # Nautische zonsondergang
 
-    # Zet de tijden om van UTC naar lokale tijd
-    utc_sunrise = datetime.fromisoformat(sunrise_utc)
-    utc_sunset = datetime.fromisoformat(sunset_utc)
+    return civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset
 
-    local_sunrise = utc_sunrise.astimezone(local_tz).time()
-    local_sunset = utc_sunset.astimezone(local_tz).time()
+# Functie om een datetime object te maken van een tijdstring
+def parse_time(time_str):
+    # Zet de tijd van UTC naar lokale tijd (en pas DST aan)
+    utc_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S+00:00')
+    local_time = utc_time.astimezone(pytz.timezone('Europe/Brussels'))  # Stel de tijdzone in
+    return local_time
 
-    # Specifieke tijden voor Civiele en Nautische zonsopgangen kunnen we later berekenen
-    civil_sunrise = (utc_sunrise + timedelta(minutes=30)).astimezone(local_tz).time()
-    civil_sunset = (utc_sunset + timedelta(minutes=30)).astimezone(local_tz).time()
-    
-    nautical_sunrise = (utc_sunrise + timedelta(minutes=60)).astimezone(local_tz).time()
-    nautical_sunset = (utc_sunset + timedelta(minutes=60)).astimezone(local_tz).time()
+# Functie om de slider en de bijbehorende gegevens te tonen
+def show_sun_times():
+    # Stel locatie in voor België (Bredene) en kies de datum van vandaag
+    lat = 51.2389
+    lon = 2.9724
+    date = datetime.now().strftime('%Y-%m-%d')  # Datum van vandaag
 
-    return local_sunrise, local_sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset
+    # Haal zonstijden op
+    civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(lat, lon, date)
 
-# Functie om de slider in te stellen voor de start- en eindtijden
-def create_time_slider(start_hour, end_hour):
-    # Ronde start- en eindtijden af naar beneden en naar boven
-    start_hour_rounded = time(start_hour.hour, 0)  # Ronden naar beneden naar het begin van het uur
-    end_hour_rounded = time(end_hour.hour + 1, 0)  # Ronden naar boven naar het begin van het volgende uur
+    # Zet de tijden om naar lokale tijd
+    civil_sunrise_local = parse_time(civil_sunrise)
+    civil_sunset_local = parse_time(civil_sunset)
+    nautical_sunrise_local = parse_time(nautical_sunrise)
+    nautical_sunset_local = parse_time(nautical_sunset)
 
-    # De slider retourneert een tuple van de start- en eindtijden
-    appointment = st.slider(
-        "Selecteer het tijdsinterval:",
-        min_value=time(0, 0),  # Begin om 00:00
-        max_value=time(23, 0),  # Eindig om 23:00
-        value=(start_hour_rounded, end_hour_rounded),  # De standaardwaarden worden ingesteld op civiele zonsopgang en zonsondergang
-        step=timedelta(hours=1),  # Stappen van één uur
-        format="HH:mm",  # Weergeven in het formaat uur:minuten
+    # Toon de tijden in de tekst
+    st.write(f"**Civiele Zonsopgang**: {civil_sunrise_local.strftime('%H:%M')}")
+    st.write(f"**Civiele Zonsondergang**: {civil_sunset_local.strftime('%H:%M')}")
+    st.write(f"**Nautische Zonsopgang**: {nautical_sunrise_local.strftime('%H:%M')}")
+    st.write(f"**Nautische Zonsondergang**: {nautical_sunset_local.strftime('%H:%M')}")
+
+    # Toon een radiobutton om de tijdsinstellingen te kiezen
+    sun_type = st.radio("Choose Sun Times", ["Civiele", "Nautische"], index=0)
+
+    # Stel de begin- en eindtijden in de slider in op basis van de keuze
+    if sun_type == "Civiele":
+        slider_start = civil_sunrise_local.replace(minute=0, second=0, microsecond=0)
+        slider_end = nautical_sunset_local.replace(minute=0, second=0, microsecond=0)
+    else:  # Nautische tijd
+        slider_start = nautical_sunrise_local.replace(minute=0, second=0, microsecond=0)
+        slider_end = civil_sunset_local.replace(minute=0, second=0, microsecond=0)
+
+    # Zet de slider om de tijd in uren te kiezen
+    start_hour = slider_start.hour
+    end_hour = slider_end.hour
+
+    time_slider = st.slider(
+        "Select Time Period (hours)",
+        min_value=0,
+        max_value=23,
+        value=(start_hour, end_hour),
+        step=1
     )
 
-    # Toon de geselecteerde tijden boven de slider
-    st.write(f"Starttijd: {appointment[0].strftime('%H:%M')}")
-    st.write(f"Eindtijd: {appointment[1].strftime('%H:%M')}")
-    
-    return appointment
+    # Toon de gekozen tijdsperiode
+    st.write(f"**Selected Time Period**: {time_slider[0]}:00 - {time_slider[1]}:00")
 
-# Hoofdfunctie om de app te starten
+# App structuur
 def main():
-    # Instellen van de standaardlocatie (Bredene, België) als voorbeeld
-    default_country = "België"
-    default_location = "Bredene"
-    latitude = 51.2389
-    longitude = 2.9724
-    selected_date = datetime.now().date()  # Gebruik de huidige datum
+    st.set_page_config(page_title="Sun Times App", layout="wide")
+    st.title("Sunrise, Sunset, and Twilight Times")
 
-    # Haal de zonsopgang en zonsondergang op voor de gekozen locatie (Bredene)
-    sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(latitude, longitude)
-
-    # Sidebar configuratie
-    with st.sidebar:
-        st.title("Locatie-instellingen")
-        
-        # Selecteer de datum via de sidebar
-        selected_date = st.date_input("Selecteer een datum", value=datetime.now().date())
-
-        # Locatiegegevens kunnen ook aangepast worden in de sidebar
-        default_country = st.text_input("Land", value=default_country)
-        default_location = st.text_input("Locatie", value=default_location)
-        latitude = st.number_input("Latitude", value=latitude)
-        longitude = st.number_input("Longitude", value=longitude)
-
-        # Keuze voor de zonsopgang/ondergang
-        zonsopgang_keuze = st.radio(
-            "Selecteer type zonsopgang/zonsondergang",
-            options=["Normal", "Civil", "Nautical"],
-            index=1,  # Standaard op 'Civil'
-            horizontal=True  # Zet de radio buttons naast elkaar
-        )
-
-        # Sla de geselecteerde optie op in de session_state
-        if "zonsopgang_keuze" not in st.session_state:
-            st.session_state.zonsopgang_keuze = "Civil"
-        st.session_state.zonsopgang_keuze = zonsopgang_keuze
-        
-        # Kies de juiste zonsopgang/zonsondergang tijden op basis van de keuze
-        if zonsopgang_keuze == "Normal":
-            start_hour, end_hour = sunrise, sunset
-        elif zonsopgang_keuze == "Nautical":
-            start_hour, end_hour = nautical_sunrise, nautical_sunset
-        else:  # 'Civil' is de default
-            start_hour, end_hour = civil_sunrise, civil_sunset
-
-        # Voeg de tijdsinterval slider toe met de civiele zonsopgang en zonsondergang als standaard
-        appointment = create_time_slider(start_hour, end_hour)
-
-    # Maak tabs aan voor de verschillende secties
-    tab1, tab2, tab3 = st.tabs(["Weatherdata", "Temperature Forecast", "Multiday Forecast"])
-
-    # Tab 1: Weatherdata
-    with tab1:
-        st.subheader("Weatherdata")
-        st.write("Locatiegegevens:")
-        st.write(f"Land: {default_country}")
-        st.write(f"Locatie: {default_location}")
-        st.write(f"Latitude: {latitude}")
-        st.write(f"Longitude: {longitude}")
-        st.write(f"Geselecteerde datum: {selected_date}")
-
-        # Toon de geselecteerde tijden en zonsopgang/ondergang details
-        st.write(f"Zonsopgang type: {zonsopgang_keuze}")
-        
-        # Toon de verschillende zonsopgangen en zonsondergangen voor alle types
-        st.write(f"Normale zonsopgang: {sunrise.strftime('%H:%M')}")
-        st.write(f"Normale zonsondergang: {sunset.strftime('%H:%M')}")
-        st.write(f"Civiele zonsopgang: {civil_sunrise.strftime('%H:%M')}")
-        st.write(f"Civiele zonsondergang: {civil_sunset.strftime('%H:%M')}")
-        st.write(f"Nautische zonsopgang: {nautical_sunrise.strftime('%H:%M')}")
-        st.write(f"Nautische zonsondergang: {nautical_sunset.strftime('%H:%M')}")
-
-        # De slider tijden (start en eindtijden)
-        st.write(f"Starttijd van geselecteerd interval: {appointment[0].strftime('%H:%M')}")
-        st.write(f"Eindtijd van geselecteerd interval: {appointment[1].strftime('%H:%M')}")
-
-    # Tab 2: Temperature Forecast
-    with tab2:
-        st.subheader("Temperature Forecast")
-        st.write("Temperature Forecast tab - Toon temperatuurvoorspellingen")
-
-    # Tab 3: Multiday Forecast
-    with tab3:
-        st.subheader("Multiday Forecast")
-        st.write("Multiday Forecast tab - Toon meerdaagse weersvoorspellingen")
+    show_sun_times()
 
 if __name__ == "__main__":
     main()
