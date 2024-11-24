@@ -73,7 +73,21 @@ def main():
     # Tab 1: Weatherdata
     with tab1:
         st.subheader("Weatherdata")
-        st.write("Weatherdata tab - Toon actuele weersomstandigheden")
+        st.write("Locatiegegevens:")
+        st.write(f"Land: {default_country}")
+        st.write(f"Locatie: {default_location}")
+        st.write(f"Latitude: {latitude}")
+        st.write(f"Longitude: {longitude}")
+        st.write(f"Geselecteerde datum: {selected_date}")
+
+        # Toon de geselecteerde tijden en zonsopgang/ondergang details
+        st.write(f"Zonsopgang type: {zonsopgang_keuze}")
+        st.write(f"Startuur (zonsopgang): {start_hour.strftime('%H:%M')}")
+        st.write(f"Einduur (zonsondergang): {end_hour.strftime('%H:%M')}")
+
+        # De slider tijden (start en eindtijden)
+        st.write(f"Starttijd van geselecteerd interval: {appointment[0].strftime('%H:%M')}")
+        st.write(f"Eindtijd van geselecteerd interval: {appointment[1].strftime('%H:%M')}")
 
     # Tab 2: Temperature Forecast
     with tab2:
