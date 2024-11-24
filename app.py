@@ -6,7 +6,7 @@ from forecast2 import show_forecast2_expander
 from forecast1 import show_forecast1_expander
 from forecastchart import show_weather_chart_expander
 
-st.set_page_config(layout="wide", page_title="Migration Weather app", page_icon=":compass")
+st.set_page_config(layout="wide", page_title="Migration Weather app")
 
 def main():
     # Verkrijg invoer van de gebruiker
