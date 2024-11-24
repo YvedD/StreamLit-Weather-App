@@ -115,7 +115,16 @@ def show_sun_times():
 # App structuur
 def main():
     # Configuratie voor de pagina
-    st.set_page_config(page_title="Sun Times App", layout="wide")
+    st.set_page_config(
+        layout="wide",
+        page_title="Mijn Streamlit App",
+        page_icon="📊",
+        menu_items={
+            "Get Help": None,
+            "Report a Bug": None,
+            "About": None,
+        }
+    )
     st.title("Sunrise, Sunset, and Twilight Times")
 
     # Hoofdapp inhoud
