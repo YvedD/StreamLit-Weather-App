@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 import pytz
 import requests
 
-# Functie om de zonstijden op te halen
+# Functie om zonstijden op te halen
 def get_sun_times(lat, lon, date):
     # Sunrise-Sunset API
     url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
@@ -30,6 +30,21 @@ def parse_time(time_str):
 def format_time(dt):
     return dt.strftime("%H:%M")
 
+# Functie om `st.session_state` te initialiseren of bij te werken
+def update_session_state(lat, lon, date):
+    if "sun_times" not in st.session_state or st.session_state.get("last_updated_date") != date:
+        sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(lat, lon, date)
+
+        st.session_state["sun_times"] = {
+            "sunrise": parse_time(sunrise),
+            "sunset": parse_time(sunset),
+            "civil_sunrise": parse_time(civil_sunrise),
+            "civil_sunset": parse_time(civil_sunset),
+            "nautical_sunrise": parse_time(nautical_sunrise),
+            "nautical_sunset": parse_time(nautical_sunset),
+        }
+        st.session_state["last_updated_date"] = date
+
 # Functie om de applicatie-UI te tonen
 def show_sun_times():
     # Standaard locatie en datum
@@ -37,44 +52,39 @@ def show_sun_times():
     lon = 2.9724
     date = datetime.now().strftime('%Y-%m-%d')
 
-    # Haal zonstijden op
-    sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(lat, lon, date)
+    # Haal of update zonstijden in `st.session_state`
+    update_session_state(lat, lon, date)
 
-    # Zet zonstijden om naar lokale tijd
-    sunrise_local = parse_time(sunrise)
-    sunset_local = parse_time(sunset)
-    civil_sunrise_local = parse_time(civil_sunrise)
-    civil_sunset_local = parse_time(civil_sunset)
-    nautical_sunrise_local = parse_time(nautical_sunrise)
-    nautical_sunset_local = parse_time(nautical_sunset)
+    # Haal de zonstijden op uit `st.session_state`
+    sun_times = st.session_state["sun_times"]
 
-    # Sidebar voor locatie en datumselectie
+    # Sidebar voor locatie, datum en zonstijdtype
     st.sidebar.write("### Instellingen")
     st.sidebar.text_input("Land", "België")
     st.sidebar.text_input("Locatie", "Bredene")
-    st.sidebar.date_input("Datum", datetime.now())
+    selected_date = st.sidebar.date_input("Datum", datetime.now())
 
     # Radiobutton voor type zonstijden
     sun_type = st.sidebar.radio("Selecteer zonstijden", ["Sunrise/Sunset", "Civil", "Nautical"], index=0, horizontal=True)
 
     # Bepaal start- en eindtijd afhankelijk van de selectie
     if sun_type == "Sunrise/Sunset":
-        slider_start = sunrise_local
-        slider_end = sunset_local
+        slider_start = sun_times["sunrise"]
+        slider_end = sun_times["sunset"]
     elif sun_type == "Civil":
-        slider_start = civil_sunrise_local
-        slider_end = civil_sunset_local
+        slider_start = sun_times["civil_sunrise"]
+        slider_end = sun_times["civil_sunset"]
     elif sun_type == "Nautical":
-        slider_start = nautical_sunrise_local
-        slider_end = nautical_sunset_local
+        slider_start = sun_times["nautical_sunrise"]
+        slider_end = sun_times["nautical_sunset"]
 
-    # Bereken afronding voor slider
+    # Slider met volledige uren en markers
     start_hour = slider_start.replace(minute=0, second=0, microsecond=0)
     end_hour = slider_end.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-
-    # Slider minimum, maximum, en markers
     slider_min = 0
     slider_max = 23
+
+    # Slider minimum, maximum, en markers
     slider_markers = {i: f"{i:02d}:00" for i in range(slider_min, slider_max + 1)}
 
     # Sidebar slider
@@ -95,12 +105,12 @@ def show_sun_times():
     # Zonstijden in het tabblad
     st.write("### Zonstijden")
     st.write(f"**Zonstijlen:** {sun_type}")
-    st.write(f"**Zonsopgang:** {format_time(sunrise_local)}")
-    st.write(f"**Zonsondergang:** {format_time(sunset_local)}")
-    st.write(f"**Civiele Zonsopgang:** {format_time(civil_sunrise_local)}")
-    st.write(f"**Civiele Zonsondergang:** {format_time(civil_sunset_local)}")
-    st.write(f"**Nautische Zonsopgang:** {format_time(nautical_sunrise_local)}")
-    st.write(f"**Nautische Zonsondergang:** {format_time(nautical_sunset_local)}")
+    st.write(f"**Zonsopgang:** {format_time(sun_times['sunrise'])}")
+    st.write(f"**Zonsondergang:** {format_time(sun_times['sunset'])}")
+    st.write(f"**Civiele Zonsopgang:** {format_time(sun_times['civil_sunrise'])}")
+    st.write(f"**Civiele Zonsondergang:** {format_time(sun_times['civil_sunset'])}")
+    st.write(f"**Nautische Zonsopgang:** {format_time(sun_times['nautical_sunrise'])}")
+    st.write(f"**Nautische Zonsondergang:** {format_time(sun_times['nautical_sunset'])}")
 
 # App structuur
 def main():
