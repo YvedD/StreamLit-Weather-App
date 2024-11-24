@@ -59,30 +59,38 @@ def show_sun_times():
         slider_start = nautical_sunrise_local
         slider_end = nautical_sunset_local
 
-    # Zet de slider om de tijd in uren te kiezen (afronden naar beneden voor start, naar boven voor eind)
+    # Zet de slider om de tijd in uren en minuten te kiezen (afronden naar beneden voor start, naar boven voor eind)
     start_hour = slider_start.replace(minute=0, second=0, microsecond=0)
     end_hour = slider_end.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)  # Afronden naar boven voor eind
 
-    # Sidebar Slider
+    # Om de tijdswaarden van de slider in minuten weer te geven
+    def format_time(time_obj):
+        return time_obj.strftime("%H:%M")
+
+    # Sidebar Slider (per minuut)
     time_slider = st.sidebar.slider(
-        "Select Time Period (hours)",
-        min_value=0,
-        max_value=23,
-        value=(start_hour.hour, end_hour.hour),
-        step=1
+        "Select Time Period (minutes)",
+        min_value=int(start_hour.timestamp() // 60),
+        max_value=int(end_hour.timestamp() // 60),
+        value=(int(start_hour.timestamp() // 60), int(end_hour.timestamp() // 60)),
+        step=1,
+        format="time",
     )
 
-    # Toon de gekozen tijdsperiode in het hoofdgedeelte van de app
-    st.write(f"**Selected Time Period**: {time_slider[0]}:00 - {time_slider[1]}:00")
+    # Toon de gekozen tijdsperiode in het hoofdgedeelte van de app (tot op minuut)
+    start_time_selected = datetime.fromtimestamp(time_slider[0] * 60, pytz.timezone('Europe/Brussels'))
+    end_time_selected = datetime.fromtimestamp(time_slider[1] * 60, pytz.timezone('Europe/Brussels'))
 
-    # Toon de zonstijden in de tab
+    st.write(f"**Selected Time Period**: {format_time(start_time_selected)} - {format_time(end_time_selected)}")
+
+    # Toon de zonstijden in de tab (tot op minuut)
     st.write(f"**Selected Sun Type**: {sun_type}")
-    st.write(f"**Zonsopgang**: {sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Zonsondergang**: {sunset_local.strftime('%H:%M')}")
-    st.write(f"**Civiele Zonsopgang**: {civil_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Civiele Zonsondergang**: {civil_sunset_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsopgang**: {nautical_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsondergang**: {nautical_sunset_local.strftime('%H:%M')}")
+    st.write(f"**Zonsopgang**: {format_time(sunrise_local)}")
+    st.write(f"**Zonsondergang**: {format_time(sunset_local)}")
+    st.write(f"**Civiele Zonsopgang**: {format_time(civil_sunrise_local)}")
+    st.write(f"**Civiele Zonsondergang**: {format_time(civil_sunset_local)}")
+    st.write(f"**Nautische Zonsopgang**: {format_time(nautical_sunrise_local)}")
+    st.write(f"**Nautische Zonsondergang**: {format_time(nautical_sunset_local)}")
 
 # App structuur
 def main():
