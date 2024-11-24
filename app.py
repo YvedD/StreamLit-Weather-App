@@ -1,14 +1,14 @@
 import streamlit as st
 from datetime import datetime, timedelta
-import requests
 import pytz
+import requests
 
 # Standaardinstellingen
 default_country = "België"
 default_location = "Bredene"
 latitude = 51.2389
 longitude = 2.9724
-selected_date = datetime.now() #- timedelta(days=1)
+selected_date = datetime.now()  # Vandaag
 
 # Functie om de tijdzone op te halen via een API
 @st.cache_data
@@ -76,10 +76,39 @@ def initialize_location_data():
     st.write(f"Nautische zonsopgang: {nautical_sunrise_local.strftime('%H:%M')}")
     st.write(f"Nautische zonsondergang: {nautical_sunset_local.strftime('%H:%M')}")
 
+# Placeholder voor jouw bestaande code voor temperatuurvoorspellingen
+def show_temperature_forecast():
+    # Je eigen code voor het ophalen en weergeven van de temperatuurvoorspellingen
+    st.write("Dit is de temperatuurvoorspelling tab. Voeg hier je code in.")
+    
+# Placeholder voor jouw bestaande code voor meerdaagse weersvoorspellingen
+def show_multiday_forecast():
+    # Je eigen code voor het ophalen en weergeven van de meerdaagse weersvoorspellingen
+    st.write("Dit is de meerdaagse weersvoorspelling tab. Voeg hier je code in.")
+
 # Hoofdfunctie om de app te starten
 def main():
     # Initialiseer de gegevens en toon ze
     initialize_location_data()
+
+    # Maak tabs aan voor de verschillende secties
+    tab1, tab2, tab3 = st.tabs(["Weatherdata", "Temperature Forecast", "Multiday Forecast"])
+
+    # Tab 1: Weatherdata
+    with tab1:
+        st.subheader("Weatherdata")
+        # Hier kunnen we de weerdata weergeven, die via een API of een andere bron opgehaald wordt
+        st.write("Weatherdata tab - Toon actuele weersomstandigheden")
+
+    # Tab 2: Temperature Forecast
+    with tab2:
+        st.subheader("Temperature Forecast")
+        show_temperature_forecast()  # Jouw werkende code voor temperatuurvoorspelling
+
+    # Tab 3: Multiday Forecast
+    with tab3:
+        st.subheader("Multiday Forecast")
+        show_multiday_forecast()  # Jouw werkende code voor meerdaagse weersvoorspelling
 
 if __name__ == "__main__":
     main()
