@@ -112,7 +112,7 @@ def main():
             </style>
             """, unsafe_allow_html=True)
         
-        st_folium(map_, width=600, height=150)  # Kaart breder maken (600px breed)
+        st_folium(map_, width=600, height=250)  # Kaart breder maken (600px breed)
 
         # Keuze voor zonstijden
         sun_option = st.radio(
