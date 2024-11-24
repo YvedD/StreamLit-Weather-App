@@ -28,7 +28,14 @@ def get_sun_times(lat, lon):
     local_sunrise = utc_sunrise.astimezone(local_tz).time()
     local_sunset = utc_sunset.astimezone(local_tz).time()
 
-    return local_sunrise, local_sunset
+    # Specifieke tijden voor Civiele en Nautische zonsopgangen kunnen we later berekenen
+    civil_sunrise = (utc_sunrise + timedelta(minutes=30)).astimezone(local_tz).time()
+    civil_sunset = (utc_sunset + timedelta(minutes=30)).astimezone(local_tz).time()
+    
+    nautical_sunrise = (utc_sunrise + timedelta(minutes=60)).astimezone(local_tz).time()
+    nautical_sunset = (utc_sunset + timedelta(minutes=60)).astimezone(local_tz).time()
+
+    return local_sunrise, local_sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset
 
 # Functie om de slider in te stellen voor de start- en eindtijden
 def create_time_slider(start_hour, end_hour):
@@ -62,7 +69,7 @@ def main():
     selected_date = datetime.now().date()  # Gebruik de huidige datum
 
     # Haal de zonsopgang en zonsondergang op voor de gekozen locatie (Bredene)
-    sunrise, sunset = get_sun_times(latitude, longitude)
+    sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(latitude, longitude)
 
     # Sidebar configuratie
     with st.sidebar:
@@ -94,9 +101,9 @@ def main():
         if zonsopgang_keuze == "Normal":
             start_hour, end_hour = sunrise, sunset
         elif zonsopgang_keuze == "Nautical":
-            start_hour, end_hour = sunrise, sunset
+            start_hour, end_hour = nautical_sunrise, nautical_sunset
         else:  # 'Civil' is de default
-            start_hour, end_hour = sunrise, sunset
+            start_hour, end_hour = civil_sunrise, civil_sunset
 
         # Voeg de tijdsinterval slider toe met de civiele zonsopgang en zonsondergang als standaard
         appointment = create_time_slider(start_hour, end_hour)
@@ -116,8 +123,14 @@ def main():
 
         # Toon de geselecteerde tijden en zonsopgang/ondergang details
         st.write(f"Zonsopgang type: {zonsopgang_keuze}")
-        st.write(f"Zonsopgang: {sunrise.strftime('%H:%M')}")
-        st.write(f"Zonsondergang: {sunset.strftime('%H:%M')}")
+        
+        # Toon de verschillende zonsopgangen en zonsondergangen voor alle types
+        st.write(f"Normale zonsopgang: {sunrise.strftime('%H:%M')}")
+        st.write(f"Normale zonsondergang: {sunset.strftime('%H:%M')}")
+        st.write(f"Civiele zonsopgang: {civil_sunrise.strftime('%H:%M')}")
+        st.write(f"Civiele zonsondergang: {civil_sunset.strftime('%H:%M')}")
+        st.write(f"Nautische zonsopgang: {nautical_sunrise.strftime('%H:%M')}")
+        st.write(f"Nautische zonsondergang: {nautical_sunset.strftime('%H:%M')}")
 
         # De slider tijden (start en eindtijden)
         st.write(f"Starttijd van geselecteerd interval: {appointment[0].strftime('%H:%M')}")
