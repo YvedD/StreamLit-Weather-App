@@ -78,8 +78,6 @@ def main():
         # Locatie
         default_country = st.text_input("Land", value=default_country)
         default_location = st.text_input("Locatie", value=default_location)
-        latitude = st.number_input("Latitude", value=latitude)
-        longitude = st.number_input("Longitude", value=longitude)
 
         # Keuze voor zonstijden
         sun_option = st.radio(
