@@ -1,62 +1,85 @@
 import streamlit as st
-import streamlit.components.v1 as components
+import requests
+from datetime import datetime, timedelta
 
-# Functie om de locatie op te halen via JavaScript
-def get_location():
-    # JavaScript code om de geolocatie op te halen
-    js_code = """
-    <script>
-        navigator.geolocation.getCurrentPosition(function(position) {
-            const lat = position.coords.latitude;
-            const lon = position.coords.longitude;
-            const location = {latitude: lat, longitude: lon};
-            window.parent.postMessage(location, "*");
-        }, function(error) {
-            const location = {latitude: "Unknown", longitude: "Unknown"};
-            window.parent.postMessage(location, "*");
-        });
-    </script>
-    """
-    # Voer de JavaScript uit in een HTML component
-    components.html(js_code, height=0)
+# Standaardinstellingen
+default_country = "België"
+default_location = "Bredene"
+latitude = 51.2389
+longitude = 2.9724
+selected_date = datetime.now() - timedelta(days=1)
 
-# Functie om locatie te verwerken en op te slaan in de session_state
-def handle_location_message(location):
-    if location.get('latitude') != "Unknown" and location.get('longitude') != "Unknown":
-        st.session_state['latitude'] = location['latitude']
-        st.session_state['longitude'] = location['longitude']
+# Sessie initialiseren met standaardinstellingen
+def initialize_session_state():
+    if "country" not in st.session_state:
+        st.session_state["country"] = default_country
+    if "location" not in st.session_state:
+        st.session_state["location"] = default_location
+    if "latitude" not in st.session_state:
+        st.session_state["latitude"] = latitude
+    if "longitude" not in st.session_state:
+        st.session_state["longitude"] = longitude
+    if "selected_date" not in st.session_state:
+        st.session_state["selected_date"] = selected_date
+    if "sun_times" not in st.session_state:
+        st.session_state["sun_times"] = {}
+
+# Functie om de zonstijden op te halen via de Sunrise-Sunset API
+def get_sun_times(latitude, longitude, date):
+    url = f"https://api.sunrise-sunset.org/json?lat={latitude}&lng={longitude}&date={date.strftime('%Y-%m-%d')}&formatted=0"
+    response = requests.get(url)
+    data = response.json()
+    
+    if data["status"] == "OK":
+        sun_times = {
+            "sunrise": data["results"]["sunrise"],
+            "sunset": data["results"]["sunset"],
+            "civil_twilight_begin": data["results"]["civil_twilight_begin"],
+            "civil_twilight_end": data["results"]["civil_twilight_end"],
+            "nautical_twilight_begin": data["results"]["nautical_twilight_begin"],
+            "nautical_twilight_end": data["results"]["nautical_twilight_end"],
+        }
+        return sun_times
     else:
-        st.session_state['latitude'] = None
-        st.session_state['longitude'] = None
+        return None
+
+# Haal de zonstijden op voor de standaardlocatie
+def update_sun_times():
+    sun_times = get_sun_times(st.session_state["latitude"], st.session_state["longitude"], st.session_state["selected_date"])
+    if sun_times:
+        st.session_state["sun_times"] = sun_times
+    else:
+        st.session_state["sun_times"] = {"error": "Kon zonstijden niet ophalen."}
 
 # Hoofdprogramma
 def main():
-    st.title("Locatie ophalen")
-    st.subheader("Locatie van de gebruiker")
-
-    # Haal de locatie op via JavaScript
-    get_location()
-
-    # Toon de locatiegegevens zodra ze beschikbaar zijn
-    if "latitude" in st.session_state and "longitude" in st.session_state:
-        if st.session_state['latitude'] is not None and st.session_state['longitude'] is not None:
-            st.write(f"Latitude: {st.session_state['latitude']}")
-            st.write(f"Longitude: {st.session_state['longitude']}")
+    # Initialiseer de sessie met standaardinstellingen
+    initialize_session_state()
+    
+    # Haal de zonstijden op bij de start
+    update_sun_times()
+    
+    # Toon de standaardlocatiegegevens
+    st.title("Locatie en Zonsopgang/Zonsondergang")
+    st.write(f"Land: {st.session_state['country']}")
+    st.write(f"Locatie: {st.session_state['location']}")
+    st.write(f"Latitude: {st.session_state['latitude']}")
+    st.write(f"Longitude: {st.session_state['longitude']}")
+    st.write(f"Datum: {st.session_state['selected_date'].strftime('%Y-%m-%d')}")
+    
+    # Toon de zonstijden
+    if "sun_times" in st.session_state and st.session_state["sun_times"]:
+        if "error" in st.session_state["sun_times"]:
+            st.write(st.session_state["sun_times"]["error"])
         else:
-            st.write("Kon de locatie niet ophalen.")
+            st.write(f"Zonsopgang: {st.session_state['sun_times']['sunrise']}")
+            st.write(f"Zonsondergang: {st.session_state['sun_times']['sunset']}")
+            st.write(f"Civiele zonsopgang: {st.session_state['sun_times']['civil_twilight_begin']}")
+            st.write(f"Civiele zonsondergang: {st.session_state['sun_times']['civil_twilight_end']}")
+            st.write(f"Nautische zonsopgang: {st.session_state['sun_times']['nautical_twilight_begin']}")
+            st.write(f"Nautische zonsondergang: {st.session_state['sun_times']['nautical_twilight_end']}")
     else:
-        st.write("Locatiegegevens worden opgehaald...")
-
-# Luister naar berichten van de JavaScript-executie en verwerk ze
-components.html("""
-<script>
-    window.addEventListener("message", function(event) {
-        const location = event.data;
-        const message = {latitude: location.latitude, longitude: location.longitude};
-        window.parent.postMessage(message, "*");
-    });
-</script>
-""", height=0)
+        st.write("Zonstijden zijn nog niet beschikbaar.")
 
 if __name__ == "__main__":
     main()
