@@ -1,137 +1,130 @@
 import streamlit as st
 from datetime import datetime, timedelta
-import pytz
 import requests
+import pytz
 
-# Functie om zonstijden op te halen
-def get_sun_times(lat, lon, date):
-    # Sunrise-Sunset API
-    url = f"https://api.sunrise-sunset.org/json?lat={lat}&lng={lon}&date={date}&formatted=0"
-    response = requests.get(url)
+# Standaardinstellingen
+default_country = "België"
+default_location = "Bredene"
+latitude = 51.2389
+longitude = 2.9724
+selected_date = datetime.now()  # Vandaag
+
+# Functie om de tijdzone op te halen via een API
+@st.cache_data
+def get_timezone_info(latitude, longitude):
+    # Gebruik een API zoals TimeZoneDB of GeoNames
+    api_url = f"http://api.geonames.org/timezoneJSON?lat={latitude}&lng={longitude}&username=your_geonames_username"
+    response = requests.get(api_url)
     data = response.json()
+    
+    # Haal de tijdzone en DST-gegevens uit de response
+    timezone = data.get("timezoneId", "Europe/Brussels")
+    dst = data.get("dstOffset", 0)  # De DST offset in seconden
+    return timezone, dst
 
-    # Haal zonstijden op
-    sunrise = data['results']['sunrise']
-    sunset = data['results']['sunset']
-    civil_sunrise = data['results']['civil_twilight_begin']
-    civil_sunset = data['results']['civil_twilight_end']
-    nautical_sunrise = data['results']['nautical_twilight_begin']
-    nautical_sunset = data['results']['nautical_twilight_end']
+# Functie om zonsopgang- en zonsondergangtijden op te halen via een API
+@st.cache_data
+def get_sun_times(latitude, longitude, date):
+    # Gebruik een API om de tijden op te halen (Sunrise-Sunset API)
+    api_url = f"https://api.sunrise-sunset.org/json?lat={latitude}&lng={longitude}&date={date}&formatted=0"
+    response = requests.get(api_url)
+    data = response.json()
+    
+    return data["results"]
 
-    return sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset
-
-# Functie om UTC-tijd om te zetten naar lokale tijd
-def parse_time(time_str):
-    utc_time = datetime.strptime(time_str, '%Y-%m-%dT%H:%M:%S+00:00')
-    local_time = utc_time.astimezone(pytz.timezone('Europe/Brussels'))
+# Functie om een tijdstempel om te zetten naar de lokale tijd
+def convert_to_local_time(utc_time, timezone, dst_offset):
+    utc_time = utc_time.replace(tzinfo=pytz.UTC)  # Zet de tijd om naar UTC
+    local_time = utc_time.astimezone(pytz.timezone(timezone))  # Converteer naar lokale tijd
+    local_time += timedelta(seconds=dst_offset)  # Pas de DST-offset toe
     return local_time
 
-# Functie voor tijdsnotatie in HH:mm
-def format_time(dt):
-    return dt.strftime("%H:%M")
+# Functie om alle gegevens op te halen en weer te geven
+def initialize_location_data():
+    # Haal de standaardlocatiegegevens en zonsopgang/zonsondergang op
+    sun_times = get_sun_times(latitude, longitude, selected_date.date())
 
-# Functie om `st.session_state` te initialiseren of bij te werken
-def update_session_state(lat, lon, date):
-    if "sun_times" not in st.session_state or st.session_state.get("last_updated_date") != date:
-        sunrise, sunset, civil_sunrise, civil_sunset, nautical_sunrise, nautical_sunset = get_sun_times(lat, lon, date)
+    # Haal tijdzone-informatie op voor de opgegeven locatie
+    timezone, dst_offset = get_timezone_info(latitude, longitude)
 
-        st.session_state["sun_times"] = {
-            "sunrise": parse_time(sunrise),
-            "sunset": parse_time(sunset),
-            "civil_sunrise": parse_time(civil_sunrise),
-            "civil_sunset": parse_time(civil_sunset),
-            "nautical_sunrise": parse_time(nautical_sunrise),
-            "nautical_sunset": parse_time(nautical_sunset),
-        }
-        st.session_state["last_updated_date"] = date
+    # Zet de zonsopgang en zonsondergang om naar lokale tijd
+    sunrise_utc = datetime.fromisoformat(sun_times["sunrise"])
+    sunset_utc = datetime.fromisoformat(sun_times["sunset"])
+    civil_sunrise_utc = datetime.fromisoformat(sun_times["civil_twilight_begin"])
+    civil_sunset_utc = datetime.fromisoformat(sun_times["civil_twilight_end"])
+    nautical_sunrise_utc = datetime.fromisoformat(sun_times["nautical_twilight_begin"])
+    nautical_sunset_utc = datetime.fromisoformat(sun_times["nautical_twilight_end"])
 
-# Functie om de applicatie-UI te tonen
-def show_sun_times():
-    # Standaard locatie en datum
-    lat = 51.2389
-    lon = 2.9724
-    date = datetime.now().strftime('%Y-%m-%d')
+    sunrise_local = convert_to_local_time(sunrise_utc, timezone, dst_offset)
+    sunset_local = convert_to_local_time(sunset_utc, timezone, dst_offset)
+    civil_sunrise_local = convert_to_local_time(civil_sunrise_utc, timezone, dst_offset)
+    civil_sunset_local = convert_to_local_time(civil_sunset_utc, timezone, dst_offset)
+    nautical_sunrise_local = convert_to_local_time(nautical_sunrise_utc, timezone, dst_offset)
+    nautical_sunset_local = convert_to_local_time(nautical_sunset_utc, timezone, dst_offset)
 
-    # Haal of update zonstijden in `st.session_state`
-    update_session_state(lat, lon, date)
+    # Toon de gegevens in Streamlit
+    st.write(f"Land: {default_country}")
+    st.write(f"Locatie: {default_location}")
+    st.write(f"Latitude: {latitude}")
+    st.write(f"Longitude: {longitude}")
+    st.write(f"Datum: {selected_date.date()}")
+    st.write(f"Zonsopgang: {sunrise_local.strftime('%H:%M')}")
+    st.write(f"Zonsondergang: {sunset_local.strftime('%H:%M')}")
+    st.write(f"Civiele zonsopgang: {civil_sunrise_local.strftime('%H:%M')}")
+    st.write(f"Civiele zonsondergang: {civil_sunset_local.strftime('%H:%M')}")
+    st.write(f"Nautische zonsopgang: {nautical_sunrise_local.strftime('%H:%M')}")
+    st.write(f"Nautische zonsondergang: {nautical_sunset_local.strftime('%H:%M')}")
 
-    # Haal de zonstijden op uit `st.session_state`
-    sun_times = st.session_state["sun_times"]
+# Functie om weerdata op te halen
+@st.cache_data
+def get_weather_data(latitude, longitude):
+    # Voorbeeld API-aanroep voor weerdata
+    api_url = f"https://api.openweathermap.org/data/2.5/weather?lat={latitude}&lon={longitude}&appid=your_api_key&units=metric"
+    response = requests.get(api_url)
+    return response.json()
 
-    # Sidebar voor locatie, datum en zonstijdtype
-    st.sidebar.write("### Instellingen")
-    st.sidebar.text_input("Land", "België")
-    st.sidebar.text_input("Locatie", "Bredene")
-    selected_date = st.sidebar.date_input("Datum", datetime.now())
+# Functie om temperatuurvoorspellingen op te halen
+@st.cache_data
+def get_temperature_forecast(latitude, longitude):
+    # Voorbeeld API-aanroep voor temperatuurvoorspelling
+    api_url = f"https://api.openweathermap.org/data/2.5/forecast?lat={latitude}&lon={longitude}&appid=your_api_key&units=metric"
+    response = requests.get(api_url)
+    return response.json()
 
-    # Radiobutton voor type zonstijden
-    sun_type = st.sidebar.radio("Selecteer zonstijden", ["Sunrise/Sunset", "Civil", "Nautical"], index=0, horizontal=True)
+# Functie om meerdaagse voorspellingen op te halen
+@st.cache_data
+def get_multiday_forecast(latitude, longitude):
+    # Voorbeeld API-aanroep voor meerdaagse voorspellingen
+    api_url = f"https://api.openweathermap.org/data/2.5/forecast/daily?lat={latitude}&lon={longitude}&cnt=7&appid=your_api_key&units=metric"
+    response = requests.get(api_url)
+    return response.json()
 
-    # Bepaal start- en eindtijd afhankelijk van de selectie
-    if sun_type == "Sunrise/Sunset":
-        slider_start = sun_times["sunrise"]
-        slider_end = sun_times["sunset"]
-    elif sun_type == "Civil":
-        slider_start = sun_times["civil_sunrise"]
-        slider_end = sun_times["civil_sunset"]
-    elif sun_type == "Nautical":
-        slider_start = sun_times["nautical_sunrise"]
-        slider_end = sun_times["nautical_sunset"]
-
-    # Slider met volledige uren en markers
-    start_hour = slider_start.replace(minute=0, second=0, microsecond=0)
-    end_hour = slider_end.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
-    slider_min = 0
-    slider_max = 23
-
-    # Slider minimum, maximum, en markers
-    slider_markers = {i: f"{i:02d}:00" for i in range(slider_min, slider_max + 1)}
-
-    # Sidebar slider
-    time_range = st.sidebar.slider(
-        "Selecteer tijdsperiode",
-        min_value=slider_min,
-        max_value=slider_max,
-        value=(start_hour.hour, end_hour.hour),
-        step=1,
-        format=""
-    )
-
-    # Toon de geselecteerde tijden onder de slider
-    chosen_start_time = datetime.combine(datetime.now(), datetime.min.time()) + timedelta(hours=time_range[0])
-    chosen_end_time = datetime.combine(datetime.now(), datetime.min.time()) + timedelta(hours=time_range[1])
-    st.sidebar.write(f"**Gekozen tijdsperiode:** {chosen_start_time.strftime('%H:%M')} - {chosen_end_time.strftime('%H:%M')}")
-
-    # Zonstijden in het tabblad
-    st.write("### Zonstijden")
-    st.write(f"**Zonstijlen:** {sun_type}")
-    st.write(f"**Zonsopgang:** {format_time(sun_times['sunrise'])}")
-    st.write(f"**Zonsondergang:** {format_time(sun_times['sunset'])}")
-    st.write(f"**Civiele Zonsopgang:** {format_time(sun_times['civil_sunrise'])}")
-    st.write(f"**Civiele Zonsondergang:** {format_time(sun_times['civil_sunset'])}")
-    st.write(f"**Nautische Zonsopgang:** {format_time(sun_times['nautical_sunrise'])}")
-    st.write(f"**Nautische Zonsondergang:** {format_time(sun_times['nautical_sunset'])}")
-
-# App structuur
+# Hoofdfunctie om de app te starten
 def main():
-    # Configuratie voor de pagina
-    st.set_page_config(layout="wide")
+    # Initialiseer de gegevens en toon ze
+    initialize_location_data()
 
-    # CSS om iconen en menu te verbergen
-    hide_streamlit_style = """
-        <style>
-        #MainMenu {visibility: hidden;}
-        footer {visibility: hidden;}
-        header {visibility: hidden;}
-        </style>
-    """
-    st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-    st.write("De bovenste iconen zijn nu verborgen!")    
-    st.title("Sunrise, Sunset, and Twilight Times")
-    #st.title("Mijn Streamlit App")
+    # Maak tabs aan voor de verschillende secties
+    tab1, tab2, tab3 = st.tabs(["Weatherdata", "Temperature Forecast", "Multiday Forecast"])
 
-    # Hoofdapp inhoud
-    show_sun_times()
+    # Tab 1: Weatherdata
+    with tab1:
+        st.subheader("Weatherdata")
+        weather_data = get_weather_data(latitude, longitude)
+        st.write(weather_data)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
+
+    # Tab 2: Temperature Forecast
+    with tab2:
+        st.subheader("Temperature Forecast")
+        temperature_forecast = get_temperature_forecast(latitude, longitude)
+        st.write(temperature_forecast)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
+
+    # Tab 3: Multiday Forecast
+    with tab3:
+        st.subheader("Multiday Forecast")
+        multiday_forecast = get_multiday_forecast(latitude, longitude)
+        st.write(multiday_forecast)  # Dit is tijdelijk; vervang door de specifieke velden die je wilt tonen.
 
 if __name__ == "__main__":
     main()
