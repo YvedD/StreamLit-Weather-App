@@ -85,14 +85,14 @@ def main():
         st.subheader("Kaart")
         if latitude and longitude:
             # Toon de kaart met de juiste locatie
-            #show_map_expander()
+            st.write(f"Yves") #show_map_expander()
         else:
             st.error("Geen geldige locatiecoördinaten ingevoerd.")
 
     # Tab 3: Data
     with tab3:
         st.subheader("Data")
-        #show_data_expander()  # Toon de data-expander
+        st.write(f"Yves") #show_map_expander()#show_data_expander()  # Toon de data-expander
 
     # Tab 4: Forecast 1
     with tab4:
