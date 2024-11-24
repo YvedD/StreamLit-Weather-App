@@ -8,7 +8,7 @@ default_country = "België"
 default_location = "Bredene"
 latitude = 51.2389
 longitude = 2.9724
-selected_date = datetime.now() - timedelta(days=1)
+selected_date = datetime.now() #- timedelta(days=1)
 
 # Functie om de tijdzone op te halen via een API
 @st.cache_data
