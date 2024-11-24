@@ -85,24 +85,24 @@ def main():
         st.subheader("Kaart")
         if latitude and longitude:
             # Toon de kaart met de juiste locatie
-            show_map_expander()
+            #show_map_expander()
         else:
             st.error("Geen geldige locatiecoördinaten ingevoerd.")
 
     # Tab 3: Data
     with tab3:
         st.subheader("Data")
-        show_data_expander()  # Toon de data-expander
+        #show_data_expander()  # Toon de data-expander
 
     # Tab 4: Forecast 1
     with tab4:
         st.subheader("Weersvoorspelling - Methode 1")
-        show_forecast1_expander()
+        #show_forecast1_expander()
 
     # Tab 5: Forecast 2
     with tab5:
         st.subheader("Weersvoorspelling - Methode 2")
-        show_forecast2_expander()
+        #show_forecast2_expander()
 
     # Optioneel: Voeg meer tabs toe indien nodig
     # Met bijvoorbeeld een tabblad voor een Echart:
