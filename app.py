@@ -81,7 +81,9 @@ def show_sun_times():
     start_time_selected = datetime.fromtimestamp(time_slider[0] * 60, pytz.timezone('Europe/Brussels'))
     end_time_selected = datetime.fromtimestamp(time_slider[1] * 60, pytz.timezone('Europe/Brussels'))
 
-    st.write(f"**Selected Time Period**: {format_time(start_time_selected)} - {format_time(end_time_selected)}")
+    # Toon de tijden boven de bolletjes van de slider
+    st.write(f"**Start Time**: {format_time(start_time_selected)}")
+    st.write(f"**End Time**: {format_time(end_time_selected)}")
 
     # Toon de zonstijden in de tab (tot op minuut)
     st.write(f"**Selected Sun Type**: {sun_type}")
