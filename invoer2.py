@@ -25,11 +25,16 @@ EUROPEAN_COUNTRIES_NL = [
 ]
 
 # Functie om GPS-coördinaten op te halen via geocoding service
+
+@st.cache_data
 def get_gps_coordinates(location):
     api_url = f"https://nominatim.openstreetmap.org/search?q={location}&format=json&addressdetails=1&limit=1"
+    headers = {
+        'User-Agent': 'StreamLit-Weather-app/1.0 (ydsdsy@gmail.com)'  # Voeg je eigen app naam en contact e-mail toe
+    }
     try:
-        response = requests.get(api_url)
-        response.raise_for_status()  # Dit zorgt ervoor dat we een foutmelding krijgen bij een slechte API-aanroep
+        response = requests.get(api_url, headers=headers)
+        response.raise_for_status()  # Zorgt ervoor dat fouten goed worden afgehandeld
         data = response.json()
         if data:
             lat = float(data[0]["lat"])
@@ -40,8 +45,8 @@ def get_gps_coordinates(location):
             return None, None
     except requests.RequestException as e:
         st.error(f"Fout bij het ophalen van GPS-coördinaten voor locatie '{location}': {e}")
-        return None, None
-# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
+        return None, None# Functie om zonsopkomst, zonsondergang, en schemeringstijden te berekenen
+@st.cache_data
 def get_sun_times(lat, lon, date):
     tz_finder = TimezoneFinder()
     timezone_str = tz_finder.timezone_at(lng=lon, lat=lat)
@@ -97,6 +102,7 @@ def get_sun_times(lat, lon, date):
     except requests.RequestException as e:
         st.error(f"Error fetching sunrise/sunset times: {e}")
         return None, None, None, None, None, None
+
 # De invoerfunctie die de gegevens toont en de invoer mogelijk maakt
 def show_input_form():
     # Standaardwaarden voor locatie en datum
@@ -105,23 +111,23 @@ def show_input_form():
     default_location = "Bredene"
     latitude = 51.2389
     longitude = 2.9724
-    selected_date = datetime.now().date() - timedelta(days=1)
+    selected_date = datetime.now().date()
 
     # Voeg enkel de titel toe boven de expander
     st.markdown(
-        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px;">Migration Weather Data</h1>',
+        '<h1 style="font-size: 36px; font-weight: bold; color: #4CAF50; margin-bottom: 20px; text-align: center;">Vogeltrek Weersgegevens<br>Bird Migration Weather Data</h1>',
         unsafe_allow_html=True
     )
 
     # Expander die altijd uitgeklapt is
-    with st.expander("Input Data", expanded=True):
+    with st.expander("**Input Data/Voer gegevens in**", expanded=True):
 
         # Taalkeuze door middel van een two-state switch binnen de expander
         lang_choice = st.radio(
-            "Select Language/Kies uw taal",
+            "", #Select Language/Kies uw taal",
             options=["English", "Nederlands"],
-            index=0 if st.session_state.get("language", "English") == "English" else 1,
-            key="language_selector",  
+            index=1 if st.session_state.get("language", "English") == "English" else 1,
+            #key="language_selector",  
             horizontal=True  
         )
 
@@ -138,6 +144,8 @@ def show_input_form():
             end_hour_label = "End Hour"
             sunrise_label = "Sunrise"
             sunset_label = "Sunset"
+            civil_twilight_label = "Civil Twilight"
+            nautical_twilight_label = "Nautical Twilight"
             default_country = default_country_en
         else:
             countries = EUROPEAN_COUNTRIES_NL
@@ -148,15 +156,15 @@ def show_input_form():
             end_hour_label = "Einduur"
             sunrise_label = "Zonsopkomst"
             sunset_label = "Zonsondergang"
+            civil_twilight_label = "Civiele Schemering"
+            nautical_twilight_label = "Nautische Schemering"
             default_country = default_country_nl
 
         # Formulier voor het invoeren van gegevens
         country = st.selectbox(country_label, countries, index=countries.index(default_country))  # Lijst van Europese landen
         location = st.text_input(location_label, value=default_location)
         selected_date = st.date_input(date_label, value=selected_date)
-        start_hour = st.selectbox(start_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=8)
-        end_hour = st.selectbox(end_hour_label, [f"{hour:02d}:00" for hour in range(24)], index=16)
-
+        
         # Verkrijg de GPS-coördinaten voor de nieuwe locatie
         latitude, longitude = get_gps_coordinates(location)
 
@@ -167,30 +175,46 @@ def show_input_form():
         # Haal zonsopkomst en zonsondergang tijden op
         sunrise, sunset, civil_twilight_begin, civil_twilight_end, nautical_twilight_begin, nautical_twilight_end = get_sun_times(latitude, longitude, selected_date)
 
+        # Automatisch begin- en einduur instellen op basis van de civiele schemering
+        if civil_twilight_begin and civil_twilight_end:
+            # Zet de tijden om naar datetime objecten
+            civil_twilight_begin_time = datetime.strptime(civil_twilight_begin, '%H:%M')
+            civil_twilight_end_time = datetime.strptime(civil_twilight_end, '%H:%M')
+
+            # Rond de begin tijd af naar beneden (naar beneden afronden naar het dichtstbijzijnde uur)
+            start_hour = civil_twilight_begin_time.replace(minute=0, second=0, microsecond=0)
+            
+            # Rond de eind tijd af naar boven (naar boven afronden naar het dichtstbijzijnde uur)
+            end_hour = civil_twilight_end_time.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+
+            # Update de session_state voor begin- en einduur
+            st.session_state["start_hour"] = start_hour.strftime("%H:%M")
+            st.session_state["end_hour"] = end_hour.strftime("%H:%M")
+
+        # Voeg invoervelden toe voor beginuur en einduur, met de mogelijkheid om handmatig aan te passen
+        start_hour_input = st.time_input(start_hour_label, value=start_hour)
+        end_hour_input = st.time_input(end_hour_label, value=end_hour)
+
         # Sla de gegevens op in st.session_state
+        st.session_state["country"] = country
         st.session_state["latitude"] = latitude
         st.session_state["longitude"] = longitude
         st.session_state["location"] = location
         st.session_state["selected_date"] = selected_date
-        st.session_state["start_hour"] = start_hour
-        st.session_state["end_hour"] = end_hour
         st.session_state["sunrise"] = sunrise
         st.session_state["sunset"] = sunset
         st.session_state["civil_twilight_begin"] = civil_twilight_begin
         st.session_state["civil_twilight_end"] = civil_twilight_end
         st.session_state["nautical_twilight_begin"] = nautical_twilight_begin
         st.session_state["nautical_twilight_end"] = nautical_twilight_end
+        st.session_state["start_hour"] = start_hour_input.strftime("%H:%M")
+        st.session_state["end_hour"] = end_hour_input.strftime("%H:%M")
 
-        # Toon Land, Locatie, Latitude en Longitude, en Zonsopkomst/Zonsondergang
-        if latitude and longitude:
-            st.write(f"**Country**: {country}, **Location**: {location}, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
-            if sunrise and sunset:
-                st.write(f"**{sunrise_label}**: {sunrise}, **{sunset_label}**: {sunset}")
-                # Toon ook de civiele en nautische schemeringstijden
-                st.write(f"**Civil Twilight Begin**: {civil_twilight_begin}, **Civil Twilight End**: {civil_twilight_end}")
-                st.write(f"**Nautical Twilight Begin**: {nautical_twilight_begin}, **Nautical Twilight End**: {nautical_twilight_end}")
-        else:
-            st.write(f"{location_label} not found.")  # Foutmelding in de gekozen taal
+        # **Documentatie**: Toon de begin- en einduur tijden (st.write) voor controle (deze regel kan later verwijderd worden).
+        st.write(f"**{country}**, **{location}**, **GPS** :{latitude:.2f}°N {longitude:.2f}°E")
+        st.write(f"{start_hour_label}: {start_hour_input.strftime('%H:%M')}, {end_hour_label}: {end_hour_input.strftime('%H:%M')}, {sunrise_label}: {sunrise}, {sunset_label}: {sunset}")
+        # Toon overige tijden voor controle
+        st.write(f"{civil_twilight_label} Begin:{civil_twilight_begin}, {civil_twilight_label} End:{civil_twilight_end}")
+        st.write(f"{nautical_twilight_label} Begin: {nautical_twilight_begin}, {nautical_twilight_label} End: {nautical_twilight_end}")
 
-        # Geef de latitude, longitude en locatie terug voor gebruik in de kaartmodule
         return latitude, longitude, location
