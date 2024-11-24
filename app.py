@@ -27,6 +27,10 @@ def parse_time(time_str):
     local_time = utc_time.astimezone(pytz.timezone('Europe/Brussels'))  # Stel de tijdzone in
     return local_time
 
+# Functie om tijden te formatteren in HH:mm
+def format_time(dt):
+    return dt.strftime("%H:%M")
+
 # Functie om de slider en de bijbehorende gegevens te tonen
 def show_sun_times():
     # Stel locatie in voor België (Bredene) en kies de datum van vandaag
@@ -45,8 +49,14 @@ def show_sun_times():
     nautical_sunrise_local = parse_time(nautical_sunrise)
     nautical_sunset_local = parse_time(nautical_sunset)
 
+    # Sidebar voor locatie en datakeuzes
+    st.sidebar.write("### Instellingen")
+    st.sidebar.text_input("Land", "België")
+    st.sidebar.text_input("Locatie", "Bredene")
+    st.sidebar.date_input("Datum", datetime.now())
+
     # Sidebar voor de selectie van de zonsopgang- en zonsondergangtijden
-    sun_type = st.sidebar.radio("Select Sun Times", ["Sunrise/Sunset", "Civil", "Nautical"], index=0)
+    sun_type = st.sidebar.radio("Selecteer zonstijden", ["Sunrise/Sunset", "Civil", "Nautical"], index=0, horizontal=True)
 
     # Bepaal de begin- en eindtijden in de slider op basis van de keuze
     if sun_type == "Sunrise/Sunset":
@@ -59,30 +69,42 @@ def show_sun_times():
         slider_start = nautical_sunrise_local
         slider_end = nautical_sunset_local
 
-    # Zet de slider om de tijd in uren te kiezen (afronden naar beneden voor start, naar boven voor eind)
+    # Slider minimum en maximum in uren
+    slider_min = 0
+    slider_max = 23
+    slider_step = 1
+
+    # Start en eindtijd afronden voor slider
     start_hour = slider_start.replace(minute=0, second=0, microsecond=0)
-    end_hour = slider_end.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)  # Afronden naar boven voor eind
+    end_hour = slider_end.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+
+    # Bereken slider markers in HH:mm
+    slider_markers = {i: format_time((datetime.combine(datetime.now(), datetime.min.time()) + timedelta(hours=i)).time())
+                      for i in range(slider_min, slider_max + 1)}
 
     # Sidebar Slider
-    time_slider = st.sidebar.slider(
-        "Select Time Period (hours)",
-        min_value=0,
-        max_value=23,
+    time_range = st.sidebar.slider(
+        "Selecteer tijdsperiode",
+        min_value=slider_min,
+        max_value=slider_max,
         value=(start_hour.hour, end_hour.hour),
-        step=1
+        step=slider_step,
+        format="",
+        key="time_range"
     )
 
-    # Toon de gekozen tijdsperiode in het hoofdgedeelte van de app
-    st.write(f"**Selected Time Period**: {time_slider[0]}:00 - {time_slider[1]}:00")
+    # Toon slider met aangepaste markers
+    st.sidebar.write(f"**Gekozen tijdsperiode:** {slider_markers[time_range[0]]} - {slider_markers[time_range[1]]}")
 
     # Toon de zonstijden in de tab
-    st.write(f"**Selected Sun Type**: {sun_type}")
-    st.write(f"**Zonsopgang**: {sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Zonsondergang**: {sunset_local.strftime('%H:%M')}")
-    st.write(f"**Civiele Zonsopgang**: {civil_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Civiele Zonsondergang**: {civil_sunset_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsopgang**: {nautical_sunrise_local.strftime('%H:%M')}")
-    st.write(f"**Nautische Zonsondergang**: {nautical_sunset_local.strftime('%H:%M')}")
+    st.write("### Zonstijden")
+    st.write(f"**Zonstijlen:** {sun_type}")
+    st.write(f"**Zonsopgang:** {format_time(sunrise_local)}")
+    st.write(f"**Zonsondergang:** {format_time(sunset_local)}")
+    st.write(f"**Civiele Zonsopgang:** {format_time(civil_sunrise_local)}")
+    st.write(f"**Civiele Zonsondergang:** {format_time(civil_sunset_local)}")
+    st.write(f"**Nautische Zonsopgang:** {format_time(nautical_sunrise_local)}")
+    st.write(f"**Nautische Zonsondergang:** {format_time(nautical_sunset_local)}")
 
 # App structuur
 def main():
