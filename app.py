@@ -100,7 +100,11 @@ def main():
         start_hour = round(start_hour)  # Rond naar het dichtstbijzijnde uur
         end_hour = round(end_hour)
 
-        st.write("Starthour / Endhour")
+        # Toon de geselecteerde start- en einduren boven de slider
+        st.write(f"Starthour: {start_hour}:00")
+        st.write(f"Einduur: {end_hour}:00")
+        
+        # Voeg de slider toe
         start_end_slider = st.slider(
             "Selecteer het uur",
             min_value=0, 
