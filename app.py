@@ -61,7 +61,7 @@ def create_map(lat, lon):
     map_ = folium.Map(location=[lat, lon], zoom_start=9)
     
     # Aangepaste marker om te zorgen dat deze goed zichtbaar is
-    icon = folium.Icon(color='red', icon='binoculars', icon_color='white', prefix='fa')
+    icon = folium.Icon(color='green', icon='binoculars', icon_color='red', prefix='fa')
     folium.Marker([lat, lon], popup="Geselecteerde Locatie", icon=icon).add_to(map_)
     
     return map_
