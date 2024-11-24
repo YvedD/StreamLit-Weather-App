@@ -7,7 +7,7 @@ def create_time_slider(start_hour, end_hour):
     appointment = st.slider(
         "Selecteer het tijdsinterval:",
         min_value=time(0, 0),  # Begin om 00:00
-        max_value=time(23, 0),  # Eindig om 23:00
+        max_value=time(23, 59),  # Eindig om 23:00
         value=(start_hour, end_hour),  # De standaardwaarden worden ingesteld op civiele zonsopgang en zonsondergang
         step=timedelta(hours=1),  # Stappen van één uur
         format="HH:mm",  # Weergeven in het formaat uur:minuten
