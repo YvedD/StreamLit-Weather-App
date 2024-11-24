@@ -1,36 +1,85 @@
 import streamlit as st
-from invoer import show_input_form
-from maps import show_map_expander
-from data import show_data_expander  # Importeer de data-expander
-from forecast2 import show_forecast2_expander
-from forecast1 import show_forecast1_expander
-from forecastchart import show_weather_chart_expander
+import requests
+from datetime import datetime, timedelta
 
-st.set_page_config(layout="wide", page_title="Migration Weather app")
+# Standaardinstellingen
+default_country = "België"
+default_location = "Bredene"
+latitude = 51.2389
+longitude = 2.9724
+selected_date = datetime.now() - timedelta(days=1)
 
-def main():
-    # Verkrijg invoer van de gebruiker
-    latitude, longitude, location = show_input_form()
+# Sessie initialiseren met standaardinstellingen
+def initialize_session_state():
+    if "country" not in st.session_state:
+        st.session_state["country"] = default_country
+    if "location" not in st.session_state:
+        st.session_state["location"] = default_location
+    if "latitude" not in st.session_state:
+        st.session_state["latitude"] = latitude
+    if "longitude" not in st.session_state:
+        st.session_state["longitude"] = longitude
+    if "selected_date" not in st.session_state:
+        st.session_state["selected_date"] = selected_date
+    if "sun_times" not in st.session_state:
+        st.session_state["sun_times"] = {}
 
-    # Altijd de data-expander tonen (zelfstandig van de locatie)
-    show_data_expander()  # Toon de data-expander voor de opgegeven locatie
-
-
-    # Toon de kaart op basis van de invoer
-    if latitude and longitude:
-        # Eerst de kaart-expander tonen zonder argumenten, want de waarden worden uit session_state gehaald
-        show_map_expander()  # Toon de kaart met de juiste locatie
+# Functie om de zonstijden op te halen via de Sunrise-Sunset API
+def get_sun_times(latitude, longitude, date):
+    url = f"https://api.sunrise-sunset.org/json?lat={latitude}&lng={longitude}&date={date.strftime('%Y-%m-%d')}&formatted=0"
+    response = requests.get(url)
+    data = response.json()
+    
+    if data["status"] == "OK":
+        sun_times = {
+            "sunrise": data["results"]["sunrise"],
+            "sunset": data["results"]["sunset"],
+            "civil_twilight_begin": data["results"]["civil_twilight_begin"],
+            "civil_twilight_end": data["results"]["civil_twilight_end"],
+            "nautical_twilight_begin": data["results"]["nautical_twilight_begin"],
+            "nautical_twilight_end": data["results"]["nautical_twilight_end"],
+        }
+        return sun_times
     else:
-        st.error("Invalid location coordinates.")  # Foutmelding als de locatie niet geldig is
+        return None
 
-    # Altijd de data-expander tonen (zelfstandig van de locatie)
-    #show_data_expander()  # Toon de data-expander voor de opgegeven locatie
+# Haal de zonstijden op voor de standaardlocatie
+def update_sun_times():
+    sun_times = get_sun_times(st.session_state["latitude"], st.session_state["longitude"], st.session_state["selected_date"])
+    if sun_times:
+        st.session_state["sun_times"] = sun_times
+    else:
+        st.session_state["sun_times"] = {"error": "Kon zonstijden niet ophalen."}
 
-    #toon een weerkaart (test)!
-    show_forecast1_expander()
-    #toon de voorspellingen voor -1dag+7 dagen
-    show_forecast2_expander()
-    #toon de Echart
-    #show_weather_chart_expander()
+# Hoofdprogramma
+def main():
+    # Initialiseer de sessie met standaardinstellingen
+    initialize_session_state()
+    
+    # Haal de zonstijden op bij de start
+    update_sun_times()
+    
+    # Toon de standaardlocatiegegevens
+    st.title("Locatie en Zonsopgang/Zonsondergang")
+    st.write(f"Land: {st.session_state['country']}")
+    st.write(f"Locatie: {st.session_state['location']}")
+    st.write(f"Latitude: {st.session_state['latitude']}")
+    st.write(f"Longitude: {st.session_state['longitude']}")
+    st.write(f"Datum: {st.session_state['selected_date'].strftime('%Y-%m-%d')}")
+    
+    # Toon de zonstijden
+    if "sun_times" in st.session_state and st.session_state["sun_times"]:
+        if "error" in st.session_state["sun_times"]:
+            st.write(st.session_state["sun_times"]["error"])
+        else:
+            st.write(f"Zonsopgang: {st.session_state['sun_times']['sunrise']}")
+            st.write(f"Zonsondergang: {st.session_state['sun_times']['sunset']}")
+            st.write(f"Civiele zonsopgang: {st.session_state['sun_times']['civil_twilight_begin']}")
+            st.write(f"Civiele zonsondergang: {st.session_state['sun_times']['civil_twilight_end']}")
+            st.write(f"Nautische zonsopgang: {st.session_state['sun_times']['nautical_twilight_begin']}")
+            st.write(f"Nautische zonsondergang: {st.session_state['sun_times']['nautical_twilight_end']}")
+    else:
+        st.write("Zonstijden zijn nog niet beschikbaar.")
+
 if __name__ == "__main__":
     main()
