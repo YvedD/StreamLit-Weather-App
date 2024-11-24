@@ -88,6 +88,19 @@ def show_multiday_forecast():
 
 # Hoofdfunctie om de app te starten
 def main():
+    # Sidebar configuratie
+    with st.sidebar:
+        st.title("Locatie-instellingen")
+        
+        # Selecteer de datum via de sidebar
+        selected_date = st.date_input("Selecteer een datum", value=datetime.now().date())
+
+        # Locatiegegevens kunnen ook aangepast worden in de sidebar
+        default_country = st.text_input("Land", value="België")
+        default_location = st.text_input("Locatie", value="Bredene")
+        latitude = st.number_input("Latitude", value=51.2389)
+        longitude = st.number_input("Longitude", value=2.9724)
+
     # Initialiseer de gegevens en toon ze
     initialize_location_data()
 
