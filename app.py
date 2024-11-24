@@ -126,9 +126,8 @@ def main():
         </style>
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
-
-    st.title("Mijn Streamlit App")
     st.write("De bovenste iconen zijn nu verborgen!")    st.title("Sunrise, Sunset, and Twilight Times")
+    st.title("Mijn Streamlit App")
 
     # Hoofdapp inhoud
     show_sun_times()
