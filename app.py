@@ -85,7 +85,7 @@ def main():
         # Folium-kaart in de sidebar
         st.write("### Kaart van de locatie")
         map_ = create_map(latitude, longitude)
-        st_folium(map_, width=300, height=300)  # Weergave van de kaart
+        st_folium(map_, width=600, height=300)  # Kaart breder maken (600px breed)
 
         # Keuze voor zonstijden
         sun_option = st.radio(
