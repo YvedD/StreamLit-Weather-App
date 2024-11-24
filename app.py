@@ -3,6 +3,8 @@ from datetime import datetime, timedelta, time
 import requests
 from timezonefinder import TimezoneFinder
 from pytz import timezone
+import folium
+from streamlit_folium import st_folium
 
 # Functie om de zonsopgang en zonsondergang op te halen via de Sunrise-Sunset API
 def get_sun_times(lat, lon):
@@ -50,12 +52,13 @@ def create_time_slider(start_time, end_time):
         step=timedelta(minutes=15),  # Intervals van 15 minuten
         format="HH:mm",  # Weergeven in HH:mm formaat
     )
-
-    # Toon de geselecteerde tijden boven de slider
-    #st.write(f"**Geselecteerde Starttijd:** {appointment[0].strftime('%H:%M')}")
-    #st.write(f"**Geselecteerde Eindtijd:** {appointment[1].strftime('%H:%M')}")
-    
     return appointment
+
+# Functie om een Folium-kaart te genereren
+def create_map(lat, lon):
+    map_ = folium.Map(location=[lat, lon], zoom_start=9)
+    folium.Marker([lat, lon], tooltip="Geselecteerde Locatie").add_to(map_)
+    return map_
 
 # Hoofdfunctie om de app te starten
 def main():
@@ -78,6 +81,11 @@ def main():
         # Locatie
         default_country = st.text_input("Land", value=default_country)
         default_location = st.text_input("Locatie", value=default_location)
+
+        # Folium-kaart in de sidebar
+        st.write("### Kaart van de locatie")
+        map_ = create_map(latitude, longitude)
+        st_folium(map_, width=300, height=300)  # Weergave van de kaart
 
         # Keuze voor zonstijden
         sun_option = st.radio(
