@@ -33,23 +33,25 @@ def get_location_js():
 
 # Hoofdprogramma
 def main():
+    # Tab 1: Toon de locatiegegevens
+    st.title("Locatiegegevens")
+    st.subheader("Locatie van de gebruiker")
+
     # Zoek de locatie op bij het openen van de app (IP-geolocatie voor desktop)
     if "latitude" not in st.session_state or "longitude" not in st.session_state:
         country = get_country_from_ip()  # IP-geolocatie ophalen
         st.session_state.country = country
-        st.session_state.latitude = 51.2389  # Standaardlocatie voor België (Bredene)
-        st.session_state.longitude = 2.9724
 
-    # Voeg geolocatie via JavaScript toe voor mobiele apparaten
-    if st.session_state.get("latitude") == 51.2389 and st.session_state.get("longitude") == 2.9724:
+        # Voeg geolocatie via JavaScript toe voor mobiele apparaten
         get_location_js()  # Ophaal en verstuur de locatie via JS (voor mobiele apparaten)
 
-    # Tab 1: Toon de locatiegegevens
-    st.title("Locatiegegevens")
-    st.subheader("Locatie van de gebruiker")
-    st.write(f"Land (op basis van IP): {st.session_state.get('country')}")
-    st.write(f"Latitude: {st.session_state.get('latitude')}")
-    st.write(f"Longitude: {st.session_state.get('longitude')}")
+    # Wacht tot de locatiegegevens beschikbaar zijn
+    if "latitude" in st.session_state and "longitude" in st.session_state:
+        st.write(f"Land (op basis van IP): {st.session_state.get('country')}")
+        st.write(f"Latitude: {st.session_state.get('latitude')}")
+        st.write(f"Longitude: {st.session_state.get('longitude')}")
+    else:
+        st.write("Locatie wordt opgehaald...")
 
 if __name__ == "__main__":
     main()
