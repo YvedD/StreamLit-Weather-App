@@ -119,7 +119,7 @@ def show_input_form():
         st.session_state.update({
             "country": country, "location": location, "latitude": latitude, "longitude": longitude,
             "selected_date": selected_date, "sunrise": sunrise, "sunset": sunset,
-            "start_hour": st.session_state["start_hour"], "end_hour": st.session_state["end_hour"]
+            "start_hour": start_hour, "end_hour": end_hour
         })
 
         st.write(f"Locatie: {country}, {location} - GPS: {latitude:.2f}°N {longitude:.2f}°E")
