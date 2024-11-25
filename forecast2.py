@@ -111,12 +111,14 @@ def show_forecast2_expander():
     # Haal gegevens op van de API
     
     def fetch_weather_data(url):
-        response = requests.get(url)
+        response = requests.get(url, headers=headers)
+
         if response.status_code == 200:
-            return response.json()
+            print("Succes:", response.json())
+        elif response.status_code == 429:
+            print("Te veel verzoeken: Wacht even en probeer opnieuw.")
         else:
-            st.error("Kan de weergegevens niet ophalen. Controleer de API URL.")
-            return None
+            print(f"Fout {response.status_code}: {response.text}")
 
     st.title(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
 
