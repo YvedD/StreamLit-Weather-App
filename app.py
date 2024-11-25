@@ -30,5 +30,7 @@ def main():
     #show_forecast2_expander()
     #toon de Echart
     #show_weather_chart_expander()
+    st.write(f"Momenteel zijn we volop bezig om een nieuwere, performantere versie te ontwikkelen - STAY TUNED")
+
 if __name__ == "__main__":
     main()
