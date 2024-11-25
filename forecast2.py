@@ -97,7 +97,15 @@ def show_forecast2_expander():
     filter_end_time = sunset_time_today + timedelta(hours=1)
 
     API_URL = (
-        "https://api.open-meteo.com/v1/forecast?latitude={latitude}&longitude={longitude}&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,visibility,wind_speed_10m,wind_speed_80m,wind_direction_10m&daily=sunrise,sunset&timezone={local_timezone.zone}&past_days=1&forecast_days=5"
+        "https://api.open-meteo.com/v1/forecast"
+        f"?latitude={latitude}"
+        f"&longitude={longitude}"
+        "&hourly=temperature_2m,precipitation,cloud_cover,cloud_cover_low,cloud_cover_mid,cloud_cover_high,"
+        "visibility,wind_speed_10m,wind_speed_80m,wind_direction_10m"
+        "&daily=sunrise,sunset"
+        f"&timezone={local_timezone.zone}"
+        "&past_days=1"
+        "&forecast_days=5"
     )
 
     # Haal gegevens op van de API
@@ -110,7 +118,7 @@ def show_forecast2_expander():
             st.error("Kan de weergegevens niet ophalen. Controleer de API URL.")
             return None
 
-    st.subheader(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
+    st.title(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
 
     weather_data = fetch_weather_data(API_URL)
 
