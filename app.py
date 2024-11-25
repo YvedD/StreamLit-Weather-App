@@ -5,8 +5,6 @@ from timezonefinder import TimezoneFinder
 from pytz import timezone
 import folium
 from streamlit_folium import st_folium
-from folium import Marker
-from folium.plugins import MarkerCluster
 
 # Functie om de zonsopgang en zonsondergang op te halen via de Sunrise-Sunset API
 def get_sun_times(lat, lon):
@@ -56,6 +54,20 @@ def create_time_slider(start_time, end_time):
     )
     return appointment
 
+# Functie om de coördinaten op te halen via Nominatim API
+def get_coordinates(location, country):
+    """Haal de breedte- en lengtegraad op van een opgegeven locatie."""
+    url = f"https://nominatim.openstreetmap.org/search?q={location},{country}&format=json&limit=1"
+    response = requests.get(url)
+    if response.status_code == 200:
+        results = response.json()
+        if results:
+            latitude = float(results[0]['lat'])
+            longitude = float(results[0]['lon'])
+            return latitude, longitude
+    # Als geen resultaten gevonden zijn, gebruik standaardwaarden
+    return None, None
+
 # Functie om een Folium-kaart te genereren
 def create_map(lat, lon):
     map_ = folium.Map(location=[lat, lon], zoom_start=9)
@@ -80,15 +92,6 @@ def main():
     """
     st.markdown(hide_streamlit_style, unsafe_allow_html=True)
 
-    # Standaardinstellingen
-    default_country = "België"
-    default_location = "Bredene"
-    latitude = 51.2389
-    longitude = 2.9724
-
-    # Haal de zonstijden op
-    sun_times = get_sun_times(latitude, longitude)
-
     # Sidebar instellingen
     with st.sidebar:
         st.title("Locatie-instellingen")
@@ -96,29 +99,29 @@ def main():
         # Datumselectie
         selected_date = st.date_input("Selecteer een datum", value=datetime.now().date())
 
-        # Locatie
-        default_country = st.text_input("Land", value=default_country)
-        default_location = st.text_input("Locatie", value=default_location)
+        # Land en locatie
+        country = st.text_input("Land", value="België")
+        location = st.text_input("Locatie", value="Bredene")
+
+        # Haal coördinaten op
+        lat, lon = get_coordinates(location, country)
+
+        if lat is None or lon is None:
+            st.warning("Locatie niet gevonden. Gebruik standaardwaarden.")
+            lat, lon = 51.2389, 2.9724  # Default coördinaten
 
         # Folium-kaart in de sidebar
-        #st.write("### Kaart van de locatie")
-        map_ = create_map(latitude, longitude)
-        
-        # Kaart aanpassen: 100% breedte om visueel de sidebar en kaart te combineren
-        st.markdown(
-            """
-            <style>
-                .css-ffhzg2 {width: 100%;}
-            </style>
-            """, unsafe_allow_html=True)
-        
-        st_folium(map_, width=600, height=250)  # Kaart breder maken (600px breed)
+        map_ = create_map(lat, lon)
+        st_folium(map_, width=600, height=250)
 
+        # Haal zonstijden op
+        sun_times = get_sun_times(lat, lon)
+        
         # Keuze voor zonstijden
         sun_option = st.radio(
             "Selecteer type zonstijden",
             options=["Normal", "Civil", "Nautical"],
-            index=1,  # Standaard Civil
+            index=1,
             horizontal=True
         )
 
@@ -127,7 +130,7 @@ def main():
             start_time, end_time = sun_times["sunrise"], sun_times["sunset"]
         elif sun_option == "Nautical":
             start_time, end_time = sun_times["nautical_sunrise"], sun_times["nautical_sunset"]
-        else:  # Civil
+        else:
             start_time, end_time = sun_times["civil_sunrise"], sun_times["civil_sunset"]
 
         # Slider
@@ -139,10 +142,10 @@ def main():
     # Tab 1: Weatherdata
     with tab1:
         st.subheader("Weatherdata")
-        st.write(f"**Land:** {default_country}")
-        st.write(f"**Locatie:** {default_location}")
-        st.write(f"**Latitude:** {latitude}")
-        st.write(f"**Longitude:** {longitude}")
+        st.write(f"**Land:** {country}")
+        st.write(f"**Locatie:** {location}")
+        st.write(f"**Latitude:** {lat}")
+        st.write(f"**Longitude:** {lon}")
         st.write(f"**Geselecteerde Datum:** {selected_date}")
         st.write(f"**Zonstijden Type:** {sun_option}")
         st.write(f"**Zonsopgang:** {sun_times['sunrise'].strftime('%H:%M')}")
@@ -150,12 +153,10 @@ def main():
         st.write(f"**Geselecteerde Starttijd:** {appointment[0].strftime('%H:%M')}")
         st.write(f"**Geselecteerde Eindtijd:** {appointment[1].strftime('%H:%M')}")
 
-    # Tab 2: Temperature Forecast
     with tab2:
         st.subheader("Temperature Forecast")
         st.write("Toon temperatuurvoorspellingen.")
 
-    # Tab 3: Multiday Forecast
     with tab3:
         st.subheader("Multiday Forecast")
         st.write("Toon meerdaagse weersvoorspellingen.")
