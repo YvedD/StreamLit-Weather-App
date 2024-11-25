@@ -116,11 +116,11 @@ def show_input_form():
         st.time_input(labels["end_hour"], value=end_hour.time(), key="end_hour")
 
         # Opslaan in session_state
-        st.session_state.update({
-            "country": country, "location": location, "latitude": latitude, "longitude": longitude,
-            "selected_date": selected_date, "sunrise": sunrise, "sunset": sunset,
-            "start_hour": start_hour, "end_hour": end_hour
-        })
+        #st.session_state.update({
+        #    "country": country, "location": location, "latitude": latitude, "longitude": longitude,
+        #    "selected_date": selected_date, "sunrise": sunrise, "sunset": sunset,
+        #    "start_hour": start_hour, "end_hour": end_hour
+        #})
 
         st.write(f"Locatie: {country}, {location} - GPS: {latitude:.2f}°N {longitude:.2f}°E")
     else:
