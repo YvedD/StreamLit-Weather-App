@@ -108,22 +108,27 @@ def show_forecast2_expander():
         "&forecast_days=5"
     )
 
-    # Haal gegevens op van de API
-    
     def fetch_weather_data(url):
-        response = requests.get(url, headers=headers)
+        # Definieer de headers binnen de functie
+        headers = {
+            "User-Agent": "StreamlitWeatherApp/1.0 (mailto:ydsdsy@gmail.com)"
+        }
 
-        if response.status_code == 200:
-            print("Succes:", response.json())
-        elif response.status_code == 429:
-            print("Te veel verzoeken: Wacht even en probeer opnieuw.")
-        else:
-            print(f"Fout {response.status_code}: {response.text}")
+        try:
+            response = requests.get(url, headers=headers)
+            response.raise_for_status()  # Controleer op HTTP-fouten
+            return response.json()  # Geef de JSON-gegevens terug
+        except requests.exceptions.HTTPError as http_err:
+            st.error(f"HTTP fout opgetreden: {http_err}")
+            return None
+        except requests.exceptions.RequestException as req_err:
+            st.error(f"Fout bij het verbinden met de API: {req_err}")
+            return None
 
-    st.title(f"**Weersvoorspelling voor {location}** (-1d/+5d)")
+    # Haal de weersgegevens op met fetch_weather_data
+    weather_data = fetch_weather_data(API_URL)  # Deze regel voegt de missende initialisatie toe.
 
-    weather_data = fetch_weather_data(API_URL)
-
+    # Controleer of er gegevens zijn opgehaald
     if weather_data:
         with st.expander("Forecastdata / Weersvoorspelling"):
             # Styling voor een compactere tabel
@@ -136,6 +141,7 @@ def show_forecast2_expander():
                 </style>
                 """, unsafe_allow_html=True
             )
+            # Rest van je code om gegevens weer te geven...
 
             # Toon uurlijkse gegevens
             hourly = weather_data.get("hourly", {})
