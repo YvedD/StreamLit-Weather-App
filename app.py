@@ -27,7 +27,7 @@ def main():
     #toon een weerkaart (test)!
     show_forecast1_expander()
     #toon de voorspellingen voor -1dag+7 dagen
-    #show_forecast2_expander()
+    show_forecast2_expander()
     #toon de Echart
     #show_weather_chart_expander()
     st.write(f"Momenteel zijn we volop bezig om een nieuwere, performantere versie te ontwikkelen - STAY TUNED")
