@@ -188,17 +188,17 @@ def show_forecast2_expander():
                         f"""
                         <table>
                         <tr>
-                            <td>🕒 {time}</td>
-                            <td>🌡️ {temperature[i]}°C</td>
-                            <td>🌧️ {precipitation[i]} mm</td>
-                            <td>☁️Tot {cloud_cover[i]}%</td>
-                            <td>☁️Lo {cloud_low[i]}%</td>
-                            <td>☁️Mi {cloud_mid[i]}%</td>
-                            <td>☁️Hi {cloud_high[i]}%</td>
-                            <td>👁️ {convert_visibility(visibility[i])}Km</td>
-                            <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
-                            <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
-                            <td>{wind_icon_svg} {wind_direction_to_compass(wind_direction_10m[i])}</td>
+                            <td>🕒<br>{time}<br></td>
+                            <td>🌡️<br>{temperature[i]}°C<br></td>
+                            <td>🌧️<br>{precipitation[i]}mm<br></td>
+                            <td>☁️<br>Total<br>{cloud_cover[i]}%</td>
+                            <td>☁️<br>Low<br>{cloud_low[i]}%</td>
+                            <td>☁️<br>Mid<br>{cloud_mid[i]}%</td>
+                            <td>☁️<br>High<br>{cloud_high[i]}%</td>
+                            <td>👁️<br>{convert_visibility(visibility[i])}Km<br></td>
+                            <td>💨<br>@10m<br>{wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
+                            <td>💨<br>@80m<br>{wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
+                            <td>{wind_icon_svg}<br>{wind_direction_to_compass(wind_direction_10m[i])}<br></td>
                         </tr>
                         </table>
                         """,
