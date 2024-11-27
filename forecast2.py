@@ -191,10 +191,10 @@ def show_forecast2_expander():
                             <td>🕒 {time}</td>
                             <td>🌡️ {temperature[i]}°C</td>
                             <td>🌧️ {precipitation[i]} mm</td>
-                            <td>☁️ {cloud_cover[i]}%</td>
-                            <td>☁️L {cloud_low[i]}%</td>
-                            <td>☁️M {cloud_mid[i]}%</td>
-                            <td>☁️H {cloud_high[i]}%</td>
+                            <td>☁️Tot {cloud_cover[i]}%</td>
+                            <td>☁️Lo {cloud_low[i]}%</td>
+                            <td>☁️Mi {cloud_mid[i]}%</td>
+                            <td>☁️Hi {cloud_high[i]}%</td>
                             <td>👁️ {convert_visibility(visibility[i])}Km</td>
                             <td>💨 @10m {wind_speed_to_beaufort(wind_speed_10m[i])}Bf</td>
                             <td>💨 @80m {wind_speed_to_beaufort(wind_speed_80m[i])}Bf</td>
